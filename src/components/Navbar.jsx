@@ -10,7 +10,7 @@ const Navbar = () => {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-6 px-4"
         >
-            <div className="bg-surface/80 backdrop-blur-md border border-white/5 rounded-xl px-10 py-5 flex flex-col items-center justify-center shadow-lg w-fit">
+            <div className="bg-surface/80 backdrop-blur-md border border-white/5 rounded-xl px-10 py-5 flex flex-col items-center justify-center shadow-lg w-fit transition-transform duration-700 ease-in-out hover:scale-[1.03]">
                 <span className="text-sm font-medium mb-2 tracking-wider uppercase bg-gradient-to-b from-[#f7f4ed] to-[#ffffff] bg-clip-text text-transparent">Client Results:</span>
                 <div className="flex items-center gap-12">
                     <div className="group flex flex-col items-center cursor-default transition-all duration-300 hover:scale-110 hover:saturate-125">

@@ -77,7 +77,7 @@ ${formData.contactMethods.map(method => `${method}: ${formData.contactDetails[me
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.9, opacity: 0 }}
-                    className="w-full max-w-2xl bg-[#121212]/60 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+                    className="w-full max-w-2xl bg-[#121212]/60 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] text-left"
                 >
                     {/* Header */}
                     <div className="p-6 flex justify-between items-center">
@@ -93,8 +93,8 @@ ${formData.contactMethods.map(method => `${method}: ${formData.contactDetails[me
                     <div className="p-8 overflow-y-auto flex-1">
                         {step === 1 && (
                             <div className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-[#fcf0d4] text-sm font-medium">1. How many videos per month do you currently post?</label>
+                                <div className="space-y-4">
+                                    <label className="text-[#fcf0d4] text-lg font-medium">1. How many videos per month do you currently post?</label>
                                     <input
                                         type="text"
                                         className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-[#ff982b] focus:outline-none transition-colors placeholder:text-white/20"
@@ -103,8 +103,8 @@ ${formData.contactMethods.map(method => `${method}: ${formData.contactDetails[me
                                         onChange={(e) => handleInputChange('currentVideos', e.target.value)}
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[#fcf0d4] text-sm font-medium">2. How many videos per month do you want to post?</label>
+                                <div className="space-y-4">
+                                    <label className="text-[#fcf0d4] text-lg font-medium">2. How many videos per month do you want to post?</label>
                                     <input
                                         type="text"
                                         className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-[#ff982b] focus:outline-none transition-colors placeholder:text-white/20"
@@ -118,8 +118,8 @@ ${formData.contactMethods.map(method => `${method}: ${formData.contactDetails[me
 
                         {step === 2 && (
                             <div className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-[#fcf0d4] text-sm font-medium">3. How much are you willing to invest in your YouTube growth?</label>
+                                <div className="space-y-4">
+                                    <label className="text-[#fcf0d4] text-lg font-medium">3. How much are you willing to invest in your YouTube growth?</label>
                                     <select
                                         className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-[#ff982b] focus:outline-none transition-colors [&>option]:bg-[#121212]"
                                         value={formData.investment}
@@ -132,8 +132,8 @@ ${formData.contactMethods.map(method => `${method}: ${formData.contactDetails[me
                                         <option value="$10k+">$10,000+ / month</option>
                                     </select>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[#fcf0d4] text-sm font-medium">4. What is your channel? (Please provide link)</label>
+                                <div className="space-y-4">
+                                    <label className="text-[#fcf0d4] text-lg font-medium">4. What is your channel? (Please provide link)</label>
                                     <input
                                         type="text"
                                         className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-[#ff982b] focus:outline-none transition-colors placeholder:text-white/20"
@@ -142,8 +142,8 @@ ${formData.contactMethods.map(method => `${method}: ${formData.contactDetails[me
                                         onChange={(e) => handleInputChange('channelLink', e.target.value)}
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[#fcf0d4] text-sm font-medium">5. What is your primary goal with this channel?</label>
+                                <div className="space-y-4">
+                                    <label className="text-[#fcf0d4] text-lg font-medium">5. What is your primary goal with this channel?</label>
                                     <textarea
                                         className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-[#ff982b] focus:outline-none transition-colors min-h-[100px] placeholder:text-white/20"
                                         placeholder="e.g. Lead generation, Brand awareness, Ad revenue..."
@@ -157,7 +157,7 @@ ${formData.contactMethods.map(method => `${method}: ${formData.contactDetails[me
                         {step === 3 && (
                             <div className="space-y-6">
                                 <div className="space-y-4">
-                                    <label className="text-[#fcf0d4] text-sm font-medium">6. How can we contact you? (Select at least one)</label>
+                                    <label className="text-[#fcf0d4] text-lg font-medium">6. How can we contact you? (Select at least one)</label>
                                     <div className="flex gap-4">
                                         {['Phone', 'Email', 'Discord'].map(method => (
                                             <button
@@ -180,9 +180,9 @@ ${formData.contactMethods.map(method => `${method}: ${formData.contactDetails[me
                                         key={method}
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: 'auto' }}
-                                        className="space-y-2"
+                                        className="space-y-4"
                                     >
-                                        <label className="text-[#fcf0d4] text-sm font-medium">Your {method}</label>
+                                        <label className="text-[#fcf0d4] text-lg font-medium">Your {method}</label>
                                         <input
                                             type="text"
                                             className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-[#ff982b] focus:outline-none transition-colors placeholder:text-white/20"

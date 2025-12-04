@@ -178,7 +178,7 @@ const RevenueCalculator = () => {
                         {/* Big Blurred Sparkle */}
                         <motion.div
                             style={{ rotate: useTransform(useScroll().scrollY, [0, 1000], [0, 200]) }}
-                            className="absolute -bottom-20 -right-20 text-[#ff982b] opacity-40 blur-xl pointer-events-none"
+                            className="absolute -bottom-20 -right-20 text-[#ff982b] opacity-40 blur-[22px] pointer-events-none"
                         >
                             <motion.svg
                                 animate={{ rotate: 360 }}
@@ -192,7 +192,7 @@ const RevenueCalculator = () => {
                         {/* Smaller Lighter Sparkle - Center Left */}
                         <motion.div
                             style={{ rotate: useTransform(useScroll().scrollY, [0, 1000], [0, -200]) }}
-                            className="absolute top-1/2 -left-10 -translate-y-1/2 text-[#ffc972] opacity-30 blur-md pointer-events-none"
+                            className="absolute top-1/2 -left-10 -translate-y-1/2 text-[#ffc972] opacity-30 blur-[11px] pointer-events-none"
                         >
                             <motion.svg
                                 animate={{ rotate: -360 }}

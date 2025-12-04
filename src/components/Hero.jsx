@@ -14,7 +14,7 @@ const Hero = () => {
     const rotate4 = useTransform(scrollY, [0, 1000], [85, -115]); // Unchanged
 
     return (
-        <section className="min-h-[135vh] flex flex-col items-center justify-center text-center px-4 pt-32 pb-20 relative overflow-visible">
+        <section className="min-h-[135vh] flex flex-col items-center justify-center text-center px-4 pt-24 pb-20 relative overflow-visible">
             {/* Background - Solid black only */}
             <div className="absolute inset-0 w-full h-full pointer-events-none -z-10 bg-[#050505]" />
 
@@ -30,78 +30,81 @@ const Hero = () => {
                 }}
             />
 
-            {/* Animated Sparkles - Multiple with varying sizes and opacities */}
-            {/* Tiny Sparkle - Far Left Top */}
-            <motion.div
-                initial={{ opacity: 0, scale: 0, rotate: -45 }}
-                style={{ rotate: rotate1 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 1.6, ease: "easeOut", delay: 0.5 }}
-                className="absolute left-[5%] top-[25%] w-32 h-32 pointer-events-none z-0 hidden lg:block blur-sm"
-            >
-                <div className="absolute inset-0 bg-orange-500/15 blur-[42px] rounded-full" />
-                <motion.svg
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 63, repeat: Infinity, ease: "linear" }}
-                    viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-[#ff982b] drop-shadow-[0_0_15px_rgba(255,152,43,0.6)] opacity-[0.32]"
+            {/* Sparkles Container with Fade Mask - Expanded vertically and horizontally to prevent clipping */}
+            <div className="absolute top-0 -bottom-[20%] -left-[100%] w-[300%] pointer-events-none z-0" style={{ maskImage: 'linear-gradient(to bottom, black 60%, transparent 85%)', WebkitMaskImage: 'linear-gradient(to bottom, black 60%, transparent 85%)' }}>
+                {/* Animated Sparkles - Multiple with varying sizes and opacities */}
+                {/* Tiny Sparkle - Far Left Top */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0, rotate: -45 }}
+                    style={{ rotate: rotate1 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 1.6, ease: "easeOut", delay: 0.5 }}
+                    className="absolute left-[35%] top-[25%] w-32 h-32 pointer-events-none z-0 hidden lg:block blur-sm"
                 >
-                    <path d="M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5L12 0Z" fill="currentColor" />
-                </motion.svg>
-            </motion.div>
+                    <div className="absolute inset-0 bg-orange-500/15 blur-[42px] rounded-full" />
+                    <motion.svg
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 63, repeat: Infinity, ease: "linear" }}
+                        viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-[#ff982b] drop-shadow-[0_0_15px_rgba(255,152,43,0.6)] opacity-[0.32]"
+                    >
+                        <path d="M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5L12 0Z" fill="currentColor" />
+                    </motion.svg>
+                </motion.div>
 
-            {/* Main Sparkle - 2nd from left - LOWERED and SMALLER (35% reduction) */}
-            <motion.div
-                initial={{ opacity: 0, scale: 0, rotate: -90 }}
-                style={{ rotate: rotate2 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
-                className="absolute left-[10%] bottom-[8%] w-[17rem] h-[17rem] pointer-events-none z-0 hidden md:block blur-sm"
-            >
-                <div className="absolute inset-0 bg-orange-500/40 blur-[105px] rounded-full" />
-                <motion.svg
-                    animate={{ rotate: -360 }}
-                    transition={{ duration: 78, repeat: Infinity, ease: "linear" }}
-                    viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-[#ff982b] drop-shadow-[0_0_30px_rgba(255,152,43,0.9)] opacity-[0.63]"
+                {/* Main Sparkle - 2nd from left - LOWERED and SMALLER (35% reduction) */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0, rotate: -90 }}
+                    style={{ rotate: rotate2 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                    className="absolute left-[36.6%] bottom-[25%] w-[17rem] h-[17rem] pointer-events-none z-0 hidden md:block blur-sm"
                 >
-                    <path d="M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5L12 0Z" fill="currentColor" />
-                </motion.svg>
-            </motion.div>
+                    <div className="absolute inset-0 bg-orange-500/40 blur-[105px] rounded-full" />
+                    <motion.svg
+                        animate={{ rotate: -360 }}
+                        transition={{ duration: 78, repeat: Infinity, ease: "linear" }}
+                        viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-[#ff982b] drop-shadow-[0_0_30px_rgba(255,152,43,0.9)] opacity-[0.63]"
+                    >
+                        <path d="M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5L12 0Z" fill="currentColor" />
+                    </motion.svg>
+                </motion.div>
 
-            {/* Smaller Sparkle - Top Right */}
-            <motion.div
-                initial={{ opacity: 0, scale: 0, rotate: 45 }}
-                style={{ rotate: rotate3 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 1.8, ease: "easeOut", delay: 0.3 }}
-                className="absolute right-[18%] top-[12%] w-48 h-48 pointer-events-none z-0 hidden md:block blur-sm"
-            >
-                <div className="absolute inset-0 bg-orange-500/20 blur-[63px] rounded-full" />
-                <motion.svg
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 69, repeat: Infinity, ease: "linear" }}
-                    viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-[#ffc972] drop-shadow-[0_0_20px_rgba(255,201,114,0.7)] opacity-[0.40]"
+                {/* Smaller Sparkle - Top Right */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0, rotate: 45 }}
+                    style={{ rotate: rotate3 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 1.8, ease: "easeOut", delay: 0.3 }}
+                    className="absolute right-[39.3%] top-[12%] w-48 h-48 pointer-events-none z-0 hidden md:block blur-sm"
                 >
-                    <path d="M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5L12 0Z" fill="currentColor" />
-                </motion.svg>
-            </motion.div>
+                    <div className="absolute inset-0 bg-orange-500/20 blur-[63px] rounded-full" />
+                    <motion.svg
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 69, repeat: Infinity, ease: "linear" }}
+                        viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-[#ffc972] drop-shadow-[0_0_20px_rgba(255,201,114,0.7)] opacity-[0.40]"
+                    >
+                        <path d="M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5L12 0Z" fill="currentColor" />
+                    </motion.svg>
+                </motion.div>
 
-            {/* Medium Sparkle - Right Bottom */}
-            <motion.div
-                initial={{ opacity: 0, scale: 0, rotate: 90 }}
-                style={{ rotate: rotate4 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 2, ease: "easeOut", delay: 0.2 }}
-                className="absolute right-[10%] bottom-[25%] w-56 h-56 pointer-events-none z-0 hidden md:block blur-sm"
-            >
-                <div className="absolute inset-0 bg-orange-500/25 blur-[74px] rounded-full" />
-                <motion.svg
-                    animate={{ rotate: -360 }}
-                    transition={{ duration: 88, repeat: Infinity, ease: "linear" }}
-                    viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-[#ff982b] drop-shadow-[0_0_25px_rgba(255,152,43,0.8)] opacity-[0.47]"
+                {/* Medium Sparkle - Right Bottom */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0, rotate: 90 }}
+                    style={{ rotate: rotate4 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 2, ease: "easeOut", delay: 0.2 }}
+                    className="absolute right-[36.6%] bottom-[35%] w-56 h-56 pointer-events-none z-0 hidden md:block blur-sm"
                 >
-                    <path d="M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5L12 0Z" fill="currentColor" />
-                </motion.svg>
-            </motion.div>
+                    <div className="absolute inset-0 bg-orange-500/25 blur-[74px] rounded-full" />
+                    <motion.svg
+                        animate={{ rotate: -360 }}
+                        transition={{ duration: 88, repeat: Infinity, ease: "linear" }}
+                        viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-[#ff982b] drop-shadow-[0_0_25px_rgba(255,152,43,0.8)] opacity-[0.47]"
+                    >
+                        <path d="M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5L12 0Z" fill="currentColor" />
+                    </motion.svg>
+                </motion.div>
+            </div>
 
             {/* Text Glow Effect - Behind text for visual interest */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 opacity-30 blur-[120px]">
