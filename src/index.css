@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #050505;
-  --color-surface: #121212;
-  --color-primary: #ffffff;
-  --color-secondary: #a1a1aa;
-  --font-sans: 'Inter', sans-serif;
+    --color-background: #050505;
+    --color-surface: #121212;
+    --color-primary: #ffffff;
+    --color-secondary: #a1a1aa;
+    --font-sans: 'Inter', sans-serif;
 }
 
 body {
-  @apply bg-background text-primary font-sans antialiased;
-  zoom: 0.8;
-  overflow-x: hidden;
+    @apply bg-background text-primary font-sans antialiased;
+    zoom: 0.8;
+    overflow-x: hidden;
 }
