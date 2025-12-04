@@ -8,13 +8,13 @@ import WorkWithUsModal from './WorkWithUsModal';
 const Hero = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { scrollY } = useScroll();
-    const rotate1 = useTransform(scrollY, [0, 1000], [-13, 187]); // Reduced delta by 45%
-    const rotate2 = useTransform(scrollY, [0, 1000], [-40, -240]); // Reduced delta by 45%
-    const rotate3 = useTransform(scrollY, [0, 1000], [60, 260]); // Reduced delta by 45%
-    const rotate4 = useTransform(scrollY, [0, 1000], [85, -115]); // Reduced delta by 45%
+    const rotate1 = useTransform(scrollY, [0, 1000], [187, -13]); // Reversed: Scroll adds CCW (opposite to idle CW)
+    const rotate2 = useTransform(scrollY, [0, 1000], [-240, -40]); // Reversed: Scroll adds CW (opposite to idle CCW)
+    const rotate3 = useTransform(scrollY, [0, 1000], [60, 260]); // Unchanged
+    const rotate4 = useTransform(scrollY, [0, 1000], [85, -115]); // Unchanged
 
     return (
-        <section className="min-h-screen flex flex-col items-center justify-center text-center px-4 pt-32 pb-20 relative overflow-visible">
+        <section className="min-h-[135vh] flex flex-col items-center justify-center text-center px-4 pt-32 pb-20 relative overflow-visible">
             {/* Background - Solid black only */}
             <div className="absolute inset-0 w-full h-full pointer-events-none -z-10 bg-[#050505]" />
 
@@ -37,7 +37,7 @@ const Hero = () => {
                 style={{ rotate: rotate1 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 1.6, ease: "easeOut", delay: 0.5 }}
-                className="absolute left-[10%] top-[30%] w-32 h-32 pointer-events-none z-0 hidden lg:block blur-sm"
+                className="absolute left-[5%] top-[25%] w-32 h-32 pointer-events-none z-0 hidden lg:block blur-sm"
             >
                 <div className="absolute inset-0 bg-orange-500/15 blur-[42px] rounded-full" />
                 <motion.svg
@@ -49,13 +49,13 @@ const Hero = () => {
                 </motion.svg>
             </motion.div>
 
-            {/* Main Sparkle - 2nd from left - LOWERED and BIGGER */}
+            {/* Main Sparkle - 2nd from left - LOWERED and SMALLER (35% reduction) */}
             <motion.div
                 initial={{ opacity: 0, scale: 0, rotate: -90 }}
                 style={{ rotate: rotate2 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 1.5, ease: "easeOut" }}
-                className="absolute left-[13%] bottom-[15%] w-[26rem] h-[26rem] pointer-events-none z-0 hidden md:block blur-sm"
+                className="absolute left-[10%] bottom-[8%] w-[17rem] h-[17rem] pointer-events-none z-0 hidden md:block blur-sm"
             >
                 <div className="absolute inset-0 bg-orange-500/40 blur-[105px] rounded-full" />
                 <motion.svg
@@ -73,7 +73,7 @@ const Hero = () => {
                 style={{ rotate: rotate3 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 1.8, ease: "easeOut", delay: 0.3 }}
-                className="absolute right-[22%] top-[18%] w-48 h-48 pointer-events-none z-0 hidden md:block blur-sm"
+                className="absolute right-[18%] top-[12%] w-48 h-48 pointer-events-none z-0 hidden md:block blur-sm"
             >
                 <div className="absolute inset-0 bg-orange-500/20 blur-[63px] rounded-full" />
                 <motion.svg
@@ -91,7 +91,7 @@ const Hero = () => {
                 style={{ rotate: rotate4 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 2, ease: "easeOut", delay: 0.2 }}
-                className="absolute right-[15%] bottom-[35%] w-56 h-56 pointer-events-none z-0 hidden md:block blur-sm"
+                className="absolute right-[10%] bottom-[25%] w-56 h-56 pointer-events-none z-0 hidden md:block blur-sm"
             >
                 <div className="absolute inset-0 bg-orange-500/25 blur-[74px] rounded-full" />
                 <motion.svg

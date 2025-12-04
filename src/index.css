@@ -10,4 +10,5 @@
 
 body {
   @apply bg-background text-primary font-sans antialiased;
+  zoom: 0.8;
 }

@@ -5,7 +5,7 @@ import { DollarSign, Users, MousePointerClick, TrendingUp } from 'lucide-react';
 const RevenueCalculator = () => {
     const [bookedCallsPer100k, setBookedCallsPer100k] = useState(100);
     const [closeRate, setCloseRate] = useState(20);
-    const [price, setPrice] = useState(2500);
+    const [price, setPrice] = useState(3000);
     const [monthlyViews, setMonthlyViews] = useState(20000);
     const [revenue, setRevenue] = useState(0);
 

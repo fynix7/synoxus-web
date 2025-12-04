@@ -77,7 +77,7 @@ ${formData.contactMethods.map(method => `${method}: ${formData.contactDetails[me
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.9, opacity: 0 }}
-                    className="w-full max-w-2xl bg-[#121212]/80 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+                    className="w-full max-w-2xl bg-[#121212]/60 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
                 >
                     {/* Header */}
                     <div className="p-6 flex justify-between items-center">

@@ -34,7 +34,7 @@ const PackagingShowcase = () => {
                         <img
                             src={image.src}
                             alt={image.alt}
-                            className="h-64 w-auto object-contain mix-blend-screen opacity-80"
+                            className="h-64 w-auto object-contain"
                         />
                     </motion.div>
                 ))}
