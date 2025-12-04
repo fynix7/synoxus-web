@@ -39,9 +39,6 @@ const ServiceNotifications = () => {
                         </div>
 
 
-
-
-
                         <div className="shrink-0 w-16 h-16 rounded-full bg-gradient-to-b from-[#ff982b] to-[#ffc972] flex items-center justify-center shadow-[0_0_15px_rgba(255,152,43,0.4)] relative z-10">
                             <Icon className="w-8 h-8 text-[#050505]" strokeWidth={2} />
                         </div>
