@@ -36,7 +36,7 @@ const Portfolio = () => {
                         initial={{ opacity: 0, scale: 0.9 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
-                        transition={{ delay: index * 0.1 }}
+                        transition={{ delay: index * 0.1, duration: 0.48 }}
                         className="group relative aspect-video rounded-xl overflow-hidden bg-surface border border-white/5"
                     >
                         <img

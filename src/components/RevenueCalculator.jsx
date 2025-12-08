@@ -3,10 +3,10 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { DollarSign, Users, MousePointerClick, TrendingUp } from 'lucide-react';
 
 const RevenueCalculator = () => {
-    const [bookedCallsPer100k, setBookedCallsPer100k] = useState(100);
+    const [bookedCallsPer100k, setBookedCallsPer100k] = useState(70);
     const [closeRate, setCloseRate] = useState(20);
     const [price, setPrice] = useState(3000);
-    const [monthlyViews, setMonthlyViews] = useState(20000);
+    const [monthlyViews, setMonthlyViews] = useState(80000);
     const [revenue, setRevenue] = useState(0);
 
     useEffect(() => {
@@ -47,7 +47,7 @@ const RevenueCalculator = () => {
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.6 }}
+                    transition={{ duration: 0.36 }}
                     className="text-center mb-8"
                 >
                     <h2 className="text-3xl md:text-4xl font-light mb-4 bg-gradient-to-b from-[#ff982b] to-[#ffc972] bg-clip-text text-transparent pb-1">
@@ -55,21 +55,56 @@ const RevenueCalculator = () => {
                     </h2>
                 </motion.div>
 
+                <style>{`
+                    .glow-thumb::-webkit-slider-thumb {
+                        -webkit-appearance: none;
+                        appearance: none;
+                        width: 20px;
+                        height: 20px;
+                        border-radius: 50%;
+                        background: #ff982b;
+                        cursor: pointer;
+                        box-shadow: 0 0 15px rgba(255, 152, 43, 0.8);
+                        border: 2px solid #121212;
+                    }
+                    .glow-thumb::-moz-range-thumb {
+                        width: 20px;
+                        height: 20px;
+                        border-radius: 50%;
+                        background: #ff982b;
+                        cursor: pointer;
+                        box-shadow: 0 0 15px rgba(255, 152, 43, 0.8);
+                        border: 2px solid #121212;
+                    }
+                `}</style>
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
                     {/* Controls */}
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
-                        className="space-y-6 bg-[#121212]/50 p-8 rounded-3xl border border-white/10 backdrop-blur-sm h-full flex flex-col justify-center"
+                        transition={{ duration: 0.36, delay: 0.2 }}
+                        className="relative space-y-6 bg-[#121212]/50 p-8 rounded-3xl backdrop-blur-sm h-full flex flex-col justify-center overflow-hidden"
                     >
+                        {/* Gradient Border Overlay */}
+                        <div
+                            className="absolute inset-0 rounded-3xl pointer-events-none z-10"
+                            style={{
+                                padding: '2px',
+                                background: 'linear-gradient(to bottom, #ff982b, #ffc972)',
+                                mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                                WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                                maskComposite: 'exclude',
+                                WebkitMaskComposite: 'xor'
+                            }}
+                        />
                         {/* Price Slider */}
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
                                 <label className="flex items-center gap-2 text-[#fcf0d4] font-medium">
                                     <DollarSign className="w-5 h-5 text-[#ff982b]" />
-                                    Price of Offer
+                                    Offer Price
                                 </label>
                                 <span className="text-white font-bold bg-white/5 px-3 py-1 rounded-lg border border-white/5">
                                     {formatCurrency(price)}
@@ -81,8 +116,31 @@ const RevenueCalculator = () => {
                                 max="20000"
                                 step="100"
                                 value={price}
-                                onChange={(e) => setPrice(Number(e.target.value))}
-                                className="w-full h-2 bg-[#27272a] rounded-lg appearance-none cursor-pointer accent-[#ff982b] hover:accent-[#ffc972] transition-all"
+                                onChange={(e) => {
+                                    const newPrice = Number(e.target.value);
+                                    setPrice(newPrice);
+                                    // Dynamic Close Rate Adjustment
+                                    // Base: 20% at $3000.
+                                    // As price goes up, close rate goes down. As price goes down, close rate goes up.
+                                    let newCloseRate;
+                                    if (newPrice <= 3000) {
+                                        // Lower price = Higher close rate (up to 70%)
+                                        // Map 500-3000 to 70-20
+                                        const ratio = (3000 - newPrice) / (3000 - 500);
+                                        newCloseRate = 20 + (ratio * 50); // 20 + (0 to 1 * 50)
+                                    } else {
+                                        // Higher price = Lower close rate (down to 5%)
+                                        // Map 3000-20000 to 20-5
+                                        const ratio = (newPrice - 3000) / (20000 - 3000);
+                                        newCloseRate = 20 - (ratio * 15); // 20 - (0 to 1 * 15)
+                                    }
+                                    setCloseRate(Math.round(newCloseRate));
+                                }}
+                                className="w-full h-2 bg-[#27272a] rounded-lg appearance-none cursor-pointer transition-all glow-thumb bg-transparent focus:outline-none"
+                                style={{
+                                    background: `linear-gradient(to right, #ffc972 0%, #ff982b ${((price - 500) / (20000 - 500)) * 100}%, #27272a ${((price - 500) / (20000 - 500)) * 100}%, #27272a 100%)`,
+                                    boxShadow: '0 0 10px rgba(255, 152, 43, 0.2)'
+                                }}
                             />
                             <p className="text-xs text-[#52525b]">How much do you charge per deal?</p>
                         </div>
@@ -113,7 +171,11 @@ const RevenueCalculator = () => {
                                     else rounded = Math.round(val / 10000) * 10000;
                                     setMonthlyViews(rounded);
                                 }}
-                                className="w-full h-2 bg-[#27272a] rounded-lg appearance-none cursor-pointer accent-[#ff982b] hover:accent-[#ffc972] transition-all"
+                                className="w-full h-2 bg-[#27272a] rounded-lg appearance-none cursor-pointer transition-all glow-thumb bg-transparent focus:outline-none"
+                                style={{
+                                    background: `linear-gradient(to right, #ffc972 0%, #ff982b ${(Math.log(monthlyViews / 5000) / Math.log(2000)) * 100}%, #27272a ${(Math.log(monthlyViews / 5000) / Math.log(2000)) * 100}%, #27272a 100%)`,
+                                    boxShadow: '0 0 10px rgba(255, 152, 43, 0.2)'
+                                }}
                             />
                             <p className="text-xs text-[#52525b]">How many people see your offer each month?</p>
                         </div>
@@ -123,7 +185,7 @@ const RevenueCalculator = () => {
                             <div className="flex justify-between items-center">
                                 <label className="flex items-center gap-2 text-[#fcf0d4] font-medium">
                                     <MousePointerClick className="w-5 h-5 text-[#ff982b]" />
-                                    Booked Calls per 100K Views
+                                    Booked Calls/100K Views
                                 </label>
                                 <span className="text-white font-bold bg-white/5 px-3 py-1 rounded-lg border border-white/5">
                                     {bookedCallsPer100k}
@@ -131,12 +193,19 @@ const RevenueCalculator = () => {
                             </div>
                             <input
                                 type="range"
-                                min="30"
-                                max="1000"
-                                step="10"
-                                value={bookedCallsPer100k}
-                                onChange={(e) => setBookedCallsPer100k(Number(e.target.value))}
-                                className="w-full h-2 bg-[#27272a] rounded-lg appearance-none cursor-pointer accent-[#ff982b] hover:accent-[#ffc972] transition-all"
+                                min="0"
+                                max="100"
+                                step="0.1"
+                                value={100 * Math.pow((bookedCallsPer100k - 30) / 270, 1 / 1.585)}
+                                onChange={(e) => {
+                                    const val = 30 + 270 * Math.pow(e.target.value / 100, 1.585);
+                                    setBookedCallsPer100k(Math.round(val / 10) * 10);
+                                }}
+                                className="w-full h-2 bg-[#27272a] rounded-lg appearance-none cursor-pointer transition-all glow-thumb bg-transparent focus:outline-none"
+                                style={{
+                                    background: `linear-gradient(to right, #ffc972 0%, #ff982b ${100 * Math.pow((bookedCallsPer100k - 30) / 270, 1 / 1.585)}%, #27272a ${100 * Math.pow((bookedCallsPer100k - 30) / 270, 1 / 1.585)}%, #27272a 100%)`,
+                                    boxShadow: '0 0 10px rgba(255, 152, 43, 0.2)'
+                                }}
                             />
                             <p className="text-xs text-[#52525b]">How many calls do you book per 100,000 views?</p>
                         </div>
@@ -155,11 +224,15 @@ const RevenueCalculator = () => {
                             <input
                                 type="range"
                                 min="1"
-                                max="100"
+                                max="70"
                                 step="1"
                                 value={closeRate}
                                 onChange={(e) => setCloseRate(Number(e.target.value))}
-                                className="w-full h-2 bg-[#27272a] rounded-lg appearance-none cursor-pointer accent-[#ff982b] hover:accent-[#ffc972] transition-all"
+                                className="w-full h-2 bg-[#27272a] rounded-lg appearance-none cursor-pointer transition-all glow-thumb bg-transparent focus:outline-none"
+                                style={{
+                                    background: `linear-gradient(to right, #ffc972 0%, #ff982b ${((closeRate - 1) / (70 - 1)) * 100}%, #27272a ${((closeRate - 1) / (70 - 1)) * 100}%, #27272a 100%)`,
+                                    boxShadow: '0 0 10px rgba(255, 152, 43, 0.2)'
+                                }}
                             />
                             <p className="text-xs text-[#52525b]">Percentage of calls that turn into deals.</p>
                         </div>
@@ -170,14 +243,14 @@ const RevenueCalculator = () => {
                         initial={{ opacity: 0, x: 20 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: 0.4 }}
+                        transition={{ duration: 0.36, delay: 0.4 }}
                         className="relative h-full min-h-[500px] flex flex-col justify-center items-center bg-[#121212]/30 rounded-3xl border border-white/10 p-8 text-center overflow-hidden"
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-[#ff982b]/5 to-transparent rounded-3xl pointer-events-none"></div>
 
                         {/* Big Blurred Sparkle */}
                         <motion.div
-                            style={{ rotate: useTransform(useScroll().scrollY, [0, 1000], [0, 200]) }}
+                            style={{ rotate: useTransform(useScroll().scrollY, [0, 5000], [0, 1000]) }}
                             className="absolute -bottom-20 -right-20 text-[#ff982b] opacity-40 blur-[22px] pointer-events-none"
                         >
                             <motion.svg
@@ -191,7 +264,7 @@ const RevenueCalculator = () => {
 
                         {/* Smaller Lighter Sparkle - Center Left */}
                         <motion.div
-                            style={{ rotate: useTransform(useScroll().scrollY, [0, 1000], [0, -200]) }}
+                            style={{ rotate: useTransform(useScroll().scrollY, [0, 5000], [0, -1000]) }}
                             className="absolute top-1/2 -left-10 -translate-y-1/2 text-[#ffc972] opacity-30 blur-[11px] pointer-events-none"
                         >
                             <motion.svg
@@ -229,10 +302,14 @@ const RevenueCalculator = () => {
                                 </p>
                             </div>
                         </div>
+
+                        <p className="mt-6 text-sm text-[#a1a1aa]">
+                            *over the 90 days at this estimate you can make <span className="text-white font-medium">{formatCurrency(revenue * 3)}</span>
+                        </p>
                     </motion.div>
                 </div>
             </div>
-        </section>
+        </section >
     );
 };
 

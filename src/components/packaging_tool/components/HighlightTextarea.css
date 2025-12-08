@@ -1,0 +1,99 @@
+.highlight-textarea-container {
+    position: relative;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+}
+
+.highlight-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    overflow-y: scroll;
+    /* Force scrollbar to match textarea */
+    pointer-events: none;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 14px;
+    line-height: 1.5;
+    background: transparent;
+    /* Changed from rgba(255, 255, 255, 0.03) to avoid double background */
+    z-index: 1;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    box-sizing: border-box;
+    color: var(--text-primary);
+    opacity: 1;
+}
+
+/* Hide scrollbar for backdrop to avoid visual glitch, sync is handled by JS */
+.highlight-backdrop::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
+.highlight-content {
+    width: 100%;
+}
+
+.highlight-mention {
+    color: #ff982b;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(0, 230, 118, 0.3);
+}
+
+.highlight-textarea {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03) !important;
+    /* Moved background here */
+    color: transparent !important;
+    caret-color: var(--text-primary);
+
+    padding: 12px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 0;
+    overflow-y: scroll;
+    /* Force scrollbar */
+}
+
+.highlight-textarea:focus {
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.highlight-textarea::placeholder {
+    color: var(--text-secondary);
+}
+
+/* Custom Scrollbar */
+.highlight-textarea::-webkit-scrollbar {
+    width: 8px;
+}
+
+.highlight-textarea::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+}
+
+.highlight-textarea::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.highlight-textarea::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}

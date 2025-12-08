@@ -1,7 +1,7 @@
 import { animate, useMotionValue, useTransform, motion, useInView } from "framer-motion";
 import { useEffect, useRef } from "react";
 
-export default function Counter({ from, to, duration = 1.5 }) {
+export default function Counter({ from, to, duration = 0.9 }) {
     const ref = useRef(null);
     const isInView = useInView(ref, { once: true, margin: "-10px" });
     const count = useMotionValue(from);

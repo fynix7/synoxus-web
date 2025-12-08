@@ -1,0 +1,31 @@
+.settings-modal {
+    max-width: 400px;
+}
+
+.input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--text-secondary);
+    pointer-events: none;
+}
+
+.glass-input.with-padding {
+    padding-left: 36px;
+}
+
+.helper-text {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 6px;
+}
+
+.btn-primary.success {
+    background: var(--success);
+    color: white;
+}

@@ -143,10 +143,10 @@ ${formData.contactMethods.map(method => `${method}: ${formData.contactDetails[me
                                     />
                                 </div>
                                 <div className="space-y-4">
-                                    <label className="text-[#fcf0d4] text-lg font-medium">5. What is your primary goal with this channel?</label>
+                                    <label className="text-[#fcf0d4] text-lg font-medium">5. What do you hope to achieve with us?</label>
                                     <textarea
                                         className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-[#ff982b] focus:outline-none transition-colors min-h-[100px] placeholder:text-white/20"
-                                        placeholder="e.g. Lead generation, Brand awareness, Ad revenue..."
+                                        placeholder="Elevate branding, Achieve $30K/mo, Hit 100K Subscribers"
                                         value={formData.primaryGoal}
                                         onChange={(e) => handleInputChange('primaryGoal', e.target.value)}
                                     />

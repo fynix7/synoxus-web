@@ -1,0 +1,90 @@
+@import './styles/variables.css';
+
+/* Copied from index.css */
+/* Utilities */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-lg);
+}
+
+.btn-primary {
+  background: var(--text-primary);
+  color: #000;
+  /* Force black text for contrast on white/light primary button */
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-glass {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  color: var(--text-primary);
+  padding: 10px 20px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.btn-glass:hover {
+  background: var(--glass-bg-hover);
+}
+
+/* Copied from App.css */
+.app-container {
+  min-height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  color: var(--text-primary);
+  position: relative;
+}
+
+.main-content {
+  flex: 1;
+  padding: 32px 32px 32px 100px;
+  /* Increased left padding */
+  display: flex;
+  justify-content: flex-start;
+  overflow: visible;
+  min-height: 100%;
+}
+
+/* Global Settings Button */
+.global-settings-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(30, 30, 30, 0.8) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  z-index: 1000;
+}
+
+.global-settings-btn:hover {
+  transform: scale(1.1);
+  background: white !important;
+  color: black;
+  box-shadow: 0 8px 30px rgba(255, 255, 255, 0.2);
+}
