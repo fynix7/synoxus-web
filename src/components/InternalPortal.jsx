@@ -181,10 +181,10 @@ const InternalPortal = ({ onExit }) => {
     const [editingTask, setEditingTask] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [view, setView] = useState('menu');
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [clientKey, setClientKey] = useState('');
+    const [isAuthenticated, setIsAuthenticated] = useState(true); // Default to true for now
+    const [clientKey, setClientKey] = useState('synoxus'); // Default to synoxus
     const [userKey, setUserKey] = useState('');
-    const [userRole, setUserRole] = useState('employee');
+    const [userRole, setUserRole] = useState('admin'); // Default to admin
     const [error, setError] = useState(false);
 
     // New State for ClickUp-like features
