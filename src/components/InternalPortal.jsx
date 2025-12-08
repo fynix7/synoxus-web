@@ -849,7 +849,7 @@ const InternalPortal = ({ onExit }) => {
                             </div>
                         )}
 
-                        {view === 'packaging' && <PackagingTool />}
+
                         {view === 'messaging' && <ChatConfiguration />}
                         {view === 'note_taker' && <NoteTaker />}
 
