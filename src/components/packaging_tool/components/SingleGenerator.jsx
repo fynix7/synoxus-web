@@ -464,40 +464,31 @@ const SingleGenerator = ({ onRequestSettings, activeTab, onTabChange, extraHeade
     return (
         <div className="generator-container" onPaste={handlePaste} tabIndex="0" style={{ outline: 'none', gridTemplateColumns: '340px 1fr' }}>
             {/* Characters Button - Top Left */}
-            {createPortal(
-                <button
-                    className="characters-btn"
-                    onClick={() => setShowCharManager(true)}
-                    title="Manage Characters"
-                >
-                    <Users size={24} />
-                </button>,
-                document.body
-            )}
+            <button
+                className="characters-btn"
+                onClick={() => setShowCharManager(true)}
+                title="Manage Characters"
+            >
+                <Users size={24} />
+            </button>
 
             {/* Saved Button */}
-            {createPortal(
-                <button
-                    className="saved-btn"
-                    onClick={() => setShowSaved(true)}
-                    title="View Saved"
-                >
-                    <Bookmark size={20} />
-                </button>,
-                document.body
-            )}
+            <button
+                className="saved-btn"
+                onClick={() => setShowSaved(true)}
+                title="View Saved"
+            >
+                <Bookmark size={20} />
+            </button>
 
             {/* History Button */}
-            {createPortal(
-                <button
-                    className="history-btn"
-                    onClick={() => setShowHistory(true)}
-                    title="View History"
-                >
-                    <Clock size={20} />
-                </button>,
-                document.body
-            )}
+            <button
+                className="history-btn"
+                onClick={() => setShowHistory(true)}
+                title="View History"
+            >
+                <Clock size={20} />
+            </button>
 
             {/* Main Content */}
             <div className="panels-column input-column" style={{ width: '340px', minWidth: '340px' }}>

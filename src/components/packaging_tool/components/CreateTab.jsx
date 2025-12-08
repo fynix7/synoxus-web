@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
 import SingleGenerator from './SingleGenerator';
 import TemplateGenerator from './TemplateGenerator';
 import Remover from './Remover';
@@ -45,16 +44,13 @@ const CreateTab = ({ onRequestSettings, activeTab, onTabChange, onRateImage }) =
     return (
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
             {/* Templates Button - Always visible in Create Tab */}
-            {createPortal(
-                <button
-                    className="templates-btn"
-                    onClick={() => setShowTemplateManager(true)}
-                    title="Manage Templates"
-                >
-                    <LayoutTemplate size={24} />
-                </button>,
-                document.body
-            )}
+            <button
+                className="templates-btn"
+                onClick={() => setShowTemplateManager(true)}
+                title="Manage Templates"
+            >
+                <LayoutTemplate size={24} />
+            </button>
 
             {subMode === 'remix' ? (
                 <SingleGenerator

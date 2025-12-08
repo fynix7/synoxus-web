@@ -5,7 +5,7 @@
     gap: 24px;
     width: 100%;
     border-color: rgba(255, 255, 255, 0.2);
-    transform: translateY(-1px);
+    /* transform: translateY(-1px); Removed to prevent stacking context issues */
 }
 
 /* Common button style */
@@ -25,9 +25,15 @@
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
     box-shadow: 0 0 20px rgba(255, 152, 43, 0.3);
-    z-index: 50;
+    z-index: 1000;
+    /* High z-index to ensure visibility */
     overflow: hidden;
-    position: absolute;
+    position: fixed;
+    /* Fixed positioning relative to viewport */
+    bottom: 28px;
+    /* Aligned at bottom */
+    top: auto;
+    left: auto;
 }
 
 .characters-btn::before,
@@ -39,12 +45,74 @@
     top: 0;
     left: 0;
     width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transform: translateX(-100%);
+    transition: transform 0s;
+}
+
+.characters-btn:hover,
+.templates-btn:hover,
+.history-btn:hover,
+.saved-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(255, 152, 43, 0.5);
+    color: #050505;
+}
+
+.characters-btn:hover::before,
+.templates-btn:hover::before,
+.history-btn:hover::before,
+.saved-btn:hover::before {
+    transform: translateX(100%);
+    transition: transform 0.5s;
+}
+
+/* Specific Positioning */
+.saved-btn {
+    right: 96px;
+}
+
+.history-btn {
+    right: 160px;
+}
+
+.templates-btn {
+    right: 224px;
+}
+
+.characters-btn {
+    right: 288px;
+}
+
+.icon-btn-glass {
+    background: rgba(255, 255, 255, 0.9);
+    color: black;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.icon-btn-glass:hover {
+    transform: scale(1.1);
+    background: white;
+}
+
+.panels-column {
+    display: flex;
+    flex-direction: column;
     gap: 24px;
     overflow-y: visible;
     overflow-x: visible;
     padding-right: 8px;
     padding-top: 20px;
-    /* Reduced top padding */
     padding-bottom: 120px;
 }
 
@@ -95,8 +163,6 @@
     z-index: 999;
     background: transparent;
 }
-
-
 
 .hex-input-wrapper {
     display: flex;
@@ -233,6 +299,7 @@
 .sub-mode-btn:hover {
     color: white;
     background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
 }
 
 .sub-mode-btn.active {
@@ -440,6 +507,61 @@ input[type="text"]:focus,
     font-weight: 600;
     cursor: pointer;
     display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(255, 152, 43, 0.3);
+}
+
+.generate-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.5s;
+}
+
+.generate-btn:hover {
+    transform: scale(1.04);
+    filter: saturate(1.15);
+    box-shadow: 0 0 30px rgba(255, 152, 43, 0.5);
+    background: linear-gradient(to bottom, #ff982b, #ffc972);
+    color: #050505;
+}
+
+.generate-btn:hover::before {
+    transform: translateX(100%);
+}
+
+.generate-btn:active {
+    transform: scale(0.98);
+}
+
+.generate-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Result Panel */
+.result-panel {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.result-image {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
     border-radius: var(--radius-md);
     box-shadow: none;
 }
