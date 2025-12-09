@@ -176,11 +176,11 @@ const Column = ({ title, id, tasks, onAdd, onDelete, onMove, onEdit, userRole, c
     );
 };
 
-const InternalPortal = ({ onExit }) => {
+const InternalPortal = ({ onExit, initialView = 'menu' }) => {
     const [columns, setColumns] = useState([]);
     const [editingTask, setEditingTask] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [view, setView] = useState('menu');
+    const [view, setView] = useState(initialView);
     const [isAuthenticated, setIsAuthenticated] = useState(true); // Default to true for now
     const [clientKey, setClientKey] = useState('synoxus'); // Default to synoxus
     const [userKey, setUserKey] = useState('');

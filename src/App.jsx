@@ -9,17 +9,22 @@ import Footer from './components/Footer';
 
 function App() {
   const [isPortalOpen, setIsPortalOpen] = useState(false);
+  const [portalInitialView, setPortalInitialView] = useState('menu');
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatMode, setChatMode] = useState('default'); // 'default' | 'qualification'
 
   React.useEffect(() => {
     if (window.location.pathname === '/portal') {
       setIsPortalOpen(true);
+      setPortalInitialView('menu');
+    } else if (window.location.pathname === '/thumbnail-generator') {
+      setIsPortalOpen(true);
+      setPortalInitialView('packaging');
     }
   }, []);
 
   if (isPortalOpen) {
-    return <InternalPortal onExit={() => {
+    return <InternalPortal initialView={portalInitialView} onExit={() => {
       setIsPortalOpen(false);
       window.history.pushState({}, '', '/');
     }} />;
