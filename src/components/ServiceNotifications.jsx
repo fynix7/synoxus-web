@@ -143,39 +143,32 @@ const ServiceNotifications = ({ isOpen, setIsOpen, mode = 'default' }) => {
                     welcome: qualPersona.welcomeMessage
                 };
             } else {
-                // Default Persona (Yohan/Laura) - Dynamic
-                const savedPersonas = localStorage.getItem('synoxus_chat_personas');
-                const personas = savedPersonas ? JSON.parse(savedPersonas) : [];
-
-                // Fallback defaults if no config
-                const defaultYohan = {
-                    name: 'Yohan',
-                    role: null,
-                    welcomeMessage: "Hey, Yohan here. Let me know if you have any questions. If I'm free I'll try to reply as fast as I can."
-                };
-                const defaultLaura = {
+                // Laura (Day: 7 AM - 7 PM) & Max (Night: 7 PM - 7 AM)
+                const lauraPersona = {
                     name: 'Laura',
-                    role: "Yohan's Assistant",
-                    welcomeMessage: "Hi, I'm Laura, Yohan's assistant. Yohan is currently offline. How can I help you today?"
+                    role: 'Client Success',
+                    welcomeMessage: "Hi, I'm Laura from Client Success. How can I help you today?"
+                };
+                const maxPersona = {
+                    name: 'Max',
+                    role: 'Client Success',
+                    welcomeMessage: "Hey, Max from Client Success here. What can I do for you?"
                 };
 
-                // Find configured personas or use defaults
-                const yohanPersona = personas.find(p => p.name === 'Yohan') || defaultYohan;
-                const lauraPersona = personas.find(p => p.name === 'Laura') || defaultLaura;
-
-                if (hour >= 7 && hour < 23) {
-                    persona = {
-                        name: yohanPersona.name,
-                        initial: yohanPersona.name.charAt(0),
-                        role: yohanPersona.role,
-                        welcome: yohanPersona.welcomeMessage
-                    };
-                } else {
+                // Check time (7 AM to 7 PM is Laura, else Max)
+                if (hour >= 7 && hour < 19) {
                     persona = {
                         name: lauraPersona.name,
                         initial: lauraPersona.name.charAt(0),
                         role: lauraPersona.role,
                         welcome: lauraPersona.welcomeMessage
+                    };
+                } else {
+                    persona = {
+                        name: maxPersona.name,
+                        initial: maxPersona.name.charAt(0),
+                        role: maxPersona.role,
+                        welcome: maxPersona.welcomeMessage
                     };
                 }
             }
@@ -214,6 +207,12 @@ const ServiceNotifications = ({ isOpen, setIsOpen, mode = 'default' }) => {
     // Status Logic
     React.useEffect(() => {
         setStatus('online');
+
+        // If in qualification mode ("Work with Us"), NEVER go offline
+        if (mode === 'qualification') {
+            return;
+        }
+
         const toOfflineTimer = setTimeout(() => {
             const offlineMinutes = Math.floor(Math.random() * 3) + 2;
             const offlineDuration = offlineMinutes * 60 * 1000;

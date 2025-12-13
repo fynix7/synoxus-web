@@ -10,7 +10,7 @@ import MentionInput from './MentionInput';
 import SavedModal from './SavedModal';
 import DrawingModal from './DrawingModal';
 import { saveItem } from '../services/savedStore';
-import { Upload, Palette, Wand2, Plus, X, Clock, Users, Bookmark, Heart, Download as DownloadIcon, GitBranch, Brush, Link, RefreshCw, Star, Pentagon, Maximize, Copy, Type, LayoutTemplate, Frame, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Upload, Palette, Wand2, Plus, X, Clock, Users, Bookmark, Heart, Download as DownloadIcon, GitBranch, Brush, Link, RefreshCw, Star, Pentagon, Maximize, Copy, Type, LayoutTemplate, Frame, ThumbsUp, ThumbsDown, Image as ImageIcon, AlertTriangle } from 'lucide-react';
 import { createMaskFromBlue, createCleanPlate } from '../utils/maskUtils';
 import { extractYoutubeThumbnail, fetchImageAsBlob } from '../utils/youtubeUtils';
 import { queueStore } from '../services/queueStore';
@@ -38,6 +38,7 @@ const SingleGenerator = ({ onRequestSettings, activeTab, onTabChange, extraHeade
     const [primaryColor, setPrimaryColor] = useState('#0071e3');
     const [secondaryColor, setSecondaryColor] = useState('#ff3b30');
     const [useSecondaryColor, setUseSecondaryColor] = useState(false);
+    const [useBrandColors, setUseBrandColors] = useState(true);
 
     const [previewImage, setPreviewImage] = useState(null);
     const [fullscreenImage, setFullscreenImage] = useState(null);
@@ -227,10 +228,10 @@ const SingleGenerator = ({ onRequestSettings, activeTab, onTabChange, extraHeade
                 apiParams: {
                     topic: videoTitle, // Pass video title as topic
                     instructions: finalInstructions,
-                    brandColors: {
+                    brandColors: useBrandColors ? {
                         primary: primaryColor,
                         secondary: useSecondaryColor ? secondaryColor : null
-                    },
+                    } : null,
                     characterImages: characterFaces,
                     refThumbs: currentThumbs.map(t => t.preview), // Keep passing previews for reference
                     baseImage, // Pass the clean base image
@@ -240,10 +241,10 @@ const SingleGenerator = ({ onRequestSettings, activeTab, onTabChange, extraHeade
                 meta: {
                     topic: videoTitle || (finalInstructions.split(' ').slice(0, 5).join(' ') + '...'),
                     instructions: finalInstructions,
-                    brandColors: {
+                    brandColors: useBrandColors ? {
                         primary: primaryColor,
                         secondary: useSecondaryColor ? secondaryColor : null
-                    }
+                    } : null
                 }
             });
 
@@ -603,91 +604,103 @@ const SingleGenerator = ({ onRequestSettings, activeTab, onTabChange, extraHeade
 
                         {/* Brand Colors */}
                         <div className="input-group">
-                            <label>Brand Colors</label>
-                            <div className="colors-container-row">
-                                <div className="color-wrapper" style={{ position: 'relative' }}>
-                                    <button
-                                        className="color-swatch-btn"
-                                        style={{ backgroundColor: primaryColor }}
-                                        onClick={() => setActiveColorPicker(activeColorPicker === 'primary' ? null : 'primary')}
-                                    />
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <label style={{ margin: 0 }}>Brand Colors</label>
+                                <label className="toggle-switch">
                                     <input
-                                        type="text"
-                                        className="color-hex-input-compact"
-                                        value={primaryColor}
-                                        onChange={(e) => setPrimaryColor(e.target.value)}
+                                        type="checkbox"
+                                        checked={useBrandColors}
+                                        onChange={(e) => setUseBrandColors(e.target.checked)}
                                     />
-                                    {activeColorPicker === 'primary' && (
-                                        <>
-                                            <div className="color-picker-backdrop" onClick={() => setActiveColorPicker(null)} />
-                                            <div className="color-picker-dropdown" onClick={e => e.stopPropagation()}>
-                                                <HexColorPicker color={primaryColor} onChange={setPrimaryColor} />
-                                                <div className="hex-input-wrapper">
-                                                    <span>#</span>
-                                                    <input
-                                                        type="text"
-                                                        value={primaryColor.replace('#', '')}
-                                                        onChange={(e) => setPrimaryColor(`#${e.target.value} `)}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-
-                                {/* Secondary Color or Add Button */}
-                                {useSecondaryColor ? (
+                                    <span className="slider round"></span>
+                                </label>
+                            </div>
+                            {useBrandColors && (
+                                <div className="colors-container-row">
                                     <div className="color-wrapper" style={{ position: 'relative' }}>
                                         <button
                                             className="color-swatch-btn"
-                                            style={{ backgroundColor: secondaryColor }}
-                                            onClick={() => setActiveColorPicker(activeColorPicker === 'secondary' ? null : 'secondary')}
+                                            style={{ backgroundColor: primaryColor }}
+                                            onClick={() => setActiveColorPicker(activeColorPicker === 'primary' ? null : 'primary')}
                                         />
                                         <input
                                             type="text"
                                             className="color-hex-input-compact"
-                                            value={secondaryColor}
-                                            onChange={(e) => setSecondaryColor(e.target.value)}
+                                            value={primaryColor}
+                                            onChange={(e) => setPrimaryColor(e.target.value)}
                                         />
-                                        <button
-                                            onClick={() => setUseSecondaryColor(false)}
-                                            style={{
-                                                background: 'transparent',
-                                                border: 'none',
-                                                color: 'var(--text-secondary)',
-                                                cursor: 'pointer',
-                                                padding: '4px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center'
-                                            }}
-                                        >
-                                            <X size={16} />
-                                        </button>
-
-                                        {activeColorPicker === 'secondary' && (
+                                        {activeColorPicker === 'primary' && (
                                             <>
                                                 <div className="color-picker-backdrop" onClick={() => setActiveColorPicker(null)} />
                                                 <div className="color-picker-dropdown" onClick={e => e.stopPropagation()}>
-                                                    <HexColorPicker color={secondaryColor} onChange={setSecondaryColor} />
+                                                    <HexColorPicker color={primaryColor} onChange={setPrimaryColor} />
                                                     <div className="hex-input-wrapper">
                                                         <span>#</span>
                                                         <input
                                                             type="text"
-                                                            value={secondaryColor.replace('#', '')}
-                                                            onChange={(e) => setSecondaryColor(`#${e.target.value} `)}
+                                                            value={primaryColor.replace('#', '')}
+                                                            onChange={(e) => setPrimaryColor(`#${e.target.value} `)}
                                                         />
                                                     </div>
                                                 </div>
                                             </>
                                         )}
                                     </div>
-                                ) : (
-                                    <div className="mini-upload" onClick={() => setUseSecondaryColor(true)}>
-                                        <span>+ Add Color</span>
-                                    </div>
-                                )}
-                            </div>
+
+                                    {/* Secondary Color or Add Button */}
+                                    {useSecondaryColor ? (
+                                        <div className="color-wrapper" style={{ position: 'relative' }}>
+                                            <button
+                                                className="color-swatch-btn"
+                                                style={{ backgroundColor: secondaryColor }}
+                                                onClick={() => setActiveColorPicker(activeColorPicker === 'secondary' ? null : 'secondary')}
+                                            />
+                                            <input
+                                                type="text"
+                                                className="color-hex-input-compact"
+                                                value={secondaryColor}
+                                                onChange={(e) => setSecondaryColor(e.target.value)}
+                                            />
+                                            <button
+                                                onClick={() => setUseSecondaryColor(false)}
+                                                style={{
+                                                    background: 'transparent',
+                                                    border: 'none',
+                                                    color: 'var(--text-secondary)',
+                                                    cursor: 'pointer',
+                                                    padding: '4px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center'
+                                                }}
+                                            >
+                                                <X size={16} />
+                                            </button>
+
+                                            {activeColorPicker === 'secondary' && (
+                                                <>
+                                                    <div className="color-picker-backdrop" onClick={() => setActiveColorPicker(null)} />
+                                                    <div className="color-picker-dropdown" onClick={e => e.stopPropagation()}>
+                                                        <HexColorPicker color={secondaryColor} onChange={setSecondaryColor} />
+                                                        <div className="hex-input-wrapper">
+                                                            <span>#</span>
+                                                            <input
+                                                                type="text"
+                                                                value={secondaryColor.replace('#', '')}
+                                                                onChange={(e) => setSecondaryColor(`#${e.target.value} `)}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="mini-upload" onClick={() => setUseSecondaryColor(true)}>
+                                            <span>+ Add Color</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* Variations */}
@@ -705,46 +718,65 @@ const SingleGenerator = ({ onRequestSettings, activeTab, onTabChange, extraHeade
 
                         {/* Magic Canvas Button - Prominent */}
                         <div style={{ marginTop: '12px', marginBottom: '8px' }}>
-                            <button
-                                className="btn-glass"
-                                onClick={() => {
-                                    const refImg = refThumbs.length > 0 ? refThumbs[0].preview : null;
-                                    setDrawingImage(refImg);
-                                    setShowDrawing(true);
-                                }}
-                                style={{
-                                    width: '100%',
-                                    height: '50px',
-                                    borderRadius: '12px',
+                            <div style={{ position: 'relative' }}>
+                                <button
+                                    className="btn-glass"
+                                    onClick={() => {
+                                        const refImg = refThumbs.length > 0 ? refThumbs[0].preview : null;
+                                        setDrawingImage(refImg);
+                                        setShowDrawing(true);
+                                    }}
+                                    style={{
+                                        width: '100%',
+                                        height: '50px',
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '10px',
+                                        background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                                        border: '1px solid rgba(255,255,255,0.2)',
+                                        color: 'white',
+                                        fontSize: '14px',
+                                        fontWeight: 'bold',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)'}
+                                >
+                                    <ImageIcon size={20} style={{ color: '#ff982b' }} />
+                                    <span>Magic Canvas</span>
+                                </button>
+                                {/* WIP Badge */}
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '-8px',
+                                    right: '-8px',
+                                    background: '#ff3b30',
+                                    color: 'white',
+                                    fontSize: '10px',
+                                    fontWeight: 'bold',
+                                    padding: '2px 6px',
+                                    borderRadius: '10px',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '10px',
-                                    background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
-                                    border: '1px solid rgba(255,255,255,0.2)',
-                                    color: 'white',
-                                    fontSize: '14px',
-                                    fontWeight: 'bold',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s ease'
-                                }}
-                                onMouseEnter={(e) => e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)'}
-                                onMouseLeave={(e) => e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)'}
-                            >
-                                <div style={{
-                                    width: '24px',
-                                    height: '24px',
-                                    backgroundColor: '#ff982b',
-                                    maskImage: 'url(/canvas-icon.png)',
-                                    maskSize: 'contain',
-                                    maskRepeat: 'no-repeat',
-                                    maskPosition: 'center',
-                                    WebkitMaskImage: 'url(/canvas-icon.png)',
-                                    WebkitMaskSize: 'contain',
-                                    WebkitMaskRepeat: 'no-repeat',
-                                    WebkitMaskPosition: 'center'
-                                }} />
-                            </button>
+                                    gap: '2px'
+                                }}>
+                                    <AlertTriangle size={8} />
+                                    WIP
+                                </div>
+                            </div>
+                            <p style={{
+                                fontSize: '11px',
+                                color: 'var(--text-secondary)',
+                                textAlign: 'center',
+                                marginTop: '6px',
+                                fontStyle: 'italic'
+                            }}>
+                                * Experimental feature. Results may vary.
+                            </p>
                         </div>
 
                         {/* Generate Button */}

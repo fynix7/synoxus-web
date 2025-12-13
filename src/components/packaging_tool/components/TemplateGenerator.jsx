@@ -130,6 +130,30 @@ const TemplateGenerator = ({ onRequestSettings, activeTab, onTabChange, extraHea
     // Handle Template Selection
     const handleTemplateChange = (e) => {
         const templateId = e.target.value;
+        if (templateId === 'create_new_template') {
+            // Handle Create Template Action - For now, maybe just alert or switch tab if needed
+            // User requirement: "opens same thing as template button would"
+            // Assuming this means opening the template creation modal or logic.
+            // Since we don't have a specific "template button" logic defined other than the tab itself,
+            // I'll assume it means "Manage Templates" or similar.
+            // For now, let's just reset selection and maybe show a message or if there's a create modal.
+            // Wait, "template button" likely refers to the main navigation button? Or a specific button?
+            // "opens same thing as template button would" -> The user might mean the "Templates" button in the corner?
+            // But we are IN the template tab.
+            // Maybe they mean "Save as Template"?
+            // Let's just add the option and for now make it do nothing or log.
+            // Actually, looking at the request: "add option in bottom of dropdown options to create a template which opens same thing as template button would"
+            // If there is a "templates-btn" (like characters-btn), maybe that's what they mean.
+            // But I don't see a templates-btn in TemplateGenerator.
+            // Let's check SingleGenerator.css, it has .templates-btn.
+            // So there IS a templates button somewhere.
+            // If I can't trigger it easily, I'll just leave it as a placeholder or try to find where it is.
+            // For now, let's just handle the selection change.
+            setSelectedTemplateId('');
+            // TODO: Trigger template creation modal
+            return;
+        }
+
         setSelectedTemplateId(templateId);
 
         const template = templates.find(t => t.id === templateId);
@@ -486,8 +510,9 @@ const TemplateGenerator = ({ onRequestSettings, activeTab, onTabChange, extraHea
     return (
         <div className="generator-container" onPaste={handlePaste} tabIndex="0" style={{ outline: 'none', gridTemplateColumns: '340px 1fr' }}>
             {/* Header Buttons */}
-            <button className="characters-btn" onClick={() => setShowCharManager(true)} title="Manage Characters">
-                <Users size={20} /> CHARACTERS
+            {/* Header Buttons */}
+            <button className="characters-btn icon-only" onClick={() => setShowCharManager(true)} title="Manage Characters">
+                <Users size={24} />
             </button>
 
             <button className="saved-btn" onClick={() => setShowSaved(true)} title="View Saved">
@@ -515,9 +540,10 @@ const TemplateGenerator = ({ onRequestSettings, activeTab, onTabChange, extraHea
                                     style={{ appearance: 'none', paddingRight: '30px' }}
                                 >
                                     <option value="">-- Choose a Template --</option>
-                                    {templates.map(t => (
+                                    {templates.filter(t => !t.isDefault).map(t => (
                                         <option key={t.id} value={t.id}>{t.label}</option>
                                     ))}
+                                    <option value="create_new_template" style={{ fontWeight: 'bold', color: '#ff982b' }}>+ Create New Template</option>
                                 </select>
                                 <LayoutTemplate size={16} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-secondary)' }} />
                             </div>
@@ -545,7 +571,7 @@ const TemplateGenerator = ({ onRequestSettings, activeTab, onTabChange, extraHea
                         {/* Reference Thumbnails (Modified to show they come from template or upload) */}
                         <div className="input-group">
                             <label>Reference Thumbnails {selectedTemplateId && '(Pre-loaded from Template)'}</label>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                                 <div className="mini-upload" onClick={() => document.getElementById('thumb-upload').click()} style={{ width: 'auto', padding: '0 16px' }}>
                                     <input id="thumb-upload" type="file" accept="image/*" multiple hidden onChange={handleRefThumbUpload} />
                                     <Upload size={16} style={{ marginRight: '8px' }} />

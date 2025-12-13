@@ -422,15 +422,15 @@ const Remover = ({ activeTab, onTabChange, extraHeaderContent }) => {
 
     return (
         <div className="generator-container" onPaste={handlePaste} tabIndex="0" style={{ outline: 'none', gridTemplateColumns: '340px 1fr' }}>
-            {/* Characters Button - Top Left */}
-            <button
+            {/* Characters Button - Hidden in Remover */}
+            {/* <button
                 className="characters-btn"
                 onClick={() => setShowCharManager(true)}
                 title="Manage Characters"
             >
                 <Users size={20} />
                 CHARACTERS
-            </button>
+            </button> */}
 
             {/* Saved Button */}
             <button

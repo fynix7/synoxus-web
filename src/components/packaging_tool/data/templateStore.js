@@ -1,4 +1,5 @@
 import { openDB } from 'idb';
+import { initDB } from '../services/db';
 
 const DB_NAME = 'ThumbnailGeneratorDB';
 const STORE_NAME = 'templates';

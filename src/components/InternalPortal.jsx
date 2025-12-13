@@ -4,7 +4,8 @@ import { supabase } from '../supabaseClient';
 import PackagingTool from './packaging_tool/PackagingTool';
 import ChatConfiguration from './ChatConfiguration';
 import NoteTaker from './NoteTaker';
-import { Plus, X, Trash2, ChevronLeft, ChevronRight, Save, LogOut, LayoutGrid, Package, MessageSquare, ArrowLeft, ArrowRight, Database, GraduationCap, Calendar, Tag, Clock, Users, Settings, Edit3, CheckSquare, Rocket, FileText, Video, User, Fingerprint, Briefcase, Globe, Search, Lightbulb, Mic, Image, TrendingUp, BookOpen } from 'lucide-react';
+import { Plus, X, Trash2, ChevronLeft, ChevronRight, Save, LogOut, LayoutGrid, Package, MessageSquare, ArrowLeft, ArrowRight, Database, GraduationCap, Calendar, Tag, Clock, Users, Settings, Edit3, CheckSquare, Rocket, FileText, Video, User, Fingerprint, Briefcase, Globe, Search, Lightbulb, Mic, Image, TrendingUp, BookOpen, Palette, Type, Upload, LayoutTemplate, Target, Eye, Heart, Zap, Swords } from 'lucide-react';
+import { HexColorPicker } from "react-colorful";
 
 const PRIORITY_TAGS = {
     'Urgent': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
@@ -192,6 +193,40 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
     const [isManageUsersOpen, setIsManageUsersOpen] = useState(false);
     const [availableUsers, setAvailableUsers] = useState([]);
     const [newUser, setNewUser] = useState({ name: '', role: '' });
+    const [isChatEnabled, setIsChatEnabled] = useState(() => {
+        const saved = localStorage.getItem('synoxus_chat_enabled');
+        return saved !== null ? JSON.parse(saved) : true;
+    });
+
+    useEffect(() => {
+        localStorage.setItem('synoxus_chat_enabled', JSON.stringify(isChatEnabled));
+    }, [isChatEnabled]);
+
+    // Sync view with initialView prop
+    useEffect(() => {
+        setView(initialView);
+    }, [initialView]);
+
+    // Brand Identity State
+    const [primaryColor, setPrimaryColor] = useState(() => localStorage.getItem('brandPrimaryColor') || '#ff982b');
+    const [activeColorPicker, setActiveColorPicker] = useState(false);
+    const [headerFontName, setHeaderFontName] = useState('');
+    const [contentFontName, setContentFontName] = useState('');
+    const [headerFontFile, setHeaderFontFile] = useState(null);
+    const [contentFontFile, setContentFontFile] = useState(null);
+
+    // Sync Brand Color
+    useEffect(() => {
+        localStorage.setItem('brandPrimaryColor', primaryColor);
+    }, [primaryColor]);
+
+    const handleFontUpload = (e, type) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (type === 'header') setHeaderFontFile(file.name);
+            else setContentFontFile(file.name);
+        }
+    };
 
     // Fetch Columns, Tasks & Users
     useEffect(() => {
@@ -500,13 +535,13 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                         <span className="font-bold text-black text-xs">S</span>
                     </div>
                     <h1 className="font-medium text-lg tracking-tight">
-                        <span onClick={onExit} className="cursor-pointer hover:text-[#ff982b] transition-colors">Synoxus</span> <span className="text-[#52525b] font-light">/ {isAuthenticated ? (view === 'menu' ? 'Portal' : view === 'crm' ? 'CRM' : view === 'packaging' ? 'Thumbnail Generator' : view === 'messaging' ? 'Chat Configuration' : view === 'note_taker' ? 'Note Taker' : view === 'vault' ? 'Growth Vault' : view === 'course' ? 'Course' : view === 'onboarding' ? 'Onboarding' : view === 'brand_sheets' ? 'Brand Sheets' : view === 'masterclass' ? 'Masterclass' : 'Sheet') : 'Login'}</span>
+                        <span onClick={() => isAuthenticated ? setView('menu') : onExit()} className="cursor-pointer hover:text-[#ff982b] transition-colors">Synoxus</span> <span className="text-[#52525b] font-light">/ {isAuthenticated ? (view === 'menu' ? 'Portal' : view === 'crm' ? 'CRM' : view === 'packaging' ? 'Thumbnail Generator' : view === 'messaging' ? 'Chat Configuration' : view === 'note_taker' ? 'Note Taker' : view === 'vault' ? 'Growth Vault' : view === 'course' ? 'Course' : view === 'onboarding' ? 'Onboarding' : view === 'brand_identity' ? 'Brand Identity' : view === 'strategic_identity' ? 'Strategic Identity' : view === 'masterclass' ? 'Masterclass' : view === 'youtube_masterclass' ? 'YouTube Masterclass' : view === 'short_form_scribe' ? 'ShortForm Scribe' : 'Sheet') : 'Login'}</span>
                         {isAuthenticated && <span className="ml-2 text-[10px] font-bold uppercase bg-white/10 px-2 py-0.5 rounded text-[#71717a]">{userRole.replace('_', ' ')}</span>}
                     </h1>
                 </div>
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#181108]">
-                        <div className="w-2 h-2 rounded-full bg-[#4ade80] animate-pulse"></div>
+                        <div className="w-2 h-2 rounded-full bg-[#ffc175] animate-pulse"></div>
                         <span className="text-xs text-[#fcf0d4] font-medium">System Online</span>
                     </div>
                     <button
@@ -524,7 +559,11 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                 {view !== 'menu' && isAuthenticated && (
                     <button
                         onClick={() => {
-                            if (view.startsWith('brand_sheets_') && view !== 'brand_sheets') {
+                            if (['brand_identity', 'strategic_identity'].includes(view)) {
+                                setView('onboarding');
+                            } else if (['course', 'masterclass'].includes(view)) {
+                                setView('vault');
+                            } else if (view.startsWith('brand_sheets_') && view !== 'brand_sheets') {
                                 setView('brand_sheets');
                             } else {
                                 setView('menu');
@@ -594,28 +633,11 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                                 <Rocket className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
                                             </div>
                                             <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Onboarding</h3>
-                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Start here. Complete your initial setup and orientation.</p>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Start here. Setup your Brand, Business, and Industry identity.</p>
                                         </div>
-
                                     </motion.div>
 
-                                    {/* 2. Brand Sheets */}
-                                    <motion.div
-                                        whileHover={{ scale: 1.02 }}
-                                        onClick={() => setView('brand_sheets')}
-                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
-                                    >
-                                        <div>
-                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                <FileText className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
-                                            </div>
-                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Brand Sheets</h3>
-                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Define your identity. ICP, Brand Voice, and Competitor Analysis.</p>
-                                        </div>
-
-                                    </motion.div>
-
-                                    {/* 3. CRM */}
+                                    {/* 2. CRM */}
                                     <motion.div
                                         whileHover={{ scale: 1.02 }}
                                         onClick={() => setView('crm')}
@@ -628,23 +650,46 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                             <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">CRM</h3>
                                             <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Manage tasks, track progress, and organize your workflow.</p>
                                         </div>
-
                                     </motion.div>
 
-                                    {/* 4. Messaging Tool */}
+                                    {/* 3. Growth Vault */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        onClick={() => setView('vault')}
+                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                    >
+                                        <div>
+                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                <Database className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                            </div>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Growth Vault</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Access courses, masterclasses, and training resources.</p>
+                                        </div>
+                                    </motion.div>
+
+                                    {/* 4. Chat Configuration */}
                                     <motion.div
                                         whileHover={{ scale: 1.02 }}
                                         onClick={() => setView('messaging')}
-                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                        className="relative bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
                                     >
                                         <div>
                                             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
                                                 <MessageSquare className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
                                             </div>
                                             <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Chat Configuration</h3>
-                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Configure chat personas, instructions, and intervals.</p>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Manage chat personas, knowledge base, and settings.</p>
                                         </div>
 
+                                        <div className="absolute top-6 right-6 toggle-switch" onClick={(e) => e.stopPropagation()}>
+                                            <button
+                                                onClick={() => setIsChatEnabled(!isChatEnabled)}
+                                                className={`relative w-12 h-6 rounded-full transition-colors ${isChatEnabled ? 'bg-[#ffc175]' : 'bg-white/20'}`}
+                                                title={isChatEnabled ? "Chat Enabled" : "Chat Disabled"}
+                                            >
+                                                <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${isChatEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
+                                            </button>
+                                        </div>
                                     </motion.div>
 
                                     {/* 5. Note Taker */}
@@ -660,10 +705,9 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                             <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Note Taker</h3>
                                             <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Synthesize YouTube videos into comprehensive notes.</p>
                                         </div>
-
                                     </motion.div>
 
-                                    {/* 6. Packaging Tool */}
+                                    {/* 6. Thumbnail Generator */}
                                     <motion.div
                                         whileHover={{ scale: 1.02 }}
                                         onClick={() => setView('packaging')}
@@ -677,213 +721,563 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                             <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Advanced thumbnail generator and analyzer.</p>
                                         </div>
                                         <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
-
                                     </motion.div>
 
-                                    {/* 7. Instagram Masterclass */}
+                                    {/* 7. Landing Page Customization */}
                                     <motion.div
                                         whileHover={{ scale: 1.02 }}
-                                        onClick={() => setView('masterclass')}
                                         className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
                                     >
                                         <div>
                                             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                <Video className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                <LayoutTemplate className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
                                             </div>
-                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Instagram Masterclass</h3>
-                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Master the algorithm and grow your presence.</p>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Landing Page</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Customize landing page content and layout.</p>
                                         </div>
                                         <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
-
                                     </motion.div>
-
-                                    {/* 8. Growth Vault */}
+                                    {/* 8. ShortForm Scribe */}
                                     <motion.div
                                         whileHover={{ scale: 1.02 }}
-                                        onClick={() => setView('vault')}
+                                        onClick={() => setView('short_form_scribe')}
                                         className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
                                     >
                                         <div>
                                             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                <TrendingUp className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                <Edit3 className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
                                             </div>
-                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Growth Vault</h3>
-                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Hiring SOPs, Hooks, Training & Systems.</p>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">ShortForm Scribe</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Optimize scripts with power words, hooks, and value density.</p>
                                         </div>
                                         <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
-
-                                    </motion.div>
-
-                                    {/* 9. Appointment Setting Course */}
-                                    <motion.div
-                                        whileHover={{ scale: 1.02 }}
-                                        onClick={() => setView('course')}
-                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
-                                    >
-                                        <div>
-                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                <GraduationCap className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
-                                            </div>
-                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Appointment Setting Course</h3>
-                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Comprehensive training for setting appointments.</p>
-                                        </div>
-                                        <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
-
                                     </motion.div>
                                 </div>
                             </div>
                         )}
 
-                        {view === 'brand_sheets' && (
-                            <div className="flex-1 flex items-center justify-center overflow-y-auto">
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl w-full p-4">
-                                    {[
-                                        { id: 'icp', title: 'Dream Follower / ICP', icon: User, desc: 'Define your ideal customer profile.' },
-                                        { id: 'brand_id', title: 'Brand Identity', icon: Fingerprint, desc: 'Core values, mission, and vision.' },
-                                        { id: 'biz_id', title: 'Business Identity', icon: Briefcase, desc: 'Operational structure and goals.' },
-                                        { id: 'industry_id', title: 'Industry Identity', icon: Globe, desc: 'Market positioning and trends.' },
-                                        { id: 'competitor', title: 'Competitor Research', icon: Search, desc: 'Analyze market competition.' },
-                                        { id: 'opportunity', title: 'New Opportunity', icon: Lightbulb, desc: 'Identify growth areas.' },
-                                        { id: 'voice', title: 'Client Voice', icon: Mic, desc: 'Tone, style, and communication.' }
-                                    ].map((sheet) => (
+
+                        {
+                            view === 'onboarding' && (
+                                <div className="flex-1 flex items-center justify-center overflow-y-auto">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl w-full p-4">
+                                        {/* Brand Identity */}
                                         <motion.div
-                                            key={sheet.id}
                                             whileHover={{ scale: 1.02 }}
-                                            onClick={() => setView('sheet_wip')}
-                                            className="bg-[#121212] border border-white/10 p-8 rounded-2xl cursor-pointer transition-all group min-h-[250px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                            onClick={() => setView('brand_identity')}
+                                            className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
                                         >
                                             <div>
-                                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                    <sheet.icon className="w-6 h-6 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                    <Fingerprint className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
                                                 </div>
-                                                <h3 className="text-xl font-medium text-white mb-2 group-hover:text-black transition-colors">{sheet.title}</h3>
-                                                <p className="text-[#a1a1aa] text-sm leading-relaxed group-hover:text-black/70 transition-colors">{sheet.desc}</p>
+                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Brand Identity</h3>
+                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Colors, Fonts, and Visual Language.</p>
                                             </div>
                                         </motion.div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
 
-                        {view === 'crm' && (
-                            <div className="flex flex-col h-full pt-16">
-                                {/* CRM Toolbar */}
-                                {(userRole === 'master_admin' || userRole === 'admin') && (
-                                    <div className="flex items-center justify-between mb-4 px-1">
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => setIsEditMode(!isEditMode)}
-                                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black hover:shadow-[0_0_15px_rgba(255,152,43,0.3)] hover:scale-105 transition-all"
-                                            >
-                                                <Edit3 className="w-3.5 h-3.5" />
-                                                {isEditMode ? 'Done Editing' : 'Edit Board'}
-                                            </button>
-                                            <button
-                                                onClick={() => setIsManageUsersOpen(true)}
-                                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black hover:shadow-[0_0_15px_rgba(255,152,43,0.3)] hover:scale-105 transition-all"
-                                            >
-                                                <Users className="w-3.5 h-3.5" />
-                                                Manage Users
-                                            </button>
+                                        {/* Mission Statement */}
+                                        <motion.div
+                                            whileHover={{ scale: 1.02 }}
+                                            onClick={() => setView('mission_statement')}
+                                            className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                        >
+                                            <div>
+                                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                    <Target className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                </div>
+                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Mission Statement</h3>
+                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Why does your business exist?</p>
+                                            </div>
+                                        </motion.div>
+
+                                        {/* Vision Statement */}
+                                        <motion.div
+                                            whileHover={{ scale: 1.02 }}
+                                            onClick={() => setView('vision_statement')}
+                                            className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                        >
+                                            <div>
+                                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                    <Eye className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                </div>
+                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Vision Statement</h3>
+                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Where are you going?</p>
+                                            </div>
+                                        </motion.div>
+
+                                        {/* Core Values */}
+                                        <motion.div
+                                            whileHover={{ scale: 1.02 }}
+                                            onClick={() => setView('core_values')}
+                                            className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                        >
+                                            <div>
+                                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                    <Heart className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                </div>
+                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Core Values</h3>
+                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">What do you stand for?</p>
+                                            </div>
+                                        </motion.div>
+
+                                        {/* Target Audience */}
+                                        <motion.div
+                                            whileHover={{ scale: 1.02 }}
+                                            onClick={() => setView('target_audience')}
+                                            className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                        >
+                                            <div>
+                                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                    <Users className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                </div>
+                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Target Audience</h3>
+                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Who are you serving?</p>
+                                            </div>
+                                        </motion.div>
+
+                                        {/* USP */}
+                                        <motion.div
+                                            whileHover={{ scale: 1.02 }}
+                                            onClick={() => setView('usp')}
+                                            className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                        >
+                                            <div>
+                                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                    <Zap className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                </div>
+                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Unique Selling Proposition</h3>
+                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">What makes you different?</p>
+                                            </div>
+                                        </motion.div>
+
+                                        {/* Key Competitors */}
+                                        <motion.div
+                                            whileHover={{ scale: 1.02 }}
+                                            onClick={() => setView('key_competitors')}
+                                            className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                        >
+                                            <div>
+                                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                    <Swords className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                </div>
+                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Key Competitors</h3>
+                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Who are you up against?</p>
+                                            </div>
+                                        </motion.div>
+                                    </div>
+                                </div>
+                            )
+                        }
+
+                        {
+                            view === 'vault' && (
+                                <div className="flex-1 flex items-center justify-center overflow-y-auto">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full p-4">
+                                        {/* Appointment Setting Course */}
+                                        <motion.div
+                                            whileHover={{ scale: 1.02 }}
+                                            onClick={() => setView('course')}
+                                            className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                        >
+                                            <div>
+                                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                    <GraduationCap className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                </div>
+                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Appointment Setting Course</h3>
+                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Comprehensive training for setting appointments.</p>
+                                            </div>
+                                            <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
+                                        </motion.div>
+
+                                        {/* Instagram Masterclass */}
+                                        <motion.div
+                                            whileHover={{ scale: 1.02 }}
+                                            onClick={() => setView('masterclass')}
+                                            className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                        >
+                                            <div>
+                                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                    <Video className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                </div>
+                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Instagram Masterclass</h3>
+                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Master the algorithm and grow your presence.</p>
+                                            </div>
+                                            <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
+                                        </motion.div>
+
+                                        {/* YouTube Masterclass */}
+                                        <motion.div
+                                            whileHover={{ scale: 1.02 }}
+                                            onClick={() => setView('youtube_masterclass')}
+                                            className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                        >
+                                            <div>
+                                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                    <Video className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                </div>
+                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">YouTube Masterclass</h3>
+                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Complete guide to growing and monetizing your channel.</p>
+                                            </div>
+                                            <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
+                                        </motion.div>
+                                    </div>
+                                </div>
+                            )
+                        }
+
+                        {
+                            view === 'brand_identity' && (
+                                <div className="flex-1 overflow-y-auto p-6 max-w-6xl mx-auto w-full space-y-8">
+                                    <div className="flex flex-col gap-2 mb-4">
+                                        <h2 className="text-3xl font-bold text-white flex items-center gap-3">
+                                            <Palette className="text-[#ff982b]" />
+                                            Brand Identity
+                                        </h2>
+                                        <p className="text-[#a1a1aa]">Define your visual language: colors and typography.</p>
+                                    </div>
+
+                                    {/* Colors Section */}
+                                    <div className="bg-[#121212] border border-white/10 rounded-2xl p-8">
+                                        <h3 className="text-xl font-medium text-white mb-6 flex items-center gap-2">
+                                            <Palette className="w-5 h-5 text-[#ff982b]" />
+                                            Brand Colors
+                                        </h3>
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                            {/* Color Picker */}
+                                            <div className="space-y-4">
+                                                <label className="text-sm text-[#a1a1aa]">Primary Brand Color</label>
+                                                <div className="flex items-center gap-4 relative">
+                                                    <button
+                                                        className="w-16 h-16 rounded-xl cursor-pointer border-0 transition-transform hover:scale-105 shadow-lg"
+                                                        style={{ backgroundColor: primaryColor }}
+                                                        onClick={() => setActiveColorPicker(!activeColorPicker)}
+                                                    />
+                                                    <div className="flex flex-col">
+                                                        <span className="text-white font-mono uppercase">{primaryColor}</span>
+                                                        <span className="text-xs text-[#52525b]">Click swatch to change</span>
+                                                    </div>
+
+                                                    {activeColorPicker && (
+                                                        <div className="absolute top-full left-0 mt-2 z-50">
+                                                            <div className="fixed inset-0" onClick={() => setActiveColorPicker(false)} />
+                                                            <div className="relative bg-[#1a1a1a] p-3 rounded-xl border border-white/10 shadow-2xl">
+                                                                <HexColorPicker color={primaryColor} onChange={setPrimaryColor} />
+                                                                <div className="mt-3 flex items-center gap-2 bg-[#050505] p-2 rounded-lg border border-white/5">
+                                                                    <span className="text-[#52525b] text-xs">#</span>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={primaryColor.replace('#', '')}
+                                                                        onChange={(e) => setPrimaryColor(`#${e.target.value}`)}
+                                                                        className="bg-transparent border-none text-white text-xs focus:outline-none w-full font-mono uppercase"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Color Psychology Table */}
+                                            <div className="bg-[#050505] border border-white/5 rounded-xl overflow-hidden">
+                                                <table className="w-full text-sm text-left">
+                                                    <thead className="bg-white/5 text-[#a1a1aa]">
+                                                        <tr>
+                                                            <th className="p-3 font-medium">Color</th>
+                                                            <th className="p-3 font-medium">Psychological Association</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-white/5 text-[#d4d4d8]">
+                                                        <tr>
+                                                            <td className="p-3 flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-blue-500" /> Blue</td>
+                                                            <td className="p-3">Trust, Security, Calm, Professionalism</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td className="p-3 flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-500" /> Red</td>
+                                                            <td className="p-3">Energy, Urgency, Passion, Excitement</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td className="p-3 flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-yellow-500" /> Yellow</td>
+                                                            <td className="p-3">Optimism, Clarity, Warmth, Caution</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td className="p-3 flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-green-500" /> Green</td>
+                                                            <td className="p-3">Growth, Health, Money, Balance</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td className="p-3 flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-purple-500" /> Purple</td>
+                                                            <td className="p-3">Creativity, Luxury, Wisdom, Mystery</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td className="p-3 flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-orange-500" /> Orange</td>
+                                                            <td className="p-3">Friendly, Cheerful, Confidence</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td className="p-3 flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-black border border-white/20" /> Black</td>
+                                                            <td className="p-3">Power, Elegance, Sophistication</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
-                                )}
 
-                                <div className="flex gap-6 h-full min-w-fit overflow-x-auto pb-2">
-                                    {columns.map((col, idx) => (
-                                        <Column
-                                            key={col.id}
-                                            title={col.title}
-                                            id={col.id}
-                                            tasks={col.tasks}
-                                            onAdd={handleAddTask}
-                                            onDelete={handleDeleteTask}
-                                            onMove={handleMoveTask}
-                                            onEdit={(t) => openEditModal(t, col.id)}
-                                            userRole={userRole}
-                                            currentUserKey={userKey}
-                                            onDeleteColumn={handleDeleteColumn}
-                                            isEditMode={isEditMode}
-                                            onMoveColumn={handleMoveColumn}
-                                            index={idx}
-                                            totalColumns={columns.length}
-                                        />
-                                    ))}
-                                    {isEditMode && (userRole === 'master_admin' || userRole === 'admin') && (
-                                        <button
-                                            onClick={handleAddColumn}
-                                            className="min-w-[320px] h-16 rounded-3xl border border-dashed border-white/10 flex items-center justify-center text-[#71717a] hover:text-white hover:border-white/30 transition-all bg-[#0a0a0a]/50 hover:bg-[#0a0a0a]"
-                                        >
-                                            <Plus className="w-5 h-5 mr-2" />
-                                            Add Column
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                        {view === 'masterclass' && (
-                            <div className="flex-1 flex items-center justify-center overflow-y-auto">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full p-4">
-                                    {[
-                                        { id: 'hooks', title: 'Winning Hooks Library', icon: Lightbulb, desc: 'Curated collection of high-performing hooks.' },
-                                        { id: 'dm_setter', title: 'AI DM Setter', icon: MessageSquare, desc: 'Automated DM outreach and appointment setting.' },
-                                        { id: 'stories', title: 'Story Sequences', icon: Image, desc: 'Templates for engaging story arcs.' },
-                                        { id: 'profile', title: 'Profile Optimization', icon: User, desc: 'Audit and improve your bio and highlights.' }
-                                    ].map((item) => (
-                                        <motion.div
-                                            key={item.id}
-                                            whileHover={{ scale: 1.02 }}
-                                            onClick={() => setView('sheet_wip')}
-                                            className="bg-[#121212] border border-white/10 p-8 rounded-2xl cursor-pointer transition-all group min-h-[200px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
-                                        >
-                                            <div>
-                                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                    <item.icon className="w-6 h-6 text-black group-hover:text-[#ff982b] transition-colors" />
+                                    {/* Typography Section */}
+                                    <div className="bg-[#121212] border border-white/10 rounded-2xl p-8">
+                                        <h3 className="text-xl font-medium text-white mb-6 flex items-center gap-2">
+                                            <Type className="w-5 h-5 text-[#ff982b]" />
+                                            Typography
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            {/* Header Font */}
+                                            <div className="space-y-4">
+                                                <label className="text-sm text-[#a1a1aa]">Header Font (Bold/Display)</label>
+                                                <div className="flex flex-col gap-3">
+                                                    <input
+                                                        type="text"
+                                                        value={headerFontName}
+                                                        onChange={(e) => setHeaderFontName(e.target.value)}
+                                                        placeholder="Enter font name..."
+                                                        className="w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#ff982b] transition-colors"
+                                                    />
+                                                    <div className="flex items-center gap-3">
+                                                        <label className="flex-1 cursor-pointer group">
+                                                            <input type="file" accept=".ttf,.otf" className="hidden" onChange={(e) => handleFontUpload(e, 'header')} />
+                                                            <div className="flex items-center justify-center gap-2 bg-[#050505] border border-white/10 border-dashed rounded-xl px-4 py-3 text-[#71717a] group-hover:text-white group-hover:border-[#ff982b]/50 transition-all">
+                                                                <Upload className="w-4 h-4" />
+                                                                <span className="text-sm truncate">{headerFontFile || 'Upload .ttf / .otf'}</span>
+                                                            </div>
+                                                        </label>
+                                                    </div>
                                                 </div>
-                                                <h3 className="text-xl font-medium text-white mb-2 group-hover:text-black transition-colors">{item.title}</h3>
-                                                <p className="text-[#a1a1aa] text-sm leading-relaxed group-hover:text-black/70 transition-colors">{item.desc}</p>
+                                                <div className="p-4 bg-[#050505] rounded-xl border border-white/5">
+                                                    <p className="text-2xl font-bold text-white">The Quick Brown Fox Jumps Over The Lazy Dog</p>
+                                                </div>
                                             </div>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
 
+                                            {/* Content Font */}
+                                            <div className="space-y-4">
+                                                <label className="text-sm text-[#a1a1aa]">Content Font (Body/Text)</label>
+                                                <div className="flex flex-col gap-3">
+                                                    <input
+                                                        type="text"
+                                                        value={contentFontName}
+                                                        onChange={(e) => setContentFontName(e.target.value)}
+                                                        placeholder="Enter font name..."
+                                                        className="w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#ff982b] transition-colors"
+                                                    />
+                                                    <div className="flex items-center gap-3">
+                                                        <label className="flex-1 cursor-pointer group">
+                                                            <input type="file" accept=".ttf,.otf" className="hidden" onChange={(e) => handleFontUpload(e, 'content')} />
+                                                            <div className="flex items-center justify-center gap-2 bg-[#050505] border border-white/10 border-dashed rounded-xl px-4 py-3 text-[#71717a] group-hover:text-white group-hover:border-[#ff982b]/50 transition-all">
+                                                                <Upload className="w-4 h-4" />
+                                                                <span className="text-sm truncate">{contentFontFile || 'Upload .ttf / .otf'}</span>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div className="p-4 bg-[#050505] rounded-xl border border-white/5">
+                                                    <p className="text-base text-[#d4d4d8] leading-relaxed">
+                                                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        }
+
+                        {
+                            view === 'business_identity' && (
+                                <div className="flex-1 flex items-center justify-center">
+                                    <div className="text-center">
+                                        <Briefcase className="w-16 h-16 text-[#ff982b] mx-auto mb-4 opacity-50" />
+                                        <h2 className="text-2xl font-bold text-white mb-2">Business Identity</h2>
+                                        <p className="text-[#a1a1aa]">Mission, Vision, and Values configuration coming soon.</p>
+                                    </div>
+                                </div>
+                            )
+                        }
+
+                        {
+                            view === 'industry_identity' && (
+                                <div className="flex-1 flex items-center justify-center">
+                                    <div className="text-center">
+                                        <Globe className="w-16 h-16 text-[#ff982b] mx-auto mb-4 opacity-50" />
+                                        <h2 className="text-2xl font-bold text-white mb-2">Industry Identity</h2>
+                                        <p className="text-[#a1a1aa]">Market positioning tools coming soon.</p>
+                                    </div>
+                                </div>
+                            )
+                        }
+
+                        {
+                            view === 'crm' && (
+                                <div className="flex flex-col h-full pt-16">
+                                    {/* CRM Toolbar */}
+                                    {(userRole === 'master_admin' || userRole === 'admin') && (
+                                        <div className="flex items-center justify-between mb-4 px-1">
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => setIsEditMode(!isEditMode)}
+                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black hover:shadow-[0_0_15px_rgba(255,152,43,0.3)] hover:scale-105 transition-all"
+                                                >
+                                                    <Edit3 className="w-3.5 h-3.5" />
+                                                    {isEditMode ? 'Done Editing' : 'Edit Board'}
+                                                </button>
+                                                <button
+                                                    onClick={() => setIsManageUsersOpen(true)}
+                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black hover:shadow-[0_0_15px_rgba(255,152,43,0.3)] hover:scale-105 transition-all"
+                                                >
+                                                    <Users className="w-3.5 h-3.5" />
+                                                    Manage Users
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="flex gap-6 h-full min-w-fit overflow-x-auto pb-2">
+                                        {columns.map((col, idx) => (
+                                            <Column
+                                                key={col.id}
+                                                title={col.title}
+                                                id={col.id}
+                                                tasks={col.tasks}
+                                                onAdd={handleAddTask}
+                                                onDelete={handleDeleteTask}
+                                                onMove={handleMoveTask}
+                                                onEdit={(t) => openEditModal(t, col.id)}
+                                                userRole={userRole}
+                                                currentUserKey={userKey}
+                                                onDeleteColumn={handleDeleteColumn}
+                                                isEditMode={isEditMode}
+                                                onMoveColumn={handleMoveColumn}
+                                                index={idx}
+                                                totalColumns={columns.length}
+                                            />
+                                        ))}
+                                        {isEditMode && (userRole === 'master_admin' || userRole === 'admin') && (
+                                            <button
+                                                onClick={handleAddColumn}
+                                                className="min-w-[320px] h-16 rounded-3xl border border-dashed border-white/10 flex items-center justify-center text-[#71717a] hover:text-white hover:border-white/30 transition-all bg-[#0a0a0a]/50 hover:bg-[#0a0a0a]"
+                                            >
+                                                <Plus className="w-5 h-5 mr-2" />
+                                                Add Column
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )
+                        }
+                        {
+                            view === 'masterclass' && (
+                                <div className="flex-1 flex items-center justify-center overflow-y-auto">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full p-4">
+                                        {[
+                                            { id: 'hooks', title: 'Winning Hooks Library', icon: Lightbulb, desc: 'Curated collection of high-performing hooks.' },
+                                            { id: 'dm_setter', title: 'AI DM Setter', icon: MessageSquare, desc: 'Automated DM outreach and appointment setting.' },
+                                            { id: 'stories', title: 'Story Sequences', icon: Image, desc: 'Templates for engaging story arcs.' },
+                                            { id: 'profile', title: 'Profile Optimization', icon: User, desc: 'Audit and improve your bio and highlights.' }
+                                        ].map((item) => (
+                                            <motion.div
+                                                key={item.id}
+                                                whileHover={{ scale: 1.02 }}
+                                                onClick={() => setView('sheet_wip')}
+                                                className="bg-[#121212] border border-white/10 p-8 rounded-2xl cursor-pointer transition-all group min-h-[200px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                            >
+                                                <div>
+                                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                        <item.icon className="w-6 h-6 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                    </div>
+                                                    <h3 className="text-xl font-medium text-white mb-2 group-hover:text-black transition-colors">{item.title}</h3>
+                                                    <p className="text-[#a1a1aa] text-sm leading-relaxed group-hover:text-black/70 transition-colors">{item.desc}</p>
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )
+                        }
+
+
+                        {
+                            view === 'short_form_scribe' && (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center p-8 max-w-2xl mx-auto">
+                                    <div className="w-20 h-20 rounded-2xl bg-[#121212] border border-white/10 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(255,152,43,0.1)]">
+                                        <Edit3 className="w-10 h-10 text-[#ff982b]" />
+                                    </div>
+                                    <h2 className="text-3xl font-bold text-white mb-4">Work in Progress</h2>
+                                    <p className="text-[#a1a1aa] text-lg mb-8">
+                                        We're crafting something exceptional. This module will be available soon.
+                                    </p>
+                                    <div className="text-left bg-[#121212] border border-white/10 p-6 rounded-xl w-full text-sm text-[#a1a1aa] space-y-4">
+                                        <h4 className="text-white font-bold text-lg mb-2">Planned Features:</h4>
+                                        <ul className="list-disc pl-5 space-y-2">
+                                            <li><strong className="text-[#ff982b]">Replace The Plural:</strong> Automatically changes "Everyone", "People", "Y'all" to "You" for better engagement.</li>
+                                            <li><strong className="text-[#ff982b]">Give the Ownership:</strong> Adds "You" to sentences to hand ownership to the viewer.</li>
+                                            <li><strong className="text-[#ff982b]">Unique Power Words:</strong> Suggests rare, attention-grabbing words (e.g., "Dangerously", "Disgustingly").</li>
+                                            <li><strong className="text-[#ff982b]">High Value Per Second:</strong> Color-coded script optimization (Green=Value, Yellow=Too Long, Red=Remove).</li>
+                                            <li><strong className="text-[#ff982b]">Hook Generator:</strong> Generates 4 viral hook variations based on winning formulas.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            )
+                        }
 
                         {view === 'messaging' && <ChatConfiguration />}
                         {view === 'note_taker' && <NoteTaker />}
 
-                        {(view === 'vault' || view === 'course' || view === 'onboarding' || view === 'sheet_wip') && (
-                            <div className="flex-1 flex flex-col items-center justify-center text-center">
-                                <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6 animate-pulse">
-                                    {view === 'messaging' && <MessageSquare className="w-10 h-10 text-[#52525b]" />}
-                                    {view === 'vault' && <Database className="w-10 h-10 text-[#52525b]" />}
-                                    {view === 'course' && <GraduationCap className="w-10 h-10 text-[#52525b]" />}
-                                    {view === 'onboarding' && <Rocket className="w-10 h-10 text-[#52525b]" />}
-                                    {view === 'sheet_wip' && <FileText className="w-10 h-10 text-[#52525b]" />}
+                        {
+                            (view === 'sheet_wip') && (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                                    <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6 animate-pulse">
+                                        <FileText className="w-10 h-10 text-[#52525b]" />
+                                    </div>
+                                    <h2 className="text-3xl font-bold text-white mb-2">Work in Progress</h2>
+                                    <p className="text-[#a1a1aa] max-w-md">This tool is currently under development. Check back soon for updates.</p>
+                                    <button
+                                        onClick={() => setView('menu')}
+                                        className="mt-8 px-6 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-colors cursor-pointer"
+                                    >
+                                        Return to Menu
+                                    </button>
                                 </div>
-                                <h2 className="text-3xl font-bold text-white mb-2">Work in Progress</h2>
-                                <p className="text-[#a1a1aa] max-w-md">This tool is currently under development. Check back soon for updates.</p>
-                                <button
-                                    onClick={() => setView(view === 'sheet_wip' ? 'brand_sheets' : 'menu')}
-                                    className="mt-8 px-6 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-colors cursor-pointer"
-                                >
-                                    Return to {view === 'sheet_wip' ? 'Sheets' : 'Menu'}
-                                </button>
-                            </div>
-                        )}
+                            )
+                        }
 
-                        {view === 'packaging' && (
-                            <div className="flex-1 h-full overflow-hidden">
-                                <PackagingTool />
-                            </div>
-                        )}
+                        {
+                            (view === 'course' || view === 'masterclass' || view === 'youtube_masterclass') && (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                                    <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6 animate-pulse">
+                                        {view === 'course' && <GraduationCap className="w-10 h-10 text-[#52525b]" />}
+                                        {(view === 'masterclass' || view === 'youtube_masterclass') && <Video className="w-10 h-10 text-[#52525b]" />}
+                                    </div>
+                                    <h2 className="text-3xl font-bold text-white mb-2">Work in Progress</h2>
+                                    <p className="text-[#a1a1aa] max-w-md">This tool is currently under development. Check back soon for updates.</p>
+                                    <button
+                                        onClick={() => setView('vault')}
+                                        className="mt-8 px-6 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-colors cursor-pointer"
+                                    >
+                                        Return to Vault
+                                    </button>
+                                </div>
+                            )
+                        }
+
+                        {
+                            view === 'packaging' && (
+                                <div className="flex-1 h-full overflow-hidden">
+                                    <PackagingTool />
+                                </div>
+                            )
+                        }
                     </>
                 )}
-            </main>
+            </main >
 
             {/* Edit Modal */}
-            <AnimatePresence>
+            < AnimatePresence >
                 {isModalOpen && editingTask && (
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -1001,77 +1395,79 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                 )}
 
                 {/* Manage Users Modal */}
-                {isManageUsersOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-                        onClick={() => setIsManageUsersOpen(false)}
-                    >
+                {
+                    isManageUsersOpen && (
                         <motion.div
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="bg-[#121212] border border-white/10 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden"
-                            onClick={e => e.stopPropagation()}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+                            onClick={() => setIsManageUsersOpen(false)}
                         >
-                            <div className="p-6 border-b border-white/5 flex justify-between items-center">
-                                <h3 className="text-lg font-light text-white">Manage Team</h3>
-                                <button onClick={() => setIsManageUsersOpen(false)} className="text-[#52525b] hover:text-white">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            <div className="p-6 space-y-6">
-                                {/* Add User Form */}
-                                <form onSubmit={handleAddUser} className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        placeholder="Name"
-                                        value={newUser.name}
-                                        onChange={e => setNewUser({ ...newUser, name: e.target.value })}
-                                        className="flex-1 bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-[#ff982b] outline-none"
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Role"
-                                        value={newUser.role}
-                                        onChange={e => setNewUser({ ...newUser, role: e.target.value })}
-                                        className="flex-1 bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-[#ff982b] outline-none"
-                                    />
-                                    <button type="submit" className="bg-white/10 hover:bg-[#ff982b] hover:text-black text-white p-2 rounded-lg transition-colors">
-                                        <Plus className="w-5 h-5" />
+                            <motion.div
+                                initial={{ scale: 0.95, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                className="bg-[#121212] border border-white/10 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden"
+                                onClick={e => e.stopPropagation()}
+                            >
+                                <div className="p-6 border-b border-white/5 flex justify-between items-center">
+                                    <h3 className="text-lg font-light text-white">Manage Team</h3>
+                                    <button onClick={() => setIsManageUsersOpen(false)} className="text-[#52525b] hover:text-white">
+                                        <X className="w-5 h-5" />
                                     </button>
-                                </form>
-
-                                {/* User List */}
-                                <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                                    {availableUsers.map(user => (
-                                        <div key={user.id} className="flex items-center justify-between p-3 bg-[#0a0a0a] rounded-lg border border-white/5">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center text-black font-bold text-xs">
-                                                    {user.name.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <div className="text-sm font-medium text-white">{user.name}</div>
-                                                    <div className="text-xs text-[#71717a]">{user.role}</div>
-                                                </div>
-                                            </div>
-                                            <button onClick={() => handleDeleteUser(user.id)} className="text-[#71717a] hover:text-red-500 transition-colors">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                    {availableUsers.length === 0 && (
-                                        <p className="text-center text-[#52525b] text-sm py-4">No team members yet.</p>
-                                    )}
                                 </div>
-                            </div>
+
+                                <div className="p-6 space-y-6">
+                                    {/* Add User Form */}
+                                    <form onSubmit={handleAddUser} className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Name"
+                                            value={newUser.name}
+                                            onChange={e => setNewUser({ ...newUser, name: e.target.value })}
+                                            className="flex-1 bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-[#ff982b] outline-none"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Role"
+                                            value={newUser.role}
+                                            onChange={e => setNewUser({ ...newUser, role: e.target.value })}
+                                            className="flex-1 bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-[#ff982b] outline-none"
+                                        />
+                                        <button type="submit" className="bg-white/10 hover:bg-[#ff982b] hover:text-black text-white p-2 rounded-lg transition-colors">
+                                            <Plus className="w-5 h-5" />
+                                        </button>
+                                    </form>
+
+                                    {/* User List */}
+                                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                        {availableUsers.map(user => (
+                                            <div key={user.id} className="flex items-center justify-between p-3 bg-[#0a0a0a] rounded-lg border border-white/5">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center text-black font-bold text-xs">
+                                                        {user.name.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-sm font-medium text-white">{user.name}</div>
+                                                        <div className="text-xs text-[#71717a]">{user.role}</div>
+                                                    </div>
+                                                </div>
+                                                <button onClick={() => handleDeleteUser(user.id)} className="text-[#71717a] hover:text-red-500 transition-colors">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {availableUsers.length === 0 && (
+                                            <p className="text-center text-[#52525b] text-sm py-4">No team members yet.</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </motion.div>
                         </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
+                    )
+                }
+            </AnimatePresence >
+        </div >
     );
 };
 

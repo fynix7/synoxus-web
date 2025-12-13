@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Save, Plus, Trash2, User, MessageSquare, Clock, BookOpen, Settings, Globe } from 'lucide-react';
+import { Save, Plus, Trash2, User, MessageSquare, Clock, BookOpen, Settings, Globe, ArrowUp, ArrowDown } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
 const DEFAULT_PERSONAS = [
@@ -13,7 +13,9 @@ const DEFAULT_PERSONAS = [
         knowledge: "Synoxus offers high-ticket lead generation services. We guarantee 30+ leads in 90 days or we work for free. We help with content ideation, packaging (thumbnails/titles), and conversion assets (VSLs).",
         intervalMin: 1500,
         intervalMax: 2500,
-        welcomeMessage: "Hey! Max here. Glad you're interested. Before we start, what's your best email or phone number?"
+        welcomeMessage: "Hey! Max here. Glad you're interested. Before we start, what's your best email or phone number?",
+        startTime: "07:00",
+        endTime: "19:00"
     },
     {
         id: 'yohan',
@@ -24,7 +26,9 @@ const DEFAULT_PERSONAS = [
         knowledge: "Synoxus scales creators on Skool. We helped Nick Saraev reach #1 on Skool. We focus on 'Psychological Packaging' and 'Conversion Cascades'.",
         intervalMin: 2000,
         intervalMax: 4000,
-        welcomeMessage: "Hey, Yohan here. Let me know if you have any questions. If I'm free I'll try to reply as fast as I can."
+        welcomeMessage: "Hey, Yohan here. Let me know if you have any questions. If I'm free I'll try to reply as fast as I can.",
+        startTime: "09:00",
+        endTime: "17:00"
     },
     {
         id: 'laura',
@@ -35,7 +39,9 @@ const DEFAULT_PERSONAS = [
         knowledge: "Yohan is currently offline. You can take messages or direct people to the calendar.",
         intervalMin: 1000,
         intervalMax: 2000,
-        welcomeMessage: "Hi, I'm Laura, Yohan's assistant. Yohan is currently offline. How can I help you today?"
+        welcomeMessage: "Hi, I'm Laura, Yohan's assistant. Yohan is currently offline. How can I help you today?",
+        startTime: "19:00",
+        endTime: "07:00"
     }
 ];
 
@@ -137,6 +143,17 @@ const ChatConfiguration = () => {
         setHasChanges(true);
     };
 
+    const handleMovePersona = (index, direction) => {
+        const newPersonas = [...personas];
+        if (direction === 'up' && index > 0) {
+            [newPersonas[index], newPersonas[index - 1]] = [newPersonas[index - 1], newPersonas[index]];
+        } else if (direction === 'down' && index < newPersonas.length - 1) {
+            [newPersonas[index], newPersonas[index + 1]] = [newPersonas[index + 1], newPersonas[index]];
+        }
+        setPersonas(newPersonas);
+        setHasChanges(true);
+    };
+
     const handleDeletePersona = (id) => {
         if (confirm('Are you sure you want to delete this persona?')) {
             const newPersonas = personas.filter(p => p.id !== id);
@@ -170,21 +187,38 @@ const ChatConfiguration = () => {
                     </button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                    {personas.map(persona => (
-                        <button
-                            key={persona.id}
-                            onClick={() => setSelectedPersonaId(persona.id)}
-                            className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all flex items-center justify-between group ${selectedPersonaId === persona.id
-                                ? 'bg-[#ff982b]/10 text-[#ff982b] border border-[#ff982b]/20'
-                                : 'text-[#a1a1aa] hover:bg-white/5 hover:text-white border border-transparent'
-                                }`}
-                        >
-                            <span className="font-medium truncate">{persona.name}</span>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase ${persona.type === 'qualification' ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-500/20 text-gray-400'
-                                }`}>
-                                {persona.type === 'qualification' ? 'Qual' : 'Def'}
-                            </span>
-                        </button>
+                    {personas.map((persona, index) => (
+                        <div key={persona.id} className="flex items-center gap-1 group/item">
+                            <div className="flex flex-col opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleMovePersona(index, 'up'); }}
+                                    disabled={index === 0}
+                                    className="p-0.5 hover:text-white text-[#52525b] disabled:opacity-30"
+                                >
+                                    <ArrowUp className="w-3 h-3" />
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleMovePersona(index, 'down'); }}
+                                    disabled={index === personas.length - 1}
+                                    className="p-0.5 hover:text-white text-[#52525b] disabled:opacity-30"
+                                >
+                                    <ArrowDown className="w-3 h-3" />
+                                </button>
+                            </div>
+                            <button
+                                onClick={() => setSelectedPersonaId(persona.id)}
+                                className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all flex items-center justify-between group ${selectedPersonaId === persona.id
+                                    ? 'bg-[#ff982b]/10 text-[#ff982b] border border-[#ff982b]/20'
+                                    : 'text-[#a1a1aa] hover:bg-white/5 hover:text-white border border-transparent'
+                                    }`}
+                            >
+                                <span className="font-medium truncate">{persona.name}</span>
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase ${persona.type === 'qualification' ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-500/20 text-gray-400'
+                                    }`}>
+                                    {persona.type === 'qualification' ? 'Qual' : 'Def'}
+                                </span>
+                            </button>
+                        </div>
                     ))}
                 </div>
                 <div className="p-4 border-t border-white/10">
@@ -300,6 +334,35 @@ const ChatConfiguration = () => {
                                         />
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* Active Times */}
+                            <div className="space-y-2">
+                                <label className="flex items-center gap-2 text-sm font-medium text-[#fcf0d4]">
+                                    <Clock className="w-4 h-4 text-[#ff982b]" />
+                                    Active Hours (24h Format)
+                                </label>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-[#52525b] uppercase">Start Time</label>
+                                        <input
+                                            type="time"
+                                            value={selectedPersona.startTime || ''}
+                                            onChange={(e) => handleUpdatePersona(selectedPersona.id, 'startTime', e.target.value)}
+                                            className="w-full bg-[#121212] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#ff982b]"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-[#52525b] uppercase">End Time</label>
+                                        <input
+                                            type="time"
+                                            value={selectedPersona.endTime || ''}
+                                            onChange={(e) => handleUpdatePersona(selectedPersona.id, 'endTime', e.target.value)}
+                                            className="w-full bg-[#121212] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#ff982b]"
+                                        />
+                                    </div>
+                                </div>
+                                <p className="text-xs text-[#52525b]">Topmost active persona will be selected.</p>
                             </div>
 
                             {/* Welcome Message */}

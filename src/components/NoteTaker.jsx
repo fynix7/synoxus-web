@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Youtube, FileText, CheckSquare, Square, Loader2, ArrowRight, BookOpen, Copy, Check } from 'lucide-react';
+import { Youtube, FileText, CheckSquare, Square, Loader2, ArrowRight, BookOpen, Copy, Check, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const NoteTaker = () => {
     const [url, setUrl] = useState('');
-    console.log("NoteTaker v3 loaded");
     const [mode, setMode] = useState('video'); // 'video' or 'channel'
     const [videos, setVideos] = useState([]);
     const [selectedVideos, setSelectedVideos] = useState([]);
@@ -14,43 +15,56 @@ const NoteTaker = () => {
     const [progress, setProgress] = useState('');
     const [copied, setCopied] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [error, setError] = useState('');
 
-    // Mock data for channel videos since we can't really fetch channel videos without API key/backend
-    const generateMockVideos = () => {
-        const videoMapping = [
-            { title: "How to Scale Your Agency to $100k/mo", id: "P5yE9wUaH2U" },
-            { title: "The Secret to High Ticket Sales", id: "9PYGGN_IgNQ" },
-            { title: "Client Acquisition Systems That Work", id: "v2wQx8_000s" },
-            { title: "Stop Doing This If You Want To Grow", id: "rCgXy7m159M" },
-            { title: "My Full Productivity Workflow", id: "n_A7p1B-n_Q" },
-            { title: "The Truth About AI Automation", id: "0h9Vz4Z8f_g" }, // Keeping this as placeholder if no better match found, or use a generic one
-            { title: "Why Most Agencies Fail", id: "M7lc1UVf-VE" }, // Keeping placeholder
-            { title: "Building a Personal Brand in 2024", id: "sT6kF5H0j8I" }, // Keeping placeholder
-            { title: "Cold Email Masterclass", id: "JsdGTNssgcI" },
-            { title: "How to Hire A-Players", id: "1ebuu0KLRfk" }, // Updated
-            { title: "The Ultimate Sales Script", id: "KPM78PmkobM" },
-            { title: "Content Creation Strategy", id: "9bZkp7q19f0" }, // Keeping placeholder
-            { title: "From $0 to $10k in 30 Days", id: "dQw4w9WgXcQ" }, // Keeping placeholder
-            { title: "Mindset Shift for Success", id: "j4uG2u-qjX0" },
-            { title: "Automating Your Business", id: "L_jWHffIx5E" } // Keeping placeholder
+    // Mock data for channel videos - tailored to look professional/agency related
+    const generateMockChannelVideos = (channelName) => {
+        const baseVideos = [
+            { title: "How to Scale Your Agency to $100k/mo", views: "125K" },
+            { title: "The Secret to High Ticket Sales", views: "89K" },
+            { title: "Client Acquisition Systems That Work", views: "210K" },
+            { title: "Stop Doing This If You Want To Grow", views: "45K" },
+            { title: "My Full Productivity Workflow", views: "320K" },
+            { title: "The Truth About AI Automation", views: "150K" },
+            { title: "Why Most Agencies Fail", views: "78K" },
+            { title: "Building a Personal Brand in 2024", views: "95K" },
+            { title: "Cold Email Masterclass", views: "67K" },
+            { title: "How to Hire A-Players", views: "42K" }
         ];
 
-        return videoMapping.map((video, i) => ({
-            id: `vid_${i}`,
+        return baseVideos.map((video, i) => ({
+            id: `mock_vid_${i}`,
             title: video.title,
             duration: `${Math.floor(Math.random() * 20) + 5}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`,
-            thumbnail: `https://img.youtube.com/vi/${video.id}/mqdefault.jpg`
+            date: new Date(Date.now() - Math.floor(Math.random() * 10000000000)).toLocaleDateString(),
+            thumbnail: `https://img.youtube.com/vi/${['P5yE9wUaH2U', '9PYGGN_IgNQ', 'v2wQx8_000s', 'rCgXy7m159M', 'n_A7p1B-n_Q'][i % 5]}/mqdefault.jpg`,
+            author: channelName || "Channel Name"
         }));
     };
-
-    const MOCK_CHANNEL_VIDEOS = generateMockVideos();
-    const [currentPage, setCurrentPage] = useState(1);
-    const videosPerPage = 5;
 
     const extractVideoId = (inputUrl) => {
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
         const match = inputUrl.match(regExp);
         return (match && match[2].length === 11) ? match[2] : null;
+    };
+
+    const fetchVideoDetails = async (videoUrl) => {
+        try {
+            // Use noembed to get video title without API key
+            const response = await fetch(`https://noembed.com/embed?url=${videoUrl}`);
+            const data = await response.json();
+
+            if (data.error) throw new Error(data.error);
+
+            return {
+                title: data.title,
+                author: data.author_name,
+                thumbnail: data.thumbnail_url
+            };
+        } catch (err) {
+            console.error("Failed to fetch video details:", err);
+            return null;
+        }
     };
 
     const handleFetch = async () => {
@@ -59,29 +73,43 @@ const NoteTaker = () => {
         setVideos([]);
         setSelectedVideos([]);
         setNotes('');
+        setError('');
 
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        try {
+            if (url.includes('channel') || url.includes('@')) {
+                setMode('channel');
+                // Simulate fetching channel videos
+                await new Promise(resolve => setTimeout(resolve, 1000));
 
-        if (url.includes('channel') || url.includes('@')) {
-            setMode('channel');
-            setVideos(MOCK_CHANNEL_VIDEOS);
-        } else {
-            setMode('video');
-            const videoId = extractVideoId(url);
-            if (videoId) {
-                setVideos([{
-                    id: videoId,
-                    title: 'Extracted Video Title', // In real app, fetch title
-                    duration: '10:00',
-                    thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
-                }]);
-                setSelectedVideos([videoId]);
+                // Extract channel name for better mock data
+                const channelName = url.split('/').pop().replace('@', '');
+                setVideos(generateMockChannelVideos(channelName));
             } else {
-                alert('Invalid YouTube URL');
+                setMode('video');
+                const videoId = extractVideoId(url);
+
+                if (videoId) {
+                    // Try to fetch real details
+                    const details = await fetchVideoDetails(url);
+
+                    setVideos([{
+                        id: videoId,
+                        title: details ? details.title : 'Video Title (Could not fetch)',
+                        duration: '10:00', // Placeholder as noembed doesn't return duration
+                        date: new Date().toLocaleDateString(),
+                        thumbnail: details ? details.thumbnail : `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+                        author: details ? details.author : 'Unknown Channel'
+                    }]);
+                    setSelectedVideos([videoId]);
+                } else {
+                    setError('Invalid YouTube URL');
+                }
             }
+        } catch (err) {
+            setError('Failed to fetch video. Please check the URL.');
+        } finally {
+            setIsFetching(false);
         }
-        setIsFetching(false);
     };
 
     const toggleVideoSelection = (id) => {
@@ -100,58 +128,88 @@ const NoteTaker = () => {
         }
     };
 
+    const generateNotesWithGemini = async (selectedVids) => {
+        const apiKey = localStorage.getItem('google_api_key');
+        if (!apiKey) {
+            return "## Error: API Key Missing\n\nPlease add your Google API Key in the settings to generate AI notes.";
+        }
+
+        const mainVideo = videos.find(v => v.id === selectedVids[0]);
+        const title = mainVideo ? mainVideo.title : "Selected Video";
+        const author = mainVideo ? mainVideo.author : "Unknown Creator";
+
+        const prompt = `You are an expert note-taker and content synthesizer. 
+        I need comprehensive notes for a YouTube video titled "${title}" by "${author}".
+        
+        Since I cannot provide the full transcript right now, please generate a high-quality, structured summary based on what is typically covered in a video with this specific title and by this creator (if known).
+        
+        Infer the likely key points, strategies, and actionable advice.
+        
+        Format the output in clean Markdown. YOU MUST FOLLOW THIS EXACT STRUCTURE:
+
+        # Key Takeaways (TL;DR)
+        [Provide a bulleted list of the 3 most critical insights. Make this section stand out.]
+
+        # Executive Summary
+        [A concise paragraph summarizing the video's core message and value proposition.]
+
+        # Core Concepts & Frameworks
+        [Detail the main ideas. Use bolding for key terms.]
+
+        # Actionable Steps
+        [A checklist of things the viewer can implement immediately.]
+
+        # Notable Quotes
+        > [Include 1-2 powerful, hypothetical quotes that capture the essence.]
+        
+        Tone: Professional, insightful, and action-oriented. Use formatting (bolding, lists) to make it highly readable.`;
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
+            });
+
+            const data = await response.json();
+            const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            if (!generatedText) {
+                throw new Error("Failed to generate content");
+            }
+
+            return generatedText;
+
+        } catch (error) {
+            console.error("Gemini Generation Error:", error);
+            return "## Error: Generation Failed\n\nCould not generate notes at this time. Please try again later.";
+        }
+    };
+
     const handleGenerate = async () => {
         if (selectedVideos.length === 0) return;
         setIsGenerating(true);
         setNotes('');
 
         const steps = [
-            'Extracting transcripts...',
-            'Analyzing content...',
+            'Analyzing video metadata...',
             'Identifying key themes...',
-            'Synthesizing notes...',
-            'Formatting output...'
+            'Synthesizing insights...',
+            'Formatting with AI...'
         ];
+
+        // Start the generation in the background while showing progress
+        const generationPromise = generateNotesWithGemini(selectedVideos);
 
         for (const step of steps) {
             setProgress(step);
             await new Promise(resolve => setTimeout(resolve, 800));
         }
 
-        // Mock Generated Notes
-        const mockNotes = `# Comprehensive Notes
-
-## Executive Summary
-This collection of videos focuses on scaling agencies, high-ticket sales, and productivity systems. The core message is that systematic client acquisition combined with disciplined workflow management is the key to breaking past revenue plateaus.
-
-## Key Themes & Insights
-
-### 1. Agency Scaling Systems
-- **The "Flywheel" Effect**: Consistency in outreach leads to compounding results over time.
-- **Delegation**: You cannot scale if you are doing everything. Hire for your weaknesses.
-- **SOPs**: Standard Operating Procedures are the backbone of a scalable business.
-
-### 2. High Ticket Sales Psychology
-- **Value over Price**: Clients buy the transformation, not the deliverables.
-- **The "Gap"**: Identify where they are vs. where they want to be. Your service is the bridge.
-- **Objection Handling**: Treat objections as requests for more information, not rejections.
-
-### 3. Productivity & Workflow
-- **Time Blocking**: Dedicate specific blocks of time to deep work.
-- **Eliminate Distractions**: Turn off notifications during deep work sessions.
-- **Review**: Weekly reviews of what worked and what didn't are crucial for improvement.
-
-## Actionable Takeaways
-1. [ ] Create SOPs for your top 3 recurring tasks.
-2. [ ] Audit your time usage for one week to identify waste.
-3. [ ] Refine your sales script to focus more on the client's desired outcome.
-4. [ ] Implement a daily "deep work" block of at least 2 hours.
-
-## Conclusion
-Success in this domain is less about finding a "magic bullet" and more about executing fundamentals with extreme consistency and high quality.
-`;
-
-        setNotes(mockNotes);
+        const generatedNotes = await generationPromise;
+        setNotes(generatedNotes);
         setIsGenerating(false);
         setProgress('');
     };
@@ -163,12 +221,9 @@ Success in this domain is less about finding a "magic bullet" and more about exe
     };
 
     // Pagination Logic
-    const indexOfLastVideo = currentPage * videosPerPage;
-    const indexOfFirstVideo = indexOfLastVideo - videosPerPage;
-    const currentVideos = videos.filter(v => v.title.toLowerCase().includes(searchQuery.toLowerCase())).slice(indexOfFirstVideo, indexOfLastVideo);
-    const totalPages = Math.ceil(videos.filter(v => v.title.toLowerCase().includes(searchQuery.toLowerCase())).length / videosPerPage);
-
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+    const currentPage = 1; // Simplified for now
+    const videosPerPage = 100;
+    const currentVideos = videos.filter(v => v.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return (
         <div className="h-full flex flex-col gap-6 max-w-5xl mx-auto w-full">
@@ -205,6 +260,12 @@ Success in this domain is less about finding a "magic bullet" and more about exe
                         {isFetching ? <Loader2 className="animate-spin w-6 h-6" /> : <ArrowRight className="w-6 h-6" />}
                     </button>
                 </div>
+                {error && (
+                    <div className="flex items-center gap-2 text-red-400 text-sm bg-red-400/10 p-3 rounded-lg border border-red-400/20">
+                        <AlertCircle className="w-4 h-4" />
+                        {error}
+                    </div>
+                )}
             </div>
 
             {/* Content Area */}
@@ -229,7 +290,7 @@ Success in this domain is less about finding a "magic bullet" and more about exe
                             <input
                                 type="text"
                                 value={searchQuery}
-                                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search videos..."
                                 className="w-full bg-[#050505] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#ff982b] transition-colors"
                             />
@@ -252,9 +313,16 @@ Success in this domain is less about finding a "magic bullet" and more about exe
                                         </div>
                                     </div>
                                     <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                                        <h4 className={`text-sm font-medium truncate leading-tight ${selectedVideos.includes(video.id) ? 'text-[#ff982b]' : 'text-white group-hover:text-white/90'}`}>
-                                            {video.title}
-                                        </h4>
+                                        <div>
+                                            <h4 className={`text-sm font-medium truncate leading-tight ${selectedVideos.includes(video.id) ? 'text-[#ff982b]' : 'text-white group-hover:text-white/90'}`}>
+                                                {video.title}
+                                            </h4>
+                                            <div className="flex items-center gap-2 mt-1 text-[10px] text-[#71717a]">
+                                                <span>{video.date}</span>
+                                                <span>•</span>
+                                                <span>{video.duration}</span>
+                                            </div>
+                                        </div>
                                         <div className="flex items-center gap-2">
                                             {selectedVideos.includes(video.id) ? (
                                                 <CheckSquare className="w-4 h-4 text-[#ff982b]" />
@@ -267,29 +335,6 @@ Success in this domain is less about finding a "magic bullet" and more about exe
                                 </div>
                             ))}
                         </div>
-
-                        {/* Pagination Controls */}
-                        {totalPages > 1 && (
-                            <div className="flex justify-center gap-2 mt-3 mb-3">
-                                <button
-                                    onClick={() => paginate(currentPage - 1)}
-                                    disabled={currentPage === 1}
-                                    className="px-3 py-1 bg-[#0a0a0a] border border-white/10 rounded text-xs text-white disabled:opacity-50"
-                                >
-                                    Prev
-                                </button>
-                                <span className="text-xs text-[#a1a1aa] flex items-center">
-                                    Page {currentPage} of {totalPages}
-                                </span>
-                                <button
-                                    onClick={() => paginate(currentPage + 1)}
-                                    disabled={currentPage === totalPages}
-                                    className="px-3 py-1 bg-[#0a0a0a] border border-white/10 rounded text-xs text-white disabled:opacity-50"
-                                >
-                                    Next
-                                </button>
-                            </div>
-                        )}
 
                         <div className="mt-auto pt-4 border-t border-white/10 flex flex-col items-center gap-2">
                             <button
@@ -334,7 +379,24 @@ Success in this domain is less about finding a "magic bullet" and more about exe
 
                         <div className="flex-1 overflow-y-auto bg-[#050505] rounded-xl p-6 border border-white/5 font-mono text-sm leading-relaxed text-[#d4d4d8] custom-scrollbar">
                             {notes ? (
-                                <div className="whitespace-pre-wrap">{notes}</div>
+                                <div className="prose prose-invert prose-sm max-w-none">
+                                    <ReactMarkdown
+                                        remarkPlugins={[remarkGfm]}
+                                        components={{
+                                            h1: ({ node, ...props }) => <h1 className="text-2xl font-bold text-[#ff982b] mb-4 mt-6 border-b border-[#ff982b]/20 pb-2" {...props} />,
+                                            h2: ({ node, ...props }) => <h2 className="text-xl font-semibold text-white mb-3 mt-6 flex items-center gap-2" {...props} />,
+                                            h3: ({ node, ...props }) => <h3 className="text-lg font-medium text-[#ffc972] mb-2 mt-4" {...props} />,
+                                            ul: ({ node, ...props }) => <ul className="list-disc pl-5 space-y-2 mb-4 text-[#d4d4d8]" {...props} />,
+                                            ol: ({ node, ...props }) => <ol className="list-decimal pl-5 space-y-2 mb-4 text-[#d4d4d8]" {...props} />,
+                                            li: ({ node, ...props }) => <li className="pl-1" {...props} />,
+                                            blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-[#ff982b] pl-4 py-1 my-4 bg-[#ff982b]/5 rounded-r italic text-[#a1a1aa]" {...props} />,
+                                            strong: ({ node, ...props }) => <strong className="text-white font-bold" {...props} />,
+                                            p: ({ node, ...props }) => <p className="mb-4 leading-relaxed" {...props} />,
+                                        }}
+                                    >
+                                        {notes}
+                                    </ReactMarkdown>
+                                </div>
                             ) : (
                                 <div className="h-full flex flex-col items-center justify-center text-[#52525b] gap-3">
                                     <FileText className="w-12 h-12 opacity-20" />

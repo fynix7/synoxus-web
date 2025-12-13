@@ -14,10 +14,11 @@ function App() {
   const [chatMode, setChatMode] = useState('default'); // 'default' | 'qualification'
 
   React.useEffect(() => {
-    if (window.location.pathname === '/portal') {
+    const path = window.location.pathname;
+    if (path === '/portal') {
       setIsPortalOpen(true);
       setPortalInitialView('menu');
-    } else if (window.location.pathname === '/thumbnail-generator') {
+    } else if (path === '/thumbnail-generator') {
       setIsPortalOpen(true);
       setPortalInitialView('packaging');
     }
