@@ -170,21 +170,39 @@ const ChatConfiguration = () => {
     const selectedPersona = personas.find(p => p.id === selectedPersonaId);
 
     return (
-        <div className="flex h-full bg-[#0a0a0a] rounded-2xl overflow-hidden border border-white/10">
+        <div className="flex h-full bg-[#0a0a0a] rounded-2xl overflow-hidden border border-white/10 mt-16">
             {/* Sidebar - Persona List */}
             <div className="w-64 bg-[#121212] border-r border-white/10 flex flex-col">
-                <div className="p-4 border-b border-white/10 flex justify-between items-center">
-                    <h3 className="text-white font-medium flex items-center gap-2">
-                        <User className="w-4 h-4 text-[#ff982b]" />
-                        Personas
-                    </h3>
-                    <button
-                        onClick={handleAddPersona}
-                        className="p-1.5 hover:bg-white/10 rounded-lg text-[#a1a1aa] hover:text-white transition-colors"
-                        title="Add Persona"
-                    >
-                        <Plus className="w-4 h-4" />
-                    </button>
+                <div className="p-4 border-b border-white/10 flex flex-col gap-4">
+                    <div className="flex justify-between items-center">
+                        <h3 className="text-white font-medium flex items-center gap-2">
+                            <User className="w-4 h-4 text-[#ff982b]" />
+                            Personas
+                        </h3>
+                        <button
+                            onClick={handleAddPersona}
+                            className="p-1.5 hover:bg-white/10 rounded-lg text-[#a1a1aa] hover:text-white transition-colors"
+                            title="Add Persona"
+                        >
+                            <Plus className="w-4 h-4" />
+                        </button>
+                    </div>
+
+                    {/* Moved Qualifier Toggle Here */}
+                    <div className="bg-[#050505] p-3 rounded-lg border border-white/5">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium text-[#a1a1aa]">Qualifier Method</span>
+                            <button
+                                onClick={toggleQualifierMethod}
+                                className={`relative w-10 h-5 rounded-full transition-colors ${qualifierMethod === 'chat' ? 'bg-[#ff982b]' : 'bg-white/10'}`}
+                            >
+                                <div className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform ${qualifierMethod === 'chat' ? 'translate-x-5' : 'translate-x-0'}`} />
+                            </button>
+                        </div>
+                        <p className="text-[10px] text-[#52525b] text-center">
+                            {qualifierMethod === 'chat' ? 'Using AI Chat Persona' : 'Using Application Form'}
+                        </p>
+                    </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-2 space-y-1">
                     {personas.map((persona, index) => (
@@ -221,21 +239,7 @@ const ChatConfiguration = () => {
                         </div>
                     ))}
                 </div>
-                <div className="p-4 border-t border-white/10">
-                    <label className="text-xs font-medium text-[#52525b] uppercase tracking-wider mb-2 block">Global Settings</label>
-                    <div className="flex items-center justify-between bg-[#050505] p-3 rounded-lg border border-white/5">
-                        <span className="text-sm text-[#a1a1aa]">Qualifier Method</span>
-                        <button
-                            onClick={toggleQualifierMethod}
-                            className={`relative w-12 h-6 rounded-full transition-colors ${qualifierMethod === 'chat' ? 'bg-[#ff982b]' : 'bg-white/10'}`}
-                        >
-                            <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${qualifierMethod === 'chat' ? 'translate-x-6' : 'translate-x-0'}`} />
-                        </button>
-                    </div>
-                    <p className="text-[10px] text-[#52525b] mt-2 text-center">
-                        {qualifierMethod === 'chat' ? 'Using AI Chat Persona' : 'Using Application Form'}
-                    </p>
-                </div>
+                {/* Removed bottom settings panel since it moved up */}
             </div>
 
             {/* Main Content - Editor */}

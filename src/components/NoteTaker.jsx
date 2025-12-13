@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Youtube, FileText, CheckSquare, Square, Loader2, ArrowRight, BookOpen, Copy, Check, AlertCircle } from 'lucide-react';
+import { Youtube, FileText, CheckSquare, Square, Loader2, ArrowRight, BookOpen, Copy, Check, AlertCircle, ClipboardPaste, Settings, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -16,31 +16,17 @@ const NoteTaker = () => {
     const [copied, setCopied] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [error, setError] = useState('');
+    const [manualTranscript, setManualTranscript] = useState('');
+    const [showManualInput, setShowManualInput] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    const [tempApiKey, setTempApiKey] = useState(localStorage.getItem('google_api_key') || '');
 
-    // Mock data for channel videos - tailored to look professional/agency related
-    const generateMockChannelVideos = (channelName) => {
-        const baseVideos = [
-            { title: "How to Scale Your Agency to $100k/mo", views: "125K" },
-            { title: "The Secret to High Ticket Sales", views: "89K" },
-            { title: "Client Acquisition Systems That Work", views: "210K" },
-            { title: "Stop Doing This If You Want To Grow", views: "45K" },
-            { title: "My Full Productivity Workflow", views: "320K" },
-            { title: "The Truth About AI Automation", views: "150K" },
-            { title: "Why Most Agencies Fail", views: "78K" },
-            { title: "Building a Personal Brand in 2024", views: "95K" },
-            { title: "Cold Email Masterclass", views: "67K" },
-            { title: "How to Hire A-Players", views: "42K" }
-        ];
-
-        return baseVideos.map((video, i) => ({
-            id: `mock_vid_${i}`,
-            title: video.title,
-            duration: `${Math.floor(Math.random() * 20) + 5}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`,
-            date: new Date(Date.now() - Math.floor(Math.random() * 10000000000)).toLocaleDateString(),
-            thumbnail: `https://img.youtube.com/vi/${['P5yE9wUaH2U', '9PYGGN_IgNQ', 'v2wQx8_000s', 'rCgXy7m159M', 'n_A7p1B-n_Q'][i % 5]}/mqdefault.jpg`,
-            author: channelName || "Channel Name"
-        }));
+    const handleSaveSettings = () => {
+        localStorage.setItem('google_api_key', tempApiKey);
+        setShowSettings(false);
     };
+
+
 
     const extractVideoId = (inputUrl) => {
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -48,68 +34,142 @@ const NoteTaker = () => {
         return (match && match[2].length === 11) ? match[2] : null;
     };
 
-    const fetchVideoDetails = async (videoUrl) => {
-        try {
-            // Use noembed to get video title without API key
-            const response = await fetch(`https://noembed.com/embed?url=${videoUrl}`);
-            const data = await response.json();
+    const extractAllVideoIds = (text) => {
+        if (!text) return [];
+        const urls = text.match(/\bhttps?:\/\/\S+/gi) || [];
+        const ids = new Set();
 
-            if (data.error) throw new Error(data.error);
+        // Check the raw text first for any single ID if no URLs found (fallback)
+        const singleId = extractVideoId(text);
+        if (singleId) ids.add(singleId);
 
-            return {
-                title: data.title,
-                author: data.author_name,
-                thumbnail: data.thumbnail_url
-            };
-        } catch (err) {
-            console.error("Failed to fetch video details:", err);
-            return null;
-        }
+        // Process all found URLs
+        urls.forEach(url => {
+            const id = extractVideoId(url);
+            if (id) ids.add(id);
+        });
+
+        return Array.from(ids);
     };
 
-    const handleFetch = async () => {
-        if (!url) return;
+    const handleFetch = async (urlOverride) => {
+        const inputUrl = typeof urlOverride === 'string' ? urlOverride : url;
+        if (!inputUrl) return;
+
         setIsFetching(true);
-        setVideos([]);
-        setSelectedVideos([]);
-        setNotes('');
         setError('');
+        setShowManualInput(false);
+        setManualTranscript('');
 
         try {
-            if (url.includes('channel') || url.includes('@')) {
+            // Check for channel URL first
+            if (inputUrl.includes('channel') || inputUrl.includes('@') || inputUrl.includes('/c/') || inputUrl.includes('/user/')) {
                 setMode('channel');
-                // Simulate fetching channel videos
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                setVideos([]); // Clear existing for channel fetch
+                setSelectedVideos([]);
 
-                // Extract channel name for better mock data
-                const channelName = url.split('/').pop().replace('@', '');
-                setVideos(generateMockChannelVideos(channelName));
+                const response = await fetch(`/api/channel?url=${encodeURIComponent(inputUrl)}`);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to fetch channel videos');
+                }
+
+                const channelVideos = await response.json();
+                if (channelVideos.length === 0) {
+                    throw new Error('No videos found for this channel');
+                }
+
+                setVideos(channelVideos);
+                setUrl(''); // Clear input
             } else {
                 setMode('video');
-                const videoId = extractVideoId(url);
+                const videoIds = extractAllVideoIds(inputUrl);
 
-                if (videoId) {
-                    // Try to fetch real details
-                    const details = await fetchVideoDetails(url);
+                if (videoIds.length > 0) {
+                    const newVideos = [];
+                    const newSelected = [];
 
-                    setVideos([{
-                        id: videoId,
-                        title: details ? details.title : 'Video Title (Could not fetch)',
-                        duration: '10:00', // Placeholder as noembed doesn't return duration
-                        date: new Date().toLocaleDateString(),
-                        thumbnail: details ? details.thumbnail : `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-                        author: details ? details.author : 'Unknown Channel'
-                    }]);
-                    setSelectedVideos([videoId]);
+                    // Filter out IDs that are already in the list
+                    const uniqueIds = videoIds.filter(id => !videos.some(v => v.id === id));
+
+                    if (uniqueIds.length === 0 && videoIds.length > 0) {
+                        setError('Video(s) already added.');
+                        setIsFetching(false);
+                        setUrl('');
+                        return;
+                    }
+
+                    // Process all videos in parallel
+                    await Promise.all(uniqueIds.map(async (videoId) => {
+                        try {
+                            // Fetch real details using our robust metadata endpoint
+                            const response = await fetch(`/api/metadata?videoId=${videoId}`);
+                            if (!response.ok) throw new Error('Failed to fetch metadata');
+
+                            const details = await response.json();
+                            newVideos.push({
+                                id: videoId,
+                                title: details.title,
+                                duration: details.duration,
+                                date: new Date().toLocaleDateString(),
+                                thumbnail: details.thumbnail,
+                                author: details.author
+                            });
+                            newSelected.push(videoId);
+                        } catch (e) {
+                            console.error(`Metadata fetch failed for ${videoId}, falling back to noembed:`, e);
+                            try {
+                                const response = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
+                                const data = await response.json();
+                                newVideos.push({
+                                    id: videoId,
+                                    title: data.title || 'Video Title',
+                                    duration: '??:??',
+                                    date: new Date().toLocaleDateString(),
+                                    thumbnail: data.thumbnail_url || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+                                    author: data.author_name || 'Unknown Channel'
+                                });
+                                newSelected.push(videoId);
+                            } catch (fallbackErr) {
+                                console.error(`Fallback failed for ${videoId}`, fallbackErr);
+                            }
+                        }
+                    }));
+
+                    if (newVideos.length > 0) {
+                        setVideos(prev => [...prev, ...newVideos]);
+                        setSelectedVideos(prev => [...prev, ...newSelected]);
+                        setUrl(''); // Clear input on success
+                    } else {
+                        setError('Could not fetch details for any of the provided videos.');
+                    }
                 } else {
-                    setError('Invalid YouTube URL');
+                    setError('Invalid YouTube URL(s)');
                 }
             }
         } catch (err) {
-            setError('Failed to fetch video. Please check the URL.');
+            setError('Failed to fetch videos. Please check the URLs.');
         } finally {
             setIsFetching(false);
         }
+    };
+
+    const handlePaste = (e) => {
+        e.preventDefault();
+        const pastedData = e.clipboardData.getData('text');
+        if (pastedData) {
+            // Allow the paste to update the input value visually (default behavior), 
+            // but trigger the fetch with the pasted data immediately.
+            // We set the URL state to the pasted data to ensure sync if handleFetch needs it,
+            // but we pass pastedData explicitly to handleFetch to avoid race conditions.
+            setUrl(pastedData);
+            handleFetch(pastedData);
+        }
+    };
+
+    const removeVideo = (id) => {
+        setVideos(prev => prev.filter(v => v.id !== id));
+        setSelectedVideos(prev => prev.filter(v => v !== id));
     };
 
     const toggleVideoSelection = (id) => {
@@ -134,86 +194,73 @@ const NoteTaker = () => {
             return "## Error: API Key Missing\n\nPlease add your Google API Key in the settings to generate AI notes.";
         }
 
-        const mainVideo = videos.find(v => v.id === selectedVids[0]);
-        const title = mainVideo ? mainVideo.title : "Selected Video";
-        const author = mainVideo ? mainVideo.author : "Unknown Creator";
-        const videoId = mainVideo ? mainVideo.id : null;
+        let combinedTranscript = "";
+        let failedVideos = [];
 
-        let transcriptText = null;
+        // Process all selected videos
+        for (const vidId of selectedVids) {
+            const video = videos.find(v => v.id === vidId);
+            if (!video) continue;
 
-        // Try to fetch transcript
-        if (videoId && !videoId.startsWith('mock_')) {
+            // Skip mock videos for now unless we have a way to get their transcript
+            if (vidId.startsWith('mock_')) continue;
+
             try {
-                const transcriptRes = await fetch(`/api/transcript?videoId=${videoId}`);
+                console.log(`Fetching transcript for videoId: ${vidId}`);
+                const transcriptRes = await fetch(`/api/transcript?videoId=${vidId}`);
+
                 if (transcriptRes.ok) {
                     const transcriptData = await transcriptRes.json();
-                    transcriptText = transcriptData.transcript;
+                    combinedTranscript += `\n\n=== VIDEO START: "${video.title}" by ${video.author} ===\n${transcriptData.transcript}\n=== VIDEO END ===\n`;
+                } else {
+                    console.warn(`Transcript fetch failed for ${vidId}:`, await transcriptRes.text());
+                    failedVideos.push(video.title);
                 }
             } catch (e) {
-                console.warn("Could not fetch transcript:", e);
+                console.warn(`Could not fetch transcript for ${vidId}:`, e);
+                failedVideos.push(video.title);
             }
         }
 
-        let prompt;
+        // If manual transcript is provided, append it as well (useful for fallbacks or extra context)
+        if (manualTranscript) {
+            combinedTranscript += `\n\n=== MANUAL TRANSCRIPT / EXTRA CONTEXT ===\n${manualTranscript}\n=== END MANUAL CONTEXT ===\n`;
+        }
 
-        if (transcriptText) {
-            prompt = `You are an expert note-taker and content synthesizer. 
-            I need comprehensive notes for a YouTube video titled "${title}" by "${author}".
+        if (!combinedTranscript.trim()) {
+            setShowManualInput(true);
+            return "## Error: No Transcripts Available\n\nCould not retrieve transcripts for the selected videos. Please paste the transcript manually in the box below and try again.";
+        }
+
+        const prompt = `You are an expert note-taker and content synthesizer. 
+            I need comprehensive, combined notes for the following video(s).
             
-            Here is the TRANSCRIPT of the video:
+            Here is the TRANSCRIPT content (potentially from multiple videos):
             """
-            ${transcriptText}
+            ${combinedTranscript}
             """
             
-            Based on this transcript, generate a high-quality, structured summary.
+            Based on this content, generate a high-quality, structured summary.
+            If there are multiple videos, synthesize the information into a single cohesive narrative, removing overlaps and highlighting unique insights from each where relevant. Build upon the concepts to create a masterclass-level summary.
             
             Format the output in clean Markdown. YOU MUST FOLLOW THIS EXACT STRUCTURE:
 
             # Key Takeaways (TL;DR)
-            [Provide a bulleted list of the 3 most critical insights. Make this section stand out.]
+            [Provide a bulleted list of the 3-5 most critical insights across all content. Make this section stand out.]
 
             # Executive Summary
-            [A concise paragraph summarizing the video's core message and value proposition.]
+            [A concise paragraph summarizing the core messages and value proposition of the combined content.]
 
             # Core Concepts & Frameworks
-            [Detail the main ideas. Use bolding for key terms.]
+            [Detail the main ideas. Use bolding for key terms. Group related concepts together.]
 
             # Actionable Steps
             [A checklist of things the viewer can implement immediately.]
 
             # Notable Quotes
-            > [Include 1-2 powerful quotes directly from the transcript if possible.]
+            > [Include powerful quotes directly from the transcripts.]
             
             Tone: Professional, insightful, and action-oriented. Use formatting (bolding, lists) to make it highly readable.`;
-        } else {
-            prompt = `You are an expert note-taker and content synthesizer. 
-            I need comprehensive notes for a YouTube video titled "${title}" by "${author}".
-            
-            Since I cannot provide the full transcript right now, please generate a high-quality, structured summary based on what is typically covered in a video with this specific title and by this creator (if known).
-            
-            Infer the likely key points, strategies, and actionable advice.
-            
-            Format the output in clean Markdown. YOU MUST FOLLOW THIS EXACT STRUCTURE:
-
-            # Key Takeaways (TL;DR)
-            [Provide a bulleted list of the 3 most critical insights. Make this section stand out.]
-
-            # Executive Summary
-            [A concise paragraph summarizing the video's core message and value proposition.]
-
-            # Core Concepts & Frameworks
-            [Detail the main ideas. Use bolding for key terms.]
-
-            # Actionable Steps
-            [A checklist of things the viewer can implement immediately.]
-
-            # Notable Quotes
-            > [Include 1-2 powerful, hypothetical quotes that capture the essence.]
-            
-            Tone: Professional, insightful, and action-oriented. Use formatting (bolding, lists) to make it highly readable.
-            
-            IMPORTANT: Add a disclaimer at the very bottom in small italic text: "_Note: Transcript unavailable. Notes generated based on video metadata and AI inference._"`;
-        }
 
         try {
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
@@ -231,7 +278,12 @@ const NoteTaker = () => {
                 throw new Error("Failed to generate content");
             }
 
-            return generatedText;
+            let finalText = generatedText;
+            if (failedVideos.length > 0) {
+                finalText = `> [!WARNING]\n> Failed to fetch transcripts for: ${failedVideos.join(', ')}. Notes are based on successfully retrieved content only.\n\n` + finalText;
+            }
+
+            return finalText;
 
         } catch (error) {
             console.error("Gemini Generation Error:", error);
@@ -287,28 +339,85 @@ const NoteTaker = () => {
                 <p className="text-[#a1a1aa]">Turn YouTube videos and channels into comprehensive, synthesized notes.</p>
             </div>
 
+            {/* Global Settings Button (FAB) */}
+            <button
+                onClick={() => setShowSettings(true)}
+                className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-[#1e1e1e]/80 backdrop-blur-xl border border-white/10 text-white flex items-center justify-center shadow-lg hover:scale-110 hover:bg-white hover:text-black hover:shadow-[0_8px_30px_rgba(255,255,255,0.2)] transition-all duration-300 z-50"
+                title="Settings"
+            >
+                <Settings className="w-6 h-6" />
+            </button>
+
+            {/* Settings Modal */}
+            {showSettings && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <Settings className="w-5 h-5 text-[#ff982b]" />
+                            Settings
+                        </h3>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-[#a1a1aa] mb-1">
+                                    Google API Key (Gemini)
+                                </label>
+                                <input
+                                    type="password"
+                                    value={tempApiKey}
+                                    onChange={(e) => setTempApiKey(e.target.value)}
+                                    placeholder="Enter your API Key..."
+                                    className="w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#ff982b] transition-colors"
+                                />
+                                <p className="text-xs text-[#52525b] mt-2">
+                                    Required for AI note generation. Your key is stored locally in your browser.
+                                </p>
+                            </div>
+                            <div className="flex justify-end gap-3 mt-6">
+                                <button
+                                    onClick={() => setShowSettings(false)}
+                                    className="px-4 py-2 text-[#a1a1aa] hover:text-white font-medium transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSaveSettings}
+                                    className="px-6 py-2 bg-[#ff982b] text-black font-bold rounded-lg hover:bg-[#ffc972] transition-colors"
+                                >
+                                    Save Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Input Section */}
-            <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 flex flex-col gap-4">
+            <div className="flex flex-col gap-4">
                 <div className="flex gap-4">
                     <div className="flex-1 relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <Youtube className="text-[#52525b] w-5 h-5" />
-                        </div>
                         <input
                             type="text"
+                            id="youtube-url-input"
+                            name="youtube-url"
                             value={url}
                             onChange={(e) => setUrl(e.target.value)}
-                            placeholder="Paste YouTube Video or Channel URL..."
-                            className="w-full bg-[#050505] border border-white/10 rounded-xl pl-14 pr-4 py-4 text-white focus:outline-none focus:border-[#ff982b] transition-colors"
-                            onKeyDown={(e) => e.key === 'Enter' && handleFetch()}
+                            onPaste={handlePaste}
+                            placeholder="Paste YouTube Video URL..."
+                            className="w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-[#ff982b] transition-colors"
+                            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleFetch()}
                         />
                     </div>
                     <button
-                        onClick={handleFetch}
+                        onClick={() => handleFetch()}
                         disabled={!url || isFetching}
-                        className="px-6 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl hover:shadow-[0_0_20px_rgba(255,152,43,0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[80px]"
+                        className="w-12 h-12 rounded-full bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center shadow-[0_0_20px_rgba(255,152,43,0.3)] hover:scale-110 transition-transform cursor-pointer group overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex-shrink-0"
                     >
-                        {isFetching ? <Loader2 className="animate-spin w-6 h-6" /> : <ArrowRight className="w-6 h-6" />}
+                        {isFetching ? (
+                            <Loader2 className="animate-spin w-5 h-5 text-black relative z-10" />
+                        ) : (
+                            <ArrowRight className="w-6 h-6 text-[#050505] relative z-10" strokeWidth={2.5} />
+                        )}
+                        <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-0 group-hover:duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/40 to-transparent" />
                     </button>
                 </div>
                 {error && (
@@ -318,6 +427,45 @@ const NoteTaker = () => {
                     </div>
                 )}
             </div>
+
+            {/* Manual Transcript Fallback */}
+            {showManualInput && (
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-[#121212] border border-orange-500/30 rounded-2xl p-6 flex flex-col gap-4"
+                >
+                    <div className="flex items-center gap-2 text-orange-400">
+                        <AlertCircle className="w-5 h-5" />
+                        <h3 className="font-bold">Transcript Unavailable</h3>
+                    </div>
+                    <p className="text-sm text-[#a1a1aa]">
+                        We couldn't automatically fetch the transcript for this video. Please paste the transcript manually below to generate notes.
+                    </p>
+                    <div className="relative">
+                        <div className="absolute top-3 left-3 pointer-events-none">
+                            <ClipboardPaste className="text-[#52525b] w-5 h-5" />
+                        </div>
+                        <textarea
+                            id="manual-transcript-input"
+                            name="manual-transcript"
+                            value={manualTranscript}
+                            onChange={(e) => setManualTranscript(e.target.value)}
+                            placeholder="Paste transcript text here..."
+                            className="w-full h-40 bg-[#050505] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-[#ff982b] transition-colors resize-none font-mono text-sm"
+                        />
+                    </div>
+                    <div className="flex justify-end">
+                        <button
+                            onClick={handleGenerate}
+                            disabled={!manualTranscript || isGenerating}
+                            className="px-6 py-2 bg-[#ff982b] text-black font-bold rounded-lg hover:bg-[#ffc972] transition-colors disabled:opacity-50"
+                        >
+                            Generate with Manual Transcript
+                        </button>
+                    </div>
+                </motion.div>
+            )}
 
             {/* Content Area */}
             {videos.length > 0 && (
@@ -340,6 +488,8 @@ const NoteTaker = () => {
                         <div className="px-2 mb-3">
                             <input
                                 type="text"
+                                id="video-search-input"
+                                name="video-search"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search videos..."
@@ -352,11 +502,21 @@ const NoteTaker = () => {
                                 <div
                                     key={video.id}
                                     onClick={() => toggleVideoSelection(video.id)}
-                                    className={`p-3 rounded-xl border cursor-pointer transition-all flex gap-3 group ${selectedVideos.includes(video.id)
+                                    className={`p-3 rounded-xl border cursor-pointer transition-all flex gap-3 group relative ${selectedVideos.includes(video.id)
                                         ? 'bg-[#ff982b]/10 border-[#ff982b] shadow-[0_0_15px_rgba(255,152,43,0.1)]'
                                         : 'bg-[#0a0a0a] border-white/5 hover:border-white/20'
                                         }`}
                                 >
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            removeVideo(video.id);
+                                        }}
+                                        className="absolute -top-2 -right-2 bg-[#121212] border border-white/20 text-[#a1a1aa] hover:text-red-400 hover:border-red-400 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all z-10 shadow-lg"
+                                        title="Remove video"
+                                    >
+                                        <X className="w-3 h-3" />
+                                    </button>
                                     <div className="relative w-24 h-16 rounded-lg overflow-hidden flex-shrink-0">
                                         <img src={video.thumbnail} alt="" className="w-full h-full object-cover" />
                                         <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1 rounded">

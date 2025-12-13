@@ -170,7 +170,7 @@ const Column = ({ title, id, tasks, onAdd, onDelete, onMove, onEdit, userRole, c
                         <Plus className="w-4 h-4" strokeWidth={2.5} />
                         Add Task
                     </span>
-                    <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                    <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/40 to-transparent" />
                 </button>
             </div>
         </div>
@@ -256,11 +256,16 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                 initialColumns = colsData.map(c => ({ id: c.title, title: c.title, tasks: [] }));
             } else {
                 initialColumns = [
-                    { id: 'To Do', title: 'To Do', tasks: [] },
-                    { id: 'In Progress', title: 'In Progress', tasks: [] },
-                    { id: 'Done', title: 'Done', tasks: [] }
+                    { id: 'Ideation', title: 'Ideation', tasks: [] },
+                    { id: 'Scripting', title: 'Scripting', tasks: [] },
+                    { id: 'Filming', title: 'Filming', tasks: [] },
+                    { id: 'Packaging', title: 'Packaging', tasks: [] },
+                    { id: 'Ready to Post', title: 'Ready to Post', tasks: [] }
                 ];
             }
+
+
+
 
             // 2. Fetch Tasks
             const { data: tasksData } = await supabase
@@ -535,7 +540,7 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                         <span className="font-bold text-black text-xs">S</span>
                     </div>
                     <h1 className="font-medium text-lg tracking-tight">
-                        <span onClick={() => isAuthenticated ? setView('menu') : onExit()} className="cursor-pointer hover:text-[#ff982b] transition-colors">Synoxus</span> <span className="text-[#52525b] font-light">/ {isAuthenticated ? (view === 'menu' ? 'Portal' : view === 'crm' ? 'CRM' : view === 'packaging' ? 'Thumbnail Generator' : view === 'messaging' ? 'Chat Configuration' : view === 'note_taker' ? 'Note Taker' : view === 'vault' ? 'Growth Vault' : view === 'course' ? 'Course' : view === 'onboarding' ? 'Onboarding' : view === 'brand_identity' ? 'Brand Identity' : view === 'strategic_identity' ? 'Strategic Identity' : view === 'masterclass' ? 'Masterclass' : view === 'youtube_masterclass' ? 'YouTube Masterclass' : view === 'short_form_scribe' ? 'ShortForm Scribe' : 'Sheet') : 'Login'}</span>
+                        <span onClick={() => isAuthenticated ? setView('menu') : onExit()} className="cursor-pointer hover:text-[#ff982b] transition-colors">Synoxus</span> <span className="text-[#52525b] font-light">/ {isAuthenticated ? (view === 'menu' ? 'Portal' : view === 'crm' ? 'Pipeline' : view === 'packaging' ? 'Thumbnail Generator' : view === 'messaging' ? 'Chat Configuration' : view === 'note_taker' ? 'Note Taker' : view === 'vault' ? 'Growth Vault' : view === 'course' ? 'Course' : view === 'onboarding' ? 'Onboarding' : view === 'brand_identity' ? 'Brand Identity' : view === 'strategic_identity' ? 'Strategic Identity' : view === 'masterclass' ? 'Masterclass' : view === 'youtube_masterclass' ? 'YouTube Masterclass' : view === 'short_form_scribe' ? 'ShortForm Scribe' : 'Sheet') : 'Login'}</span>
                         {isAuthenticated && <span className="ml-2 text-[10px] font-bold uppercase bg-white/10 px-2 py-0.5 rounded text-[#71717a]">{userRole.replace('_', ' ')}</span>}
                     </h1>
                 </div>
@@ -553,27 +558,32 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                     </button>
                 </div>
             </header>
-
             {/* Main Content Area */}
             <main className="flex-1 p-6 overflow-hidden flex flex-col relative">
                 {view !== 'menu' && isAuthenticated && (
                     <button
                         onClick={() => {
-                            if (['brand_identity', 'strategic_identity'].includes(view)) {
+                            if (['brand_identity', 'strategic_identity', 'mission_statement', 'vision_statement', 'core_values', 'target_audience', 'usp', 'key_competitors'].includes(view)) {
                                 setView('onboarding');
-                            } else if (['course', 'masterclass'].includes(view)) {
+                            } else if (['course', 'masterclass', 'short_form_scribe', 'hooks', 'dm_setter', 'stories', 'profile'].includes(view)) {
                                 setView('vault');
+                            } else if (['note_taker', 'packaging', 'youtube_masterclass', 'title_generator'].includes(view)) {
+                                setView('long_form');
+                            } else if (['messaging', 'landing_page', 'vsl'].includes(view)) {
+                                setView('funnel');
                             } else if (view.startsWith('brand_sheets_') && view !== 'brand_sheets') {
                                 setView('brand_sheets');
                             } else {
                                 setView('menu');
                             }
                         }}
-                        className="absolute top-6 left-6 z-50 w-12 h-12 rounded-full bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center shadow-[0_0_20px_rgba(255,152,43,0.3)] hover:scale-110 transition-transform cursor-pointer group"
+                        className="absolute top-6 left-6 z-50 w-12 h-12 rounded-full bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center shadow-[0_0_20px_rgba(255,152,43,0.3)] hover:scale-110 transition-transform cursor-pointer group overflow-hidden"
                     >
-                        <ArrowLeft className="w-6 h-6 text-[#050505]" strokeWidth={2.5} />
+                        <ArrowLeft className="w-6 h-6 text-[#050505] relative z-10" strokeWidth={2.5} />
+                        <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-0 group-hover:duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/40 to-transparent" />
                     </button>
                 )}
+
                 {!isAuthenticated ? (
                     <div className="flex-1 flex items-center justify-center">
                         <motion.div
@@ -612,7 +622,7 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                         Login
                                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" strokeWidth={2.5} />
                                     </span>
-                                    <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                                    <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/40 to-transparent" />
                                 </button>
                             </form>
                         </motion.div>
@@ -637,7 +647,7 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                         </div>
                                     </motion.div>
 
-                                    {/* 2. CRM */}
+                                    {/* 2. Pipeline */}
                                     <motion.div
                                         whileHover={{ scale: 1.02 }}
                                         onClick={() => setView('crm')}
@@ -647,12 +657,12 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
                                                 <LayoutGrid className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
                                             </div>
-                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">CRM</h3>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Pipeline</h3>
                                             <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Manage tasks, track progress, and organize your workflow.</p>
                                         </div>
                                     </motion.div>
 
-                                    {/* 3. Growth Vault */}
+                                    {/* 3. Short Form */}
                                     <motion.div
                                         whileHover={{ scale: 1.02 }}
                                         onClick={() => setView('vault')}
@@ -660,232 +670,93 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                     >
                                         <div>
                                             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                <Database className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                <Zap className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
                                             </div>
-                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Growth Vault</h3>
-                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Access courses, masterclasses, and training resources.</p>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Short Form</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">ShortForm Scribe, Instagram Masterclass, and more.</p>
                                         </div>
                                     </motion.div>
 
-                                    {/* 4. Chat Configuration */}
+                                    {/* 4. Long Form */}
                                     <motion.div
                                         whileHover={{ scale: 1.02 }}
-                                        onClick={() => setView('messaging')}
-                                        className="relative bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
-                                    >
-                                        <div>
-                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                <MessageSquare className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
-                                            </div>
-                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Chat Configuration</h3>
-                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Manage chat personas, knowledge base, and settings.</p>
-                                        </div>
-
-                                        <div className="absolute top-6 right-6 toggle-switch" onClick={(e) => e.stopPropagation()}>
-                                            <button
-                                                onClick={() => setIsChatEnabled(!isChatEnabled)}
-                                                className={`relative w-12 h-6 rounded-full transition-colors ${isChatEnabled ? 'bg-[#ffc175]' : 'bg-white/20'}`}
-                                                title={isChatEnabled ? "Chat Enabled" : "Chat Disabled"}
-                                            >
-                                                <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${isChatEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
-                                            </button>
-                                        </div>
-                                    </motion.div>
-
-                                    {/* 5. Note Taker */}
-                                    <motion.div
-                                        whileHover={{ scale: 1.02 }}
-                                        onClick={() => setView('note_taker')}
+                                        onClick={() => setView('long_form')}
                                         className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
                                     >
                                         <div>
                                             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                <BookOpen className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                <Video className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
                                             </div>
-                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Note Taker</h3>
-                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Synthesize YouTube videos into comprehensive notes.</p>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Long Form</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Note Taker, Thumbnail Generator, and YouTube Masterclass.</p>
                                         </div>
                                     </motion.div>
 
-                                    {/* 6. Thumbnail Generator */}
+                                    {/* 5. Funnel */}
                                     <motion.div
                                         whileHover={{ scale: 1.02 }}
-                                        onClick={() => setView('packaging')}
+                                        onClick={() => setView('funnel')}
                                         className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
                                     >
                                         <div>
                                             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                <Image className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                <Target className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
                                             </div>
-                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Thumbnail Generator</h3>
-                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Advanced thumbnail generator and analyzer.</p>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Funnel</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Chat Config, Landing Page, and VSL.</p>
                                         </div>
-                                        <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
-                                    </motion.div>
-
-                                    {/* 7. Landing Page Customization */}
-                                    <motion.div
-                                        whileHover={{ scale: 1.02 }}
-                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
-                                    >
-                                        <div>
-                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                <LayoutTemplate className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
-                                            </div>
-                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Landing Page</h3>
-                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Customize landing page content and layout.</p>
-                                        </div>
-                                        <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
-                                    </motion.div>
-                                    {/* 8. ShortForm Scribe */}
-                                    <motion.div
-                                        whileHover={{ scale: 1.02 }}
-                                        onClick={() => setView('short_form_scribe')}
-                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
-                                    >
-                                        <div>
-                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                <Edit3 className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
-                                            </div>
-                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">ShortForm Scribe</h3>
-                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Optimize scripts with power words, hooks, and value density.</p>
-                                        </div>
-                                        <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
                                     </motion.div>
                                 </div>
                             </div>
                         )}
 
-
-                        {
-                            view === 'onboarding' && (
-                                <div className="flex-1 flex items-center justify-center overflow-y-auto">
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl w-full p-4">
-                                        {/* Brand Identity */}
+                        {view === 'onboarding' && (
+                            <div className="flex-1 flex items-center justify-center overflow-y-auto">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl w-full p-4">
+                                    {[
+                                        { id: 'brand_identity', title: 'Brand Identity', icon: Fingerprint, desc: 'Colors, Fonts, and Visual Language.' },
+                                        { id: 'mission_statement', title: 'Mission Statement', icon: Target, desc: 'Why does your business exist?' },
+                                        { id: 'vision_statement', title: 'Vision Statement', icon: Eye, desc: 'Where are you going?' },
+                                        { id: 'core_values', title: 'Core Values', icon: Heart, desc: 'What do you stand for?' },
+                                        { id: 'target_audience', title: 'Target Audience', icon: Users, desc: 'Who are you serving?' },
+                                        { id: 'usp', title: 'Unique Selling Proposition', icon: Zap, desc: 'What makes you different?' },
+                                        { id: 'key_competitors', title: 'Key Competitors', icon: Swords, desc: 'Who are you up against?' }
+                                    ].map((item) => (
                                         <motion.div
+                                            key={item.id}
                                             whileHover={{ scale: 1.02 }}
-                                            onClick={() => setView('brand_identity')}
+                                            onClick={() => setView(item.id)}
                                             className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
                                         >
                                             <div>
                                                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                    <Fingerprint className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                    <item.icon className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
                                                 </div>
-                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Brand Identity</h3>
-                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Colors, Fonts, and Visual Language.</p>
+                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">{item.title}</h3>
+                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">{item.desc}</p>
                                             </div>
                                         </motion.div>
-
-                                        {/* Mission Statement */}
-                                        <motion.div
-                                            whileHover={{ scale: 1.02 }}
-                                            onClick={() => setView('mission_statement')}
-                                            className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
-                                        >
-                                            <div>
-                                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                    <Target className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
-                                                </div>
-                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Mission Statement</h3>
-                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Why does your business exist?</p>
-                                            </div>
-                                        </motion.div>
-
-                                        {/* Vision Statement */}
-                                        <motion.div
-                                            whileHover={{ scale: 1.02 }}
-                                            onClick={() => setView('vision_statement')}
-                                            className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
-                                        >
-                                            <div>
-                                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                    <Eye className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
-                                                </div>
-                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Vision Statement</h3>
-                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Where are you going?</p>
-                                            </div>
-                                        </motion.div>
-
-                                        {/* Core Values */}
-                                        <motion.div
-                                            whileHover={{ scale: 1.02 }}
-                                            onClick={() => setView('core_values')}
-                                            className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
-                                        >
-                                            <div>
-                                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                    <Heart className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
-                                                </div>
-                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Core Values</h3>
-                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">What do you stand for?</p>
-                                            </div>
-                                        </motion.div>
-
-                                        {/* Target Audience */}
-                                        <motion.div
-                                            whileHover={{ scale: 1.02 }}
-                                            onClick={() => setView('target_audience')}
-                                            className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
-                                        >
-                                            <div>
-                                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                    <Users className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
-                                                </div>
-                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Target Audience</h3>
-                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Who are you serving?</p>
-                                            </div>
-                                        </motion.div>
-
-                                        {/* USP */}
-                                        <motion.div
-                                            whileHover={{ scale: 1.02 }}
-                                            onClick={() => setView('usp')}
-                                            className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
-                                        >
-                                            <div>
-                                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                    <Zap className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
-                                                </div>
-                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Unique Selling Proposition</h3>
-                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">What makes you different?</p>
-                                            </div>
-                                        </motion.div>
-
-                                        {/* Key Competitors */}
-                                        <motion.div
-                                            whileHover={{ scale: 1.02 }}
-                                            onClick={() => setView('key_competitors')}
-                                            className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
-                                        >
-                                            <div>
-                                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                    <Swords className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
-                                                </div>
-                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Key Competitors</h3>
-                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Who are you up against?</p>
-                                            </div>
-                                        </motion.div>
-                                    </div>
+                                    ))}
                                 </div>
-                            )
-                        }
+                            </div>
+                        )}
 
                         {
                             view === 'vault' && (
                                 <div className="flex-1 flex items-center justify-center overflow-y-auto">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full p-4">
-                                        {/* Appointment Setting Course */}
+                                        {/* ShortForm Scribe */}
                                         <motion.div
                                             whileHover={{ scale: 1.02 }}
-                                            onClick={() => setView('course')}
+                                            onClick={() => setView('short_form_scribe')}
                                             className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
                                         >
                                             <div>
                                                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                    <GraduationCap className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                    <Edit3 className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
                                                 </div>
-                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Appointment Setting Course</h3>
-                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Comprehensive training for setting appointments.</p>
+                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">ShortForm Scribe</h3>
+                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Optimize scripts with power words, hooks, and value density.</p>
                                             </div>
                                             <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
                                         </motion.div>
@@ -906,25 +777,152 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                             <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
                                         </motion.div>
 
-                                        {/* YouTube Masterclass */}
-                                        <motion.div
-                                            whileHover={{ scale: 1.02 }}
-                                            onClick={() => setView('youtube_masterclass')}
-                                            className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
-                                        >
-                                            <div>
-                                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
-                                                    <Video className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                        {[
+                                            { id: 'hooks', title: 'Winning Hooks Library', icon: Lightbulb, desc: 'Curated collection of high-performing hooks.' },
+                                            { id: 'dm_setter', title: 'AI DM Setter', icon: MessageSquare, desc: 'Automated DM outreach and appointment setting.' },
+                                            { id: 'stories', title: 'Story Sequences', icon: Image, desc: 'Templates for engaging story arcs.' },
+                                            { id: 'profile', title: 'Profile Optimization', icon: User, desc: 'Audit and improve your bio and highlights.' }
+                                        ].map((item) => (
+                                            <motion.div
+                                                key={item.id}
+                                                whileHover={{ scale: 1.02 }}
+                                                onClick={() => setView('sheet_wip')}
+                                                className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                            >
+                                                <div>
+                                                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                        <item.icon className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                                    </div>
+                                                    <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">{item.title}</h3>
+                                                    <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">{item.desc}</p>
                                                 </div>
-                                                <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">YouTube Masterclass</h3>
-                                                <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Complete guide to growing and monetizing your channel.</p>
-                                            </div>
-                                            <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
-                                        </motion.div>
+                                            </motion.div>
+                                        ))}
                                     </div>
                                 </div>
                             )
                         }
+
+                        {view === 'long_form' && (
+                            <div className="flex-1 flex items-center justify-center overflow-y-auto">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full p-4">
+                                    {/* Note Taker */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        onClick={() => setView('note_taker')}
+                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                    >
+                                        <div>
+                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                <Mic className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                            </div>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Note Taker</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Transcribe and analyze YouTube videos.</p>
+                                        </div>
+                                    </motion.div>
+
+                                    {/* Thumbnail Generator */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        onClick={() => setView('packaging')}
+                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                    >
+                                        <div>
+                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                <Package className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                            </div>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Thumbnail Generator</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Create high-converting thumbnails.</p>
+                                        </div>
+                                    </motion.div>
+
+                                    {/* YouTube Masterclass */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        onClick={() => setView('youtube_masterclass')}
+                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                    >
+                                        <div>
+                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                <Video className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                            </div>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">YouTube Masterclass</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Complete guide to growing and monetizing your channel.</p>
+                                        </div>
+                                        <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
+                                    </motion.div>
+
+                                    {/* Title Generator */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        onClick={() => setView('title_generator')}
+                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                    >
+                                        <div>
+                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                <Type className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                            </div>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Title Generator</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Generate viral titles for your videos.</p>
+                                        </div>
+                                        <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
+                                    </motion.div>
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'funnel' && (
+                            <div className="flex-1 flex items-center justify-center overflow-y-auto">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full p-4">
+                                    {/* Chat Configuration */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        onClick={() => setView('messaging')}
+                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                    >
+                                        <div>
+                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                <MessageSquare className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                            </div>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Chat Configuration</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Configure your chat settings and auto-responses.</p>
+                                        </div>
+                                    </motion.div>
+
+                                    {/* Landing Page */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        onClick={() => setView('landing_page')}
+                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                    >
+                                        <div>
+                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                <LayoutTemplate className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                            </div>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Landing Page</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Build high-converting landing pages.</p>
+                                        </div>
+                                        <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
+                                    </motion.div>
+
+                                    {/* VSL */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        onClick={() => setView('vsl')}
+                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                    >
+                                        <div>
+                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                <Video className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                            </div>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">VSL</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Video Sales Letter configuration.</p>
+                                        </div>
+                                        <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
+                                    </motion.div>
+                                </div>
+                            </div>
+                        )}
 
                         {
                             view === 'brand_identity' && (
@@ -1115,7 +1113,7 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                         {
                             view === 'crm' && (
                                 <div className="flex flex-col h-full pt-16">
-                                    {/* CRM Toolbar */}
+                                    {/* Pipeline Toolbar */}
                                     {(userRole === 'master_admin' || userRole === 'admin') && (
                                         <div className="flex items-center justify-between mb-4 px-1">
                                             <div className="flex items-center gap-2">
@@ -1272,6 +1270,63 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                 </div>
                             )
                         }
+
+                        {view === 'vsl' && (
+                            <div className="flex-1 flex flex-col items-center justify-center p-8">
+                                <div className="w-full max-w-xl space-y-6">
+                                    <div className="text-center">
+                                        <Video className="w-16 h-16 text-[#ff982b] mx-auto mb-4" />
+                                        <h2 className="text-3xl font-bold text-white mb-2">Video Sales Letter</h2>
+                                        <p className="text-[#a1a1aa]">Enter your VSL YouTube link below.</p>
+                                    </div>
+                                    <div className="bg-[#121212] border border-white/10 p-6 rounded-2xl">
+                                        <label className="text-xs font-medium text-[#52525b] uppercase tracking-wider mb-2 block">YouTube URL</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                placeholder="https://youtube.com/watch?v=..."
+                                                className="flex-1 bg-[#050505] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#ff982b] transition-colors"
+                                            />
+                                            <button className="px-6 py-3 bg-[#ff982b] text-black font-bold rounded-xl hover:bg-[#ffc972] transition-colors">
+                                                Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'title_generator' && (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center">
+                                <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6 animate-pulse">
+                                    <Type className="w-10 h-10 text-[#52525b]" />
+                                </div>
+                                <h2 className="text-3xl font-bold text-white mb-2">Title Generator</h2>
+                                <p className="text-[#a1a1aa] max-w-md">AI-powered viral title generation coming soon.</p>
+                                <button
+                                    onClick={() => setView('long_form')}
+                                    className="mt-8 px-6 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-colors cursor-pointer"
+                                >
+                                    Return to Long Form
+                                </button>
+                            </div>
+                        )}
+
+                        {view === 'landing_page' && (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center">
+                                <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6 animate-pulse">
+                                    <LayoutTemplate className="w-10 h-10 text-[#52525b]" />
+                                </div>
+                                <h2 className="text-3xl font-bold text-white mb-2">Landing Page Builder</h2>
+                                <p className="text-[#a1a1aa] max-w-md">High-converting landing page templates coming soon.</p>
+                                <button
+                                    onClick={() => setView('funnel')}
+                                    className="mt-8 px-6 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-colors cursor-pointer"
+                                >
+                                    Return to Funnel
+                                </button>
+                            </div>
+                        )}
                     </>
                 )}
             </main >
