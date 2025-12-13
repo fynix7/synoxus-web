@@ -4,7 +4,6 @@ import { Sparkles, Grid, UserX, Pentagon, LayoutTemplate, Palette, Box, Type } f
 const ModeTabs = ({ activeTab, onTabChange }) => {
     const tabs = [
         { id: 'create', icon: Palette, title: 'Create' },
-        { id: 'package', icon: Box, title: 'Package' },
         { id: 'rater', icon: Pentagon, title: 'Thumbnail Rater' }
     ];
 

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Settings } from 'lucide-react';
 import CreateTab from './components/CreateTab';
-import PackageGenerator from './components/PackageGenerator';
 import TitleGenerator from './components/TitleGenerator';
 import Remover from './components/Remover';
 import ThumbnailRater from './components/ThumbnailRater';
@@ -27,12 +26,6 @@ const PackagingTool = () => {
                 {activeTab === 'create' ? (
                     <CreateTab
                         onRequestSettings={() => setShowSettings(true)}
-                        activeTab={activeTab}
-                        onTabChange={setActiveTab}
-                        onRateImage={handleRateImage}
-                    />
-                ) : activeTab === 'package' ? (
-                    <PackageGenerator
                         activeTab={activeTab}
                         onTabChange={setActiveTab}
                         onRateImage={handleRateImage}

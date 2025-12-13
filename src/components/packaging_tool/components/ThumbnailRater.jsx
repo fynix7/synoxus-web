@@ -404,14 +404,7 @@ const ThumbnailRater = ({ activeTab, onTabChange, imageToRate, onClearImageToRat
     return (
         <div className="generator-container" onPaste={handlePaste} tabIndex="0" style={{ outline: 'none', gridTemplateColumns: '340px 1fr' }}>
             {/* Characters Button - Top Left */}
-            <button
-                className="characters-btn"
-                onClick={() => setShowCharManager(true)}
-                title="Manage Characters"
-            >
-                <Users size={20} />
-                CHARACTERS
-            </button>
+
 
             {/* Saved Button - Top Right (Fixed via CSS) */}
             <button
@@ -438,8 +431,8 @@ const ThumbnailRater = ({ activeTab, onTabChange, imageToRate, onClearImageToRat
                     </div>
                     <div className="panel-content">
                         {/* Compare Mode Toggle */}
-                        <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 500 }}>
+                        <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '4px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>
                                 <input
                                     type="checkbox"
                                     checked={compareMode}
@@ -451,11 +444,11 @@ const ThumbnailRater = ({ activeTab, onTabChange, imageToRate, onClearImageToRat
                                         setRatingResult(null);
                                         setComparisonResult(null);
                                     }}
-                                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                    style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
                                 />
                                 <span>Compare Mode</span>
                             </label>
-                            {compareMode && <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Upload 2 thumbnails to compare</span>}
+                            {compareMode && <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginLeft: 'auto' }}>Upload 2 thumbnails</span>}
                         </div>
 
                         {/* Conditional Upload UI */}
@@ -582,15 +575,13 @@ const ThumbnailRater = ({ activeTab, onTabChange, imageToRate, onClearImageToRat
                             className="generate-btn"
                             onClick={compareMode ? handleCompare : handleRate}
                             disabled={compareMode ? (!thumb1 || !thumb2) : (refThumbs.length === 0)}
-                            style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                            style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '48px' }}
+                            title={compareMode ? 'Compare Thumbnails' : 'Rate Thumbnail'}
                         >
                             {queueState.processing || queueState.queue.some(j => j.type === 'rating') ? (
                                 <div className="spinner-small" style={{ borderTopColor: 'white', borderRightColor: 'rgba(255,255,255,0.3)', borderBottomColor: 'rgba(255,255,255,0.3)', borderLeftColor: 'rgba(255,255,255,0.3)' }}></div>
                             ) : (
-                                <>
-                                    <Pentagon size={20} />
-                                    <span>{compareMode ? 'Compare Thumbnails' : 'Rate Thumbnail'}</span>
-                                </>
+                                <Pentagon size={28} fill="currentColor" fillOpacity={0.2} />
                             )}
                         </button>
 
