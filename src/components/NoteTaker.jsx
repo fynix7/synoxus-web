@@ -137,32 +137,83 @@ const NoteTaker = () => {
         const mainVideo = videos.find(v => v.id === selectedVids[0]);
         const title = mainVideo ? mainVideo.title : "Selected Video";
         const author = mainVideo ? mainVideo.author : "Unknown Creator";
+        const videoId = mainVideo ? mainVideo.id : null;
 
-        const prompt = `You are an expert note-taker and content synthesizer. 
-        I need comprehensive notes for a YouTube video titled "${title}" by "${author}".
-        
-        Since I cannot provide the full transcript right now, please generate a high-quality, structured summary based on what is typically covered in a video with this specific title and by this creator (if known).
-        
-        Infer the likely key points, strategies, and actionable advice.
-        
-        Format the output in clean Markdown. YOU MUST FOLLOW THIS EXACT STRUCTURE:
+        let transcriptText = null;
 
-        # Key Takeaways (TL;DR)
-        [Provide a bulleted list of the 3 most critical insights. Make this section stand out.]
+        // Try to fetch transcript
+        if (videoId && !videoId.startsWith('mock_')) {
+            try {
+                const transcriptRes = await fetch(`/api/transcript?videoId=${videoId}`);
+                if (transcriptRes.ok) {
+                    const transcriptData = await transcriptRes.json();
+                    transcriptText = transcriptData.transcript;
+                }
+            } catch (e) {
+                console.warn("Could not fetch transcript:", e);
+            }
+        }
 
-        # Executive Summary
-        [A concise paragraph summarizing the video's core message and value proposition.]
+        let prompt;
 
-        # Core Concepts & Frameworks
-        [Detail the main ideas. Use bolding for key terms.]
+        if (transcriptText) {
+            prompt = `You are an expert note-taker and content synthesizer. 
+            I need comprehensive notes for a YouTube video titled "${title}" by "${author}".
+            
+            Here is the TRANSCRIPT of the video:
+            """
+            ${transcriptText}
+            """
+            
+            Based on this transcript, generate a high-quality, structured summary.
+            
+            Format the output in clean Markdown. YOU MUST FOLLOW THIS EXACT STRUCTURE:
 
-        # Actionable Steps
-        [A checklist of things the viewer can implement immediately.]
+            # Key Takeaways (TL;DR)
+            [Provide a bulleted list of the 3 most critical insights. Make this section stand out.]
 
-        # Notable Quotes
-        > [Include 1-2 powerful, hypothetical quotes that capture the essence.]
-        
-        Tone: Professional, insightful, and action-oriented. Use formatting (bolding, lists) to make it highly readable.`;
+            # Executive Summary
+            [A concise paragraph summarizing the video's core message and value proposition.]
+
+            # Core Concepts & Frameworks
+            [Detail the main ideas. Use bolding for key terms.]
+
+            # Actionable Steps
+            [A checklist of things the viewer can implement immediately.]
+
+            # Notable Quotes
+            > [Include 1-2 powerful quotes directly from the transcript if possible.]
+            
+            Tone: Professional, insightful, and action-oriented. Use formatting (bolding, lists) to make it highly readable.`;
+        } else {
+            prompt = `You are an expert note-taker and content synthesizer. 
+            I need comprehensive notes for a YouTube video titled "${title}" by "${author}".
+            
+            Since I cannot provide the full transcript right now, please generate a high-quality, structured summary based on what is typically covered in a video with this specific title and by this creator (if known).
+            
+            Infer the likely key points, strategies, and actionable advice.
+            
+            Format the output in clean Markdown. YOU MUST FOLLOW THIS EXACT STRUCTURE:
+
+            # Key Takeaways (TL;DR)
+            [Provide a bulleted list of the 3 most critical insights. Make this section stand out.]
+
+            # Executive Summary
+            [A concise paragraph summarizing the video's core message and value proposition.]
+
+            # Core Concepts & Frameworks
+            [Detail the main ideas. Use bolding for key terms.]
+
+            # Actionable Steps
+            [A checklist of things the viewer can implement immediately.]
+
+            # Notable Quotes
+            > [Include 1-2 powerful, hypothetical quotes that capture the essence.]
+            
+            Tone: Professional, insightful, and action-oriented. Use formatting (bolding, lists) to make it highly readable.
+            
+            IMPORTANT: Add a disclaimer at the very bottom in small italic text: "_Note: Transcript unavailable. Notes generated based on video metadata and AI inference._"`;
+        }
 
         try {
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
@@ -194,8 +245,8 @@ const NoteTaker = () => {
         setNotes('');
 
         const steps = [
-            'Analyzing video metadata...',
-            'Identifying key themes...',
+            'Fetching transcript...',
+            'Analyzing content...',
             'Synthesizing insights...',
             'Formatting with AI...'
         ];
