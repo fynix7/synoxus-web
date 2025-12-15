@@ -156,7 +156,58 @@ const SettingsModal = ({ isOpen, onClose, theme, toggleTheme }) => {
                             Check Available Models (Debug)
                         </button>
                     </div>
+
+                    <div className="input-group" style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid var(--panel-border)' }}>
+                        <label style={{ color: 'var(--error)' }}>Danger Zone</label>
+                        <button
+                            className="btn-glass"
+                            style={{
+                                width: '100%',
+                                color: 'var(--error)',
+                                borderColor: 'var(--error)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px'
+                            }}
+                            onClick={async () => {
+                                if (window.confirm("WARNING: This will delete ALL saved characters, history, and settings from your browser. This action cannot be undone. Are you sure?")) {
+                                    try {
+                                        // Clear LocalStorage
+                                        localStorage.clear();
+
+                                        // Clear IndexedDB
+                                        const DB_NAME = 'thumbnail-generator-db';
+                                        const req = indexedDB.deleteDatabase(DB_NAME);
+
+                                        req.onsuccess = () => {
+                                            alert("All local data has been wiped. The page will now reload.");
+                                            window.location.reload();
+                                        };
+
+                                        req.onerror = () => {
+                                            alert("Failed to delete database. Please try clearing browser data manually.");
+                                        };
+
+                                        req.onblocked = () => {
+                                            alert("Operation blocked. Please close other tabs of this app and try again.");
+                                        };
+                                    } catch (e) {
+                                        console.error("Wipe failed:", e);
+                                        alert("Error wiping data: " + e.message);
+                                    }
+                                }
+                            }}
+                        >
+                            <span style={{ fontSize: '18px' }}>🗑️</span>
+                            Reset All Data & Wipe Storage
+                        </button>
+                        <p className="helper-text" style={{ color: 'var(--text-secondary)' }}>
+                            Use this if you accidentally saved sensitive data. This completely clears your browser's local storage for this app.
+                        </p>
+                    </div>
                 </div>
+
 
                 <div className="modal-footer">
                     <button

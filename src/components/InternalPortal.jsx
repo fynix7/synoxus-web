@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../supabaseClient';
 import PackagingTool from './packaging_tool/PackagingTool';
+import ShortFormScribe from './ShortFormScribe';
 import ChatConfiguration from './ChatConfiguration';
 import NoteTaker from './NoteTaker';
 import { Plus, X, Trash2, ChevronLeft, ChevronRight, Save, LogOut, LayoutGrid, Package, MessageSquare, ArrowLeft, ArrowRight, Database, GraduationCap, Calendar, Tag, Clock, Users, Settings, Edit3, CheckSquare, Rocket, FileText, Video, User, Fingerprint, Briefcase, Globe, Search, Lightbulb, Mic, Image, TrendingUp, BookOpen, Palette, Type, Upload, LayoutTemplate, Target, Eye, Heart, Zap, Swords } from 'lucide-react';
@@ -540,7 +541,7 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                         <span className="font-bold text-black text-xs">S</span>
                     </div>
                     <h1 className="font-medium text-lg tracking-tight">
-                        <span onClick={() => isAuthenticated ? setView('menu') : onExit()} className="cursor-pointer hover:text-[#ff982b] transition-colors">Synoxus</span> <span className="text-[#52525b] font-light">/ {isAuthenticated ? (view === 'menu' ? 'Portal' : view === 'crm' ? 'Pipeline' : view === 'packaging' ? 'Thumbnail Generator' : view === 'messaging' ? 'Chat Configuration' : view === 'note_taker' ? 'Note Taker' : view === 'vault' ? 'Growth Vault' : view === 'course' ? 'Course' : view === 'onboarding' ? 'Onboarding' : view === 'brand_identity' ? 'Brand Identity' : view === 'strategic_identity' ? 'Strategic Identity' : view === 'masterclass' ? 'Masterclass' : view === 'youtube_masterclass' ? 'YouTube Masterclass' : view === 'short_form_scribe' ? 'ShortForm Scribe' : 'Sheet') : 'Login'}</span>
+                        <span onClick={() => { isAuthenticated ? setView('menu') : onExit(); window.history.pushState({}, '', '/portal'); }} className="cursor-pointer hover:text-[#ff982b] transition-colors">Synoxus</span> <span className="text-[#52525b] font-light">/ {isAuthenticated ? (view === 'menu' ? 'Portal' : view === 'crm' ? 'Pipeline' : view === 'packaging' ? 'Thumbnail Generator' : view === 'messaging' ? 'Chat Configuration' : view === 'note_taker' ? 'Note Taker' : view === 'vault' ? 'Short Form' : view === 'long_form' ? 'Long Form' : view === 'funnel' ? 'Funnel' : view === 'course' ? 'Course' : view === 'onboarding' ? 'Onboarding' : view === 'brand_identity' ? 'Brand Identity' : view === 'strategic_identity' ? 'Strategic Identity' : view === 'masterclass' ? 'Masterclass' : view === 'youtube_masterclass' ? 'YouTube Masterclass' : view === 'short_form_scribe' ? 'ShortForm Scribe' : view === 'vsl' ? 'VSL' : view === 'title_generator' ? 'Title Generator' : view === 'landing_page' ? 'Landing Page' : view === 'sheet_wip' ? 'Work in Progress' : view === 'mission_statement' ? 'Mission Statement' : view === 'vision_statement' ? 'Vision Statement' : view === 'core_values' ? 'Core Values' : view === 'target_audience' ? 'Target Audience' : view === 'usp' ? 'USP' : view === 'key_competitors' ? 'Competitors' : view.startsWith('brand_sheets') ? 'Brand Sheet' : 'Sheet') : 'Login'}</span>
                         {isAuthenticated && <span className="ml-2 text-[10px] font-bold uppercase bg-white/10 px-2 py-0.5 rounded text-[#71717a]">{userRole.replace('_', ' ')}</span>}
                     </h1>
                 </div>
@@ -565,9 +566,9 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                         onClick={() => {
                             if (['brand_identity', 'strategic_identity', 'mission_statement', 'vision_statement', 'core_values', 'target_audience', 'usp', 'key_competitors'].includes(view)) {
                                 setView('onboarding');
-                            } else if (['course', 'masterclass', 'short_form_scribe', 'hooks', 'dm_setter', 'stories', 'profile'].includes(view)) {
+                            } else if (['course', 'masterclass', 'short_form_scribe', 'hooks', 'dm_setter', 'stories', 'appointment_setter'].includes(view)) {
                                 setView('vault');
-                            } else if (['note_taker', 'packaging', 'youtube_masterclass', 'title_generator'].includes(view)) {
+                            } else if (['note_taker', 'packaging', 'youtube_masterclass', 'title_generator', 'profile', 'cashcade'].includes(view)) {
                                 setView('long_form');
                             } else if (['messaging', 'landing_page', 'vsl'].includes(view)) {
                                 setView('funnel');
@@ -781,7 +782,7 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                             { id: 'hooks', title: 'Winning Hooks Library', icon: Lightbulb, desc: 'Curated collection of high-performing hooks.' },
                                             { id: 'dm_setter', title: 'AI DM Setter', icon: MessageSquare, desc: 'Automated DM outreach and appointment setting.' },
                                             { id: 'stories', title: 'Story Sequences', icon: Image, desc: 'Templates for engaging story arcs.' },
-                                            { id: 'profile', title: 'Profile Optimization', icon: User, desc: 'Audit and improve your bio and highlights.' }
+                                            { id: 'appointment_setter', title: 'Appointment Setter Training', icon: Users, desc: 'Train your team to book more calls.' }
                                         ].map((item) => (
                                             <motion.div
                                                 key={item.id}
@@ -796,6 +797,9 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                                     <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">{item.title}</h3>
                                                     <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">{item.desc}</p>
                                                 </div>
+                                                {(item.id === 'dm_setter' || item.id === 'stories' || item.id === 'appointment_setter') && (
+                                                    <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
+                                                )}
                                             </motion.div>
                                         ))}
                                     </div>
@@ -864,6 +868,38 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                             </div>
                                             <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Title Generator</h3>
                                             <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Generate viral titles for your videos.</p>
+                                        </div>
+                                        <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
+                                    </motion.div>
+
+                                    {/* Profile Optimization (Moved from Short Form) */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        onClick={() => setView('sheet_wip')}
+                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                    >
+                                        <div>
+                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                <User className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                            </div>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Profile Optimization</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Audit and improve your bio and highlights.</p>
+                                        </div>
+                                        <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
+                                    </motion.div>
+
+                                    {/* Cashcade */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        onClick={() => setView('sheet_wip')}
+                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                    >
+                                        <div>
+                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                <TrendingUp className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                            </div>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Cashcade</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Maximize revenue from every viewer.</p>
                                         </div>
                                         <span className="text-[#ff982b] text-xs font-bold uppercase bg-[#ff982b]/10 px-3 py-1 rounded w-fit group-hover:bg-black/10 group-hover:text-black transition-colors relative z-10">Work in Progress</span>
                                     </motion.div>
@@ -1201,25 +1237,7 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
 
                         {
                             view === 'short_form_scribe' && (
-                                <div className="flex-1 flex flex-col items-center justify-center text-center p-8 max-w-2xl mx-auto">
-                                    <div className="w-20 h-20 rounded-2xl bg-[#121212] border border-white/10 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(255,152,43,0.1)]">
-                                        <Edit3 className="w-10 h-10 text-[#ff982b]" />
-                                    </div>
-                                    <h2 className="text-3xl font-bold text-white mb-4">Work in Progress</h2>
-                                    <p className="text-[#a1a1aa] text-lg mb-8">
-                                        We're crafting something exceptional. This module will be available soon.
-                                    </p>
-                                    <div className="text-left bg-[#121212] border border-white/10 p-6 rounded-xl w-full text-sm text-[#a1a1aa] space-y-4">
-                                        <h4 className="text-white font-bold text-lg mb-2">Planned Features:</h4>
-                                        <ul className="list-disc pl-5 space-y-2">
-                                            <li><strong className="text-[#ff982b]">Replace The Plural:</strong> Automatically changes "Everyone", "People", "Y'all" to "You" for better engagement.</li>
-                                            <li><strong className="text-[#ff982b]">Give the Ownership:</strong> Adds "You" to sentences to hand ownership to the viewer.</li>
-                                            <li><strong className="text-[#ff982b]">Unique Power Words:</strong> Suggests rare, attention-grabbing words (e.g., "Dangerously", "Disgustingly").</li>
-                                            <li><strong className="text-[#ff982b]">High Value Per Second:</strong> Color-coded script optimization (Green=Value, Yellow=Too Long, Red=Remove).</li>
-                                            <li><strong className="text-[#ff982b]">Hook Generator:</strong> Generates 4 viral hook variations based on winning formulas.</li>
-                                        </ul>
-                                    </div>
-                                </div>
+                                <ShortFormScribe />
                             )
                         }
 

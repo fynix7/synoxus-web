@@ -105,25 +105,7 @@ const SingleGenerator = ({ onRequestSettings, activeTab, onTabChange, extraHeade
         loadCharacters();
     }, [showCharManager]);
 
-    // Parse @ mentions from text and return character images
-    const parseCharacterMentions = (text) => {
-        if (!text) return [];
-        const mentionPattern = /@(\w+)/g;
-        const mentions = [];
-        let match;
 
-        while ((match = mentionPattern.exec(text)) !== null) {
-            const characterName = match[1];
-            const character = characters.find(c =>
-                c.name.toLowerCase() === characterName.toLowerCase()
-            );
-            if (character && character.images) {
-                mentions.push(...character.images);
-            }
-        }
-
-        return mentions;
-    };
 
     const handleRefThumbUpload = (e) => {
         if (e.target.files) {
@@ -177,9 +159,17 @@ const SingleGenerator = ({ onRequestSettings, activeTab, onTabChange, extraHeade
                 }
             }
 
-            // Parse @ mentions from instructions to get character images
-            const instructionMentions = parseCharacterMentions(currentInstructions);
-            const characterFaces = [...new Set([...instructionMentions])];
+            // Identify active characters from instructions (handling names with spaces)
+            const activeCharacters = [];
+            characters.forEach(char => {
+                const escapedName = char.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const pattern = new RegExp(`@${escapedName}\\b`, 'i');
+                if (pattern.test(currentInstructions)) {
+                    if (char.images && char.images.length > 0) {
+                        activeCharacters.push({ name: char.name, images: char.images });
+                    }
+                }
+            });
 
             let finalInstructions = currentInstructions;
             if (currentThumbs.length === 1 && !currentInstructions.toLowerCase().includes('recreate')) {
@@ -232,7 +222,7 @@ const SingleGenerator = ({ onRequestSettings, activeTab, onTabChange, extraHeade
                         primary: primaryColor,
                         secondary: useSecondaryColor ? secondaryColor : null
                     } : null,
-                    characterImages: characterFaces,
+                    activeCharacters, // Pass structured character data
                     refThumbs: currentThumbs.map(t => t.preview), // Keep passing previews for reference
                     baseImage, // Pass the clean base image
                     maskImage, // Pass the extracted mask
@@ -418,6 +408,7 @@ const SingleGenerator = ({ onRequestSettings, activeTab, onTabChange, extraHeade
 
         if (newThumbs.length > 0) {
             setRefThumbs(prev => [...prev, ...newThumbs]);
+            alert(`Added ${newThumbs.length} image(s) from clipboard.`);
         }
     };
 

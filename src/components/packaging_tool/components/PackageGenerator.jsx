@@ -34,10 +34,7 @@ const PackageGenerator = ({ activeTab, onTabChange, onRateImage }) => {
         const loadChars = async () => {
             const chars = await getCharacters();
             setCharacters(chars);
-            // Auto-select first character if none selected and chars exist
-            if (chars.length > 0 && !selectedCharId) {
-                setSelectedCharId(chars[0].id);
-            }
+
         };
         loadChars();
     }, []); // Only run once on mount
@@ -108,7 +105,7 @@ const PackageGenerator = ({ activeTab, onTabChange, onRateImage }) => {
                         primary: primaryColor,
                         secondary: useSecondaryColor ? secondaryColor : null
                     },
-                    characterImages: activeChar.images,
+                    activeCharacters: [{ name: activeChar.name, images: activeChar.images }],
                     variationCount,
                     instructions: `Package generation for ${inputType}: ${inputType === 'keyword' ? keyword : channelLink}. Title context: ${videoTopic}. Ensure the character appears ONLY ONCE in the composition.`
                 },
@@ -137,7 +134,7 @@ const PackageGenerator = ({ activeTab, onTabChange, onRateImage }) => {
                         primary: primaryColor,
                         secondary: useSecondaryColor ? secondaryColor : null
                     },
-                    characterImages: characters.find(c => c.id === selectedCharId)?.images || [],
+                    activeCharacters: characters.find(c => c.id === selectedCharId) ? [{ name: characters.find(c => c.id === selectedCharId).name, images: characters.find(c => c.id === selectedCharId).images }] : [],
                     variationCount: 1,
                     instructions: `Remix of package. Ensure the character appears ONLY ONCE.`
                 },

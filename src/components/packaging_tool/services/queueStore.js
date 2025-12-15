@@ -76,7 +76,7 @@ class QueueStore {
                         refThumbs: job.apiParams.refThumbs ? await Promise.all(job.apiParams.refThumbs.map(url => urlToBase64(url))) : [],
                         baseImage: job.apiParams.baseImage ? await urlToBase64(job.apiParams.baseImage) : null,
                         maskImage: job.apiParams.maskImage ? await urlToBase64(job.apiParams.maskImage) : null,
-                        characterImages: job.apiParams.characterImages || []
+                        activeCharacters: job.apiParams.activeCharacters || []
                     };
 
                     historyEntry = await saveToHistory(historyData);

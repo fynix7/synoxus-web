@@ -28,7 +28,16 @@ export const generateThumbnail = async (params) => {
         throw new Error('API_KEY_MISSING');
     }
 
-    const { topic, instructions, brandColors, characterImages, characterName, refThumbs, baseImage, maskImage, variationCount = 1, refinementContext } = params;
+    const { topic, instructions, brandColors, activeCharacters, characterName, refThumbs, baseImage, maskImage, variationCount = 1, refinementContext } = params;
+
+    // SECURITY & TRANSPARENCY LOG: Explicitly list all image sources
+    console.group("🔒 GENERATION SECURITY AUDIT");
+    console.log("Timestamp:", new Date().toISOString());
+    console.log("Active Characters (User Selected/Mentioned):", activeCharacters?.map(c => c.name) || "None");
+    console.log("Reference Thumbnails (User Uploaded/Pasted):", refThumbs?.length || 0);
+    console.log("Base Image Source:", baseImage ? "User Provided" : "None");
+    console.log("Mask Image Source:", maskImage ? "User Drawn" : "None");
+    console.groupEnd();
 
     let userPrompt = "";
     let parts = [];
@@ -225,17 +234,19 @@ REMEMBER: You are editing a SINGLE LAYER with a PROTECTIVE MASK. The black areas
         }
 
         // Add Character Images (CRITICAL FIX: Ensure characters are passed in Edit Mode)
-        if (characterImages && characterImages.length > 0) {
-            parts.push({ text: "\n[Character Reference]:" });
-            for (const imgUrl of characterImages) {
-                const imgData = await processImage(imgUrl);
-                if (imgData) {
-                    parts.push({
-                        inlineData: {
-                            mimeType: imgData.mimeType,
-                            data: imgData.data
-                        }
-                    });
+        if (activeCharacters && activeCharacters.length > 0) {
+            for (const char of activeCharacters) {
+                parts.push({ text: `\n[Reference for ${char.name}]:` });
+                for (const imgUrl of char.images) {
+                    const imgData = await processImage(imgUrl);
+                    if (imgData) {
+                        parts.push({
+                            inlineData: {
+                                mimeType: imgData.mimeType,
+                                data: imgData.data
+                            }
+                        });
+                    }
                 }
             }
         }
@@ -251,6 +262,12 @@ INPUT DATA:
 
         if (characterName) {
             userPrompt += `- Main Character: ${characterName} \n`;
+        }
+
+        // Explicit Character Instruction
+        if (activeCharacters && activeCharacters.length > 0) {
+            const names = activeCharacters.map(c => c.name).join(', ');
+            userPrompt += `\n\nCHARACTER CONSISTENCY INSTRUCTION:\nYou have been provided with labeled reference images for: ${names}. You MUST use these references to generate the subject. Maintain facial features, hair style, and key characteristics of ${names}.\n`;
         }
 
         userPrompt += `\nYOUR CORE PROTOCOL(THE "SEE AND SOLVE" LOOP):
@@ -283,17 +300,19 @@ Brand Colors to use: Primary ${brandColors.primary} `;
         parts.push({ text: userPrompt });
 
         // Add Character Images
-        if (characterImages && characterImages.length > 0) {
-            parts.push({ text: "\n[Character Reference]:" });
-            for (const imgUrl of characterImages) {
-                const imgData = await processImage(imgUrl);
-                if (imgData) {
-                    parts.push({
-                        inlineData: {
-                            mimeType: imgData.mimeType,
-                            data: imgData.data
-                        }
-                    });
+        if (activeCharacters && activeCharacters.length > 0) {
+            for (const char of activeCharacters) {
+                parts.push({ text: `\n[Reference for ${char.name}]:` });
+                for (const imgUrl of char.images) {
+                    const imgData = await processImage(imgUrl);
+                    if (imgData) {
+                        parts.push({
+                            inlineData: {
+                                mimeType: imgData.mimeType,
+                                data: imgData.data
+                            }
+                        });
+                    }
                 }
             }
         }
@@ -788,7 +807,7 @@ export const generatePackage = async (params) => {
         finalImageModelId = `models/${finalImageModelId}`;
     }
 
-    const { topic, videoTopic, channelLink, formats, brandColors, characterImages, variationCount = 1 } = params;
+    const { topic, videoTopic, channelLink, formats, brandColors, activeCharacters, variationCount = 1 } = params;
 
     if (!apiKey) throw new Error('API_KEY_MISSING');
 
@@ -809,39 +828,39 @@ export const generatePackage = async (params) => {
     };
 
     // Helper for image generation (reusing logic from generateThumbnail but simplified for single call)
-    const generateImage = async (imagePrompt, charImages) => {
+    const generateImage = async (imagePrompt, activeChars) => {
         const parts = [{ text: imagePrompt }];
 
-        // Add Character Images - reuse urlToBase64 from parent scope
-        if (charImages && charImages.length > 0) {
-            parts.push({ text: "\n[Character Reference]:" });
+        // Add Character Images
+        if (activeChars && activeChars.length > 0) {
+            for (const char of activeChars) {
+                parts.push({ text: `\n[Reference for ${char.name}]:` });
+                for (const imgUrl of char.images) {
+                    let base64Data = "";
+                    if (imgUrl.startsWith('data:')) {
+                        base64Data = imgUrl.split(',')[1];
+                    } else {
+                        try {
+                            const response = await fetch(imgUrl);
+                            const blob = await response.blob();
+                            base64Data = await new Promise((resolve) => {
+                                const reader = new FileReader();
+                                reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                                reader.readAsDataURL(blob);
+                            });
+                        } catch (e) { console.error(e); }
+                    }
 
-            for (const imgUrl of charImages) {
-                let base64Data = "";
-                if (imgUrl.startsWith('data:')) {
-                    base64Data = imgUrl.split(',')[1];
-                } else {
-                    // This was broken before, now we can't access urlToBase64 anyway.
-                    // But we can use processImage if we define it here or make it global.
-                    // For now, I'll just use a local fetch since this function is isolated.
-                    try {
-                        const response = await fetch(imgUrl);
-                        const blob = await response.blob();
-                        base64Data = await new Promise((resolve) => {
-                            const reader = new FileReader();
-                            reader.onloadend = () => resolve(reader.result.split(',')[1]);
-                            reader.readAsDataURL(blob);
+                    if (base64Data) {
+                        parts.push({
+                            inlineData: { mimeType: "image/jpeg", data: base64Data }
                         });
-                    } catch (e) { console.error(e); }
-                }
-
-                if (base64Data) {
-                    parts.push({
-                        inlineData: { mimeType: "image/jpeg", data: base64Data }
-                    });
+                    }
                 }
             }
         }
+
+
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${finalImageModelId}:generateContent?key=${apiKey}`, {
             method: 'POST',
@@ -892,6 +911,11 @@ export const generatePackage = async (params) => {
             - Video Title: "${videoTopic || generatedTitle}"
             - Channel Context: ${channelLink || 'None'}
             - Brand Colors: Primary ${brandColors.primary || 'None'}${brandColors.secondary ? `, Secondary ${brandColors.secondary}` : ''}
+            ${activeCharacters && activeCharacters.length > 0 ? `- Main Character: ${activeCharacters.map(c => c.name).join(', ')} (See labeled reference images)` : ''}
+            
+            ${activeCharacters && activeCharacters.length > 0 ? `CHARACTER CONSISTENCY INSTRUCTION:
+            You have been provided with labeled reference images for: ${activeCharacters.map(c => c.name).join(', ')}. 
+            You MUST use these references to generate the subject. Maintain facial features, hair style, and key characteristics of ${activeCharacters.map(c => c.name).join(' and ')}.` : ''}
             
             CRITICAL THUMBNAIL DESIGN RULES:
             
@@ -956,7 +980,7 @@ export const generatePackage = async (params) => {
             // Inject User Feedback
             imagePrompt += feedbackStore.getFeedbackSummary('thumbnail');
 
-            const generatedImage = await generateImage(imagePrompt, characterImages);
+            const generatedImage = await generateImage(imagePrompt, activeCharacters);
 
             if (generatedImage) {
                 results.push({
