@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+
 
 export default async function handler(req, res) {
     const { videoId } = req.query;
@@ -7,6 +7,51 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Missing videoId' });
     }
 
+    console.log(`[API] Fetching metadata for: ${videoId}`);
+
+    // Strategy 1: Invidious API (Best for duration/details without rate limits)
+    const instances = [
+        'https://inv.tux.pizza',
+        'https://invidious.projectsegfau.lt',
+        'https://invidious.jing.rocks',
+        'https://vid.puffyan.us',
+        'https://invidious.privacydev.net',
+        'https://invidious.nerdvpn.de',
+        'https://invidious.lunar.icu',
+        'https://yewtu.be'
+    ];
+
+    for (const instance of instances) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+            const response = await fetch(`${instance}/api/v1/videos/${videoId}`, {
+                signal: controller.signal,
+                headers: { 'User-Agent': 'Mozilla/5.0' }
+            });
+            clearTimeout(timeoutId);
+
+            if (response.ok) {
+                const data = await response.json();
+                const lengthSeconds = data.lengthSeconds;
+                const minutes = Math.floor(lengthSeconds / 60);
+                const seconds = lengthSeconds % 60;
+                const duration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                return res.status(200).json({
+                    title: data.title,
+                    author: data.author,
+                    duration,
+                    thumbnail: data.videoThumbnails?.find(t => t.quality === 'medium')?.url || data.videoThumbnails?.[0]?.url
+                });
+            }
+        } catch (e) {
+            // Continue to next instance
+        }
+    }
+
+    // Strategy 2: Direct Scrape (Fallback)
     try {
         const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
             headers: {
@@ -14,39 +59,43 @@ export default async function handler(req, res) {
             }
         });
         const text = await response.text();
-
-        // Extract ytInitialPlayerResponse
         const jsonMatch = text.match(/ytInitialPlayerResponse\s*=\s*({.+?});/);
-        if (!jsonMatch) {
-            throw new Error('Could not find player response');
+
+        if (jsonMatch) {
+            const data = JSON.parse(jsonMatch[1]);
+            const videoDetails = data.videoDetails;
+            if (videoDetails) {
+                const lengthSeconds = parseInt(videoDetails.lengthSeconds);
+                const minutes = Math.floor(lengthSeconds / 60);
+                const seconds = lengthSeconds % 60;
+                const duration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                return res.status(200).json({
+                    title: videoDetails.title,
+                    author: videoDetails.author,
+                    duration,
+                    thumbnail: videoDetails.thumbnail.thumbnails.pop().url
+                });
+            }
         }
-
-        const data = JSON.parse(jsonMatch[1]);
-        const videoDetails = data.videoDetails;
-
-        if (!videoDetails) {
-            throw new Error('No video details found');
-        }
-
-        const title = videoDetails.title;
-        const author = videoDetails.author;
-        const lengthSeconds = parseInt(videoDetails.lengthSeconds);
-        const thumbnail = videoDetails.thumbnail.thumbnails.pop().url; // Get highest quality
-
-        // Format duration
-        const minutes = Math.floor(lengthSeconds / 60);
-        const seconds = lengthSeconds % 60;
-        const duration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
-        res.status(200).json({
-            title,
-            author,
-            duration,
-            thumbnail
-        });
-
     } catch (error) {
-        console.error('Metadata fetch error:', error);
-        res.status(500).json({ error: 'Failed to fetch metadata' });
+        console.error(`[API] Direct metadata scrape failed:`, error);
     }
+
+    // Strategy 3: NoEmbed (Last Resort - No Duration)
+    try {
+        const response = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
+        const data = await response.json();
+
+        return res.status(200).json({
+            title: data.title,
+            author: data.author_name,
+            duration: '??:??',
+            thumbnail: data.thumbnail_url
+        });
+    } catch (error) {
+        console.error(`[API] NoEmbed failed:`, error);
+    }
+
+    return res.status(500).json({ error: 'Failed to fetch metadata' });
 }

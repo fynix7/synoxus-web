@@ -5,6 +5,7 @@ import PackagingTool from './packaging_tool/PackagingTool';
 import ShortFormScribe from './ShortFormScribe';
 import ChatConfiguration from './ChatConfiguration';
 import NoteTaker from './NoteTaker';
+import OutlierScout from './outlier_scout/OutlierScout';
 import { Plus, X, Trash2, ChevronLeft, ChevronRight, Save, LogOut, LayoutGrid, Package, MessageSquare, ArrowLeft, ArrowRight, Database, GraduationCap, Calendar, Tag, Clock, Users, Settings, Edit3, CheckSquare, Rocket, FileText, Video, User, Fingerprint, Briefcase, Globe, Search, Lightbulb, Mic, Image, TrendingUp, BookOpen, Palette, Type, Upload, LayoutTemplate, Target, Eye, Heart, Zap, Swords } from 'lucide-react';
 import { HexColorPicker } from "react-colorful";
 
@@ -112,6 +113,11 @@ const Column = ({ title, id, tasks, onAdd, onDelete, onMove, onEdit, userRole, c
 
                             {/* Tags & Meta */}
                             <div className="flex flex-wrap gap-2">
+                                {task.metadata?.tag && (
+                                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded border transition-colors ${task.metadata.tag === 'Long Form' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' : 'bg-pink-500/20 text-pink-400 border-pink-500/30'} group-hover:bg-black/10 group-hover:text-black group-hover:border-black/20`}>
+                                        {task.metadata.tag}
+                                    </span>
+                                )}
                                 {task.priority && (
                                     <span className={`text-[10px] font-medium px-2 py-0.5 rounded border transition-colors ${PRIORITY_TAGS[task.priority] || 'bg-white/10 text-white border-white/20'} group-hover:bg-black/10 group-hover:text-black group-hover:border-black/20`}>
                                         {task.priority}
@@ -208,6 +214,27 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
         setView(initialView);
     }, [initialView]);
 
+    // Sync URL with view
+    useEffect(() => {
+        let path = '/portal';
+        switch (view) {
+            case 'packaging': path = '/thumbnail-generator'; break;
+            case 'outlier_scout': path = '/outlier-scout'; break;
+            case 'note_taker': path = '/note-taker'; break;
+            case 'short_form_scribe': path = '/short-form-scribe'; break;
+            case 'messaging': path = '/chat-config'; break;
+            case 'vsl': path = '/vsl'; break;
+            case 'title_generator': path = '/title-generator'; break;
+            case 'landing_page': path = '/landing-page'; break;
+            case 'masterclass': path = '/masterclass'; break;
+            case 'menu': path = '/portal'; break;
+            default: path = '/portal';
+        }
+        if (window.location.pathname !== path) {
+            window.history.pushState({}, '', path);
+        }
+    }, [view]);
+
     // Brand Identity State
     const [primaryColor, setPrimaryColor] = useState(() => localStorage.getItem('brandPrimaryColor') || '#ff982b');
     const [activeColorPicker, setActiveColorPicker] = useState(false);
@@ -260,8 +287,9 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                     { id: 'Ideation', title: 'Ideation', tasks: [] },
                     { id: 'Scripting', title: 'Scripting', tasks: [] },
                     { id: 'Filming', title: 'Filming', tasks: [] },
+                    { id: 'Editing', title: 'Editing', tasks: [] },
                     { id: 'Packaging', title: 'Packaging', tasks: [] },
-                    { id: 'Ready to Post', title: 'Ready to Post', tasks: [] }
+                    { id: 'Posted', title: 'Posted', tasks: [] }
                 ];
             }
 
@@ -365,13 +393,14 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
     };
 
     const handleAddTask = async (columnId) => {
+        const tag = prompt("Enter tag (Long Form / Short Form):", "Long Form");
         const newTask = {
             title: 'New Task',
             description: '',
             status: columnId,
             created_at: new Date().toISOString(),
             created_by: userKey,
-            metadata: { subtasks: [], assignee: '' }
+            metadata: { subtasks: [], assignee: '', tag: tag || 'Long Form' }
         };
 
         if (supabase) {
@@ -388,7 +417,7 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                     createdBy: createdTask.created_by,
                     createdAt: createdTask.created_at,
                     columnId: createdTask.status,
-                    metadata: createdTask.metadata || { subtasks: [], assignee: '' }
+                    metadata: createdTask.metadata || { subtasks: [], assignee: '', tag: tag || 'Long Form' }
                 };
                 setColumns(prev => prev.map(col =>
                     col.id === columnId
@@ -568,10 +597,12 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                 setView('onboarding');
                             } else if (['course', 'masterclass', 'short_form_scribe', 'hooks', 'dm_setter', 'stories', 'appointment_setter'].includes(view)) {
                                 setView('vault');
-                            } else if (['note_taker', 'packaging', 'youtube_masterclass', 'title_generator', 'profile', 'cashcade'].includes(view)) {
+                            } else if (['note_taker', 'packaging', 'youtube_masterclass', 'title_generator', 'profile', 'cashcade', 'outlier_scout'].includes(view)) {
                                 setView('long_form');
                             } else if (['messaging', 'landing_page', 'vsl'].includes(view)) {
                                 setView('funnel');
+                            } else if (view === 'sops') {
+                                setView('resources');
                             } else if (view.startsWith('brand_sheets_') && view !== 'brand_sheets') {
                                 setView('brand_sheets');
                             } else {
@@ -707,6 +738,61 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                             <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Chat Config, Landing Page, and VSL.</p>
                                         </div>
                                     </motion.div>
+
+                                    {/* 6. Resources */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        onClick={() => setView('resources')}
+                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                    >
+                                        <div>
+                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                <BookOpen className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                            </div>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Resources</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">SOPs, Guides, and Tracking Setup.</p>
+                                        </div>
+                                    </motion.div>
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'resources' && (
+                            <div className="flex-1 flex items-center justify-center overflow-y-auto">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full p-4">
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        onClick={() => setView('sops')}
+                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                    >
+                                        <div>
+                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                <FileText className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                            </div>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">SOPs</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Standard Operating Procedures.</p>
+                                        </div>
+                                    </motion.div>
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'sops' && (
+                            <div className="flex-1 flex items-center justify-center overflow-y-auto">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full p-4">
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        onClick={() => window.open('https://drive.google.com/file/d/1sRp_J5Bdh3q3WRwOW5xiq5oovfB8QkNw/view?usp=sharing', '_blank')}
+                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                    >
+                                        <div>
+                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                <TrendingUp className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                            </div>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Skool Tracking Setup</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Guide to setting up conversion tracking.</p>
+                                        </div>
+                                    </motion.div>
                                 </div>
                             </div>
                         )}
@@ -745,7 +831,7 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                         {
                             view === 'vault' && (
                                 <div className="flex-1 flex items-center justify-center overflow-y-auto">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full p-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full p-4">
                                         {/* ShortForm Scribe */}
                                         <motion.div
                                             whileHover={{ scale: 1.02 }}
@@ -809,7 +895,7 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
 
                         {view === 'long_form' && (
                             <div className="flex-1 flex items-center justify-center overflow-y-auto">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full p-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full p-4">
                                     {/* Note Taker */}
                                     <motion.div
                                         whileHover={{ scale: 1.02 }}
@@ -837,6 +923,21 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                             </div>
                                             <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Thumbnail Generator</h3>
                                             <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Create high-converting thumbnails.</p>
+                                        </div>
+                                    </motion.div>
+
+                                    {/* Outlier Scout */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        onClick={() => setView('outlier_scout')}
+                                        className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
+                                    >
+                                        <div>
+                                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(255,152,43,0.3)] group-hover:bg-none group-hover:bg-black group-hover:shadow-none transition-all">
+                                                <Search className="w-7 h-7 text-black group-hover:text-[#ff982b] transition-colors" />
+                                            </div>
+                                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-black transition-colors">Outlier Scout</h3>
+                                            <p className="text-[#a1a1aa] text-base leading-relaxed group-hover:text-black/70 transition-colors">Find viral videos and analyze patterns.</p>
                                         </div>
                                     </motion.div>
 
@@ -909,7 +1010,7 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
 
                         {view === 'funnel' && (
                             <div className="flex-1 flex items-center justify-center overflow-y-auto">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full p-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full p-4">
                                     {/* Chat Configuration */}
                                     <motion.div
                                         whileHover={{ scale: 1.02 }}
@@ -1207,7 +1308,7 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                         {
                             view === 'masterclass' && (
                                 <div className="flex-1 flex items-center justify-center overflow-y-auto">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full p-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full p-4">
                                         {[
                                             { id: 'hooks', title: 'Winning Hooks Library', icon: Lightbulb, desc: 'Curated collection of high-performing hooks.' },
                                             { id: 'dm_setter', title: 'AI DM Setter', icon: MessageSquare, desc: 'Automated DM outreach and appointment setting.' },
@@ -1285,6 +1386,14 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                             view === 'packaging' && (
                                 <div className="flex-1 h-full overflow-hidden">
                                     <PackagingTool />
+                                </div>
+                            )
+                        }
+
+                        {
+                            view === 'outlier_scout' && (
+                                <div className="flex-1 h-full overflow-y-auto">
+                                    <OutlierScout />
                                 </div>
                             )
                         }

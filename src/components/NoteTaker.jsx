@@ -188,13 +188,21 @@ const NoteTaker = () => {
         }
     };
 
+    const parseTime = (timeStr) => {
+        if (!timeStr) return 0;
+        const parts = timeStr.split(':').map(Number);
+        if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+        if (parts.length === 2) return parts[0] * 60 + parts[1];
+        return 0;
+    };
+
     const generateNotesWithGemini = async (selectedVids) => {
         const apiKey = localStorage.getItem('google_api_key');
         if (!apiKey) {
             return "## Error: API Key Missing\n\nPlease add your Google API Key in the settings to generate AI notes.";
         }
 
-        let combinedTranscript = "";
+        let combinedPromptContext = "";
         let failedVideos = [];
 
         // Process all selected videos
@@ -210,8 +218,42 @@ const NoteTaker = () => {
                 const transcriptRes = await fetch(`/api/transcript?videoId=${vidId}`);
 
                 if (transcriptRes.ok) {
-                    const transcriptData = await transcriptRes.json();
-                    combinedTranscript += `\n\n=== VIDEO START: "${video.title}" by ${video.author} ===\n${transcriptData.transcript}\n=== VIDEO END ===\n`;
+                    const data = await transcriptRes.json();
+
+                    combinedPromptContext += `\n\n=== VIDEO START: "${video.title}" by ${video.author} ===\n`;
+
+                    // Check if we have chapters and segments for better structuring
+                    if (data.chapters && data.chapters.length > 0 && data.segments) {
+                        console.log(`Processing ${data.chapters.length} chapters for ${video.title}`);
+                        combinedPromptContext += `NOTE: This video has specific chapters. Please structure the notes to follow these chapters where appropriate.\n\n`;
+
+                        const sortedChapters = data.chapters.sort((a, b) => parseTime(a.timestamp) - parseTime(b.timestamp));
+
+                        for (let i = 0; i < sortedChapters.length; i++) {
+                            const chapter = sortedChapters[i];
+                            const nextChapter = sortedChapters[i + 1];
+                            const startTime = parseTime(chapter.timestamp);
+                            const endTime = nextChapter ? parseTime(nextChapter.timestamp) : Infinity;
+
+                            // Filter segments for this chapter
+                            const chapterSegments = data.segments.filter(s => {
+                                const t = parseTime(s.timestamp);
+                                return t >= startTime && t < endTime;
+                            });
+
+                            const chapterText = chapterSegments.map(s => s.text).join(' ');
+
+                            if (chapterText.trim()) {
+                                combinedPromptContext += `--- CHAPTER: ${chapter.title} (${chapter.timestamp}) ---\n${chapterText}\n\n`;
+                            }
+                        }
+                    } else {
+                        // Fallback to raw transcript
+                        combinedPromptContext += `${data.transcript}\n`;
+                    }
+
+                    combinedPromptContext += `=== VIDEO END ===\n`;
+
                 } else {
                     console.warn(`Transcript fetch failed for ${vidId}:`, await transcriptRes.text());
                     failedVideos.push(video.title);
@@ -222,48 +264,50 @@ const NoteTaker = () => {
             }
         }
 
-        // If manual transcript is provided, append it as well (useful for fallbacks or extra context)
+        // If manual transcript is provided, append it as well
         if (manualTranscript) {
-            combinedTranscript += `\n\n=== MANUAL TRANSCRIPT / EXTRA CONTEXT ===\n${manualTranscript}\n=== END MANUAL CONTEXT ===\n`;
+            combinedPromptContext += `\n\n=== MANUAL TRANSCRIPT / EXTRA CONTEXT ===\n${manualTranscript}\n=== END MANUAL CONTEXT ===\n`;
         }
 
-        if (!combinedTranscript.trim()) {
+        if (!combinedPromptContext.trim()) {
             setShowManualInput(true);
             return "## Error: No Transcripts Available\n\nCould not retrieve transcripts for the selected videos. Please paste the transcript manually in the box below and try again.";
         }
 
         const prompt = `You are an expert note-taker and content synthesizer. 
-            I need comprehensive, combined notes for the following video(s).
+            I need comprehensive, detailed notes for the following video content.
             
-            Here is the TRANSCRIPT content (potentially from multiple videos):
+            The content is provided below, potentially structured by CHAPTERS.
+            
             """
-            ${combinedTranscript}
+            ${combinedPromptContext}
             """
             
-            Based on this content, generate a high-quality, structured summary.
-            If there are multiple videos, synthesize the information into a single cohesive narrative, removing overlaps and highlighting unique insights from each where relevant. Build upon the concepts to create a masterclass-level summary.
+            INSTRUCTIONS:
+            1. If "CHAPTER" markers are present, you MUST structure your notes primarily by these chapters. Create a section for each chapter with its title.
+            2. Within each chapter (or the main summary if no chapters), capture ALL technical details, numbers, specific steps, and frameworks. Do not over-summarize to the point of losing utility.
+            3. If multiple videos are provided, synthesize them but maintain clear distinction if they cover different topics.
             
-            Format the output in clean Markdown. YOU MUST FOLLOW THIS EXACT STRUCTURE:
-
-            # Key Takeaways (TL;DR)
-            [Provide a bulleted list of the 3-5 most critical insights across all content. Make this section stand out.]
+            Format the output in clean Markdown:
 
             # Executive Summary
-            [A concise paragraph summarizing the core messages and value proposition of the combined content.]
+            [High-level overview]
 
-            # Core Concepts & Frameworks
-            [Detail the main ideas. Use bolding for key terms. Group related concepts together.]
-
-            # Actionable Steps
-            [A checklist of things the viewer can implement immediately.]
-
-            # Notable Quotes
-            > [Include powerful quotes directly from the transcripts.]
+            # Detailed Notes (By Chapter/Section)
+            [Iterate through the chapters/sections here. Use H3 (###) for Chapter titles.]
             
-            Tone: Professional, insightful, and action-oriented. Use formatting (bolding, lists) to make it highly readable.`;
+            ### [Chapter Title]
+            - **Key Concepts**: ...
+            - **Details**: ...
+            - **Actionable Steps**: ...
+
+            # Key Takeaways & Action Plan
+            [Consolidated list of actions]
+            
+            Tone: Professional, highly detailed, and educational.`;
 
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -272,10 +316,15 @@ const NoteTaker = () => {
             });
 
             const data = await response.json();
+
+            if (data.error) {
+                throw new Error(data.error.message || "API Error");
+            }
+
             const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
             if (!generatedText) {
-                throw new Error("Failed to generate content");
+                throw new Error("Failed to generate content: No candidates returned");
             }
 
             let finalText = generatedText;
@@ -287,7 +336,7 @@ const NoteTaker = () => {
 
         } catch (error) {
             console.error("Gemini Generation Error:", error);
-            return "## Error: Generation Failed\n\nCould not generate notes at this time. Please try again later.";
+            return `## Error: Generation Failed\n\nCould not generate notes at this time. Error: ${error.message}`;
         }
     };
 

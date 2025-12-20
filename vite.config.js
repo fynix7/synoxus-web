@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { YoutubeTranscript } from 'youtube-transcript'
 import https from 'https'
-import { spawn } from 'child_process'
+import { spawn, exec } from 'child_process'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -23,226 +23,357 @@ export default defineConfig({
               return;
             }
 
+            console.log(`[Vite Proxy] Fetching transcript for: ${videoId}`);
+
+            const formatTime = (seconds) => {
+              const m = Math.floor(seconds / 60);
+              const s = Math.floor(seconds % 60);
+              return `[${m}:${s.toString().padStart(2, '0')}]`;
+            };
+
+            // Strategy -2: Puppeteer (Internal Agent - Most Robust & Supports Chapters)
             try {
-              console.log(`[Vite Proxy] Fetching transcript for: ${videoId}`);
-              const transcript = await YoutubeTranscript.fetchTranscript(videoId);
-              if (!transcript || transcript.length === 0) {
-                throw new Error('Empty transcript returned by library');
-              }
-              const fullText = transcript.map(item => item.text).join(' ');
-              if (!fullText.trim()) {
-                throw new Error('Empty transcript text returned by library');
-              }
-              const truncatedText = fullText.length > 25000 ? fullText.substring(0, 25000) + "...(truncated)" : fullText;
-
-              res.setHeader('Content-Type', 'application/json');
-              res.end(JSON.stringify({ transcript: truncatedText, source: 'library' }));
-            } catch (error) {
-              console.error(`[Vite Proxy] Transcript fetch failed:`, error);
-
-              // 2. Fallback method: Direct YouTube Scrape (Most Robust)
-              try {
-                console.log(`[Vite Proxy] Attempting direct YouTube scrape for: ${videoId}`);
-
-                const html = await new Promise((resolve, reject) => {
-                  const options = {
-                    hostname: 'www.youtube.com',
-                    path: `/watch?v=${videoId}`,
-                    method: 'GET',
-                    headers: {
-                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                      'Accept-Language': 'en-US,en;q=0.9',
+              console.log(`[Vite Proxy] Strategy -2: Attempting Puppeteer (Internal Agent)...`);
+              const result = await new Promise((resolve, reject) => {
+                exec(`node scripts/get_transcript_puppeteer.js ${videoId}`, { maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
+                  if (error) {
+                    reject(error);
+                    return;
+                  }
+                  try {
+                    const json = JSON.parse(stdout);
+                    if (json.error) {
+                      reject(new Error(json.error));
+                    } else {
+                      resolve(json);
                     }
-                  };
-
-                  const req = https.request(options, (res) => {
-                    let data = '';
-                    res.on('data', (chunk) => data += chunk);
-                    res.on('end', () => resolve(data));
-                  });
-
-                  req.on('error', (e) => reject(e));
-                  req.end();
+                  } catch (e) {
+                    reject(new Error('Failed to parse Puppeteer output'));
+                  }
                 });
+              });
 
-                console.log(`[Vite Proxy] Direct scrape HTML length: ${html.length}`);
-                if (html.includes('consent.youtube.com')) console.log('[Vite Proxy] Hit consent page');
-                if (html.includes('Sign in to confirm your age')) console.log('[Vite Proxy] Hit age restriction');
+              if (result && result.segments && result.segments.length > 0) {
+                console.log(`[Vite Proxy] Success! Found ${result.segments.length} segments and ${result.chapters?.length || 0} chapters.`);
 
-                const captionsRegex = /"captionTracks":\s*(\[.*?\])/;
-                const match = html.match(captionsRegex);
-                console.log(`[Vite Proxy] Captions match found: ${!!match}`);
+                // Construct a rich transcript with timestamps for the simple view
+                const fullText = result.segments.map(s => `[${s.timestamp}] ${s.text}`).join('\n');
+                const truncatedText = fullText.length > 50000 ? fullText.substring(0, 50000) + "...(truncated)" : fullText;
 
-                if (match && match[1]) {
-                  const captionTracks = JSON.parse(match[1]);
-                  console.log(`[Vite Proxy] Found ${captionTracks.length} caption tracks`);
-                  // Prefer English, otherwise take the first one
-                  const track = captionTracks.find(t => t.languageCode === 'en') || captionTracks[0];
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({
+                  transcript: truncatedText,
+                  segments: result.segments,
+                  chapters: result.chapters,
+                  source: 'puppeteer'
+                }));
+                return;
+              }
+            } catch (puppeteerError) {
+              console.warn(`[Vite Proxy] Puppeteer strategy failed:`, puppeteerError.message);
+            }
 
-                  if (track && track.baseUrl) {
-                    console.log(`[Vite Proxy] Fetching track XML from: ${track.baseUrl.substring(0, 50)}...`);
-                    const trackXml = await new Promise((resolve, reject) => {
-                      const url = new URL(track.baseUrl);
-                      const options = {
-                        hostname: url.hostname,
-                        path: url.pathname + url.search,
-                        method: 'GET',
-                        headers: {
-                          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                          'Accept-Language': 'en-US,en;q=0.9',
-                        }
-                      };
+            // Strategy -1: Python youtube-transcript-api (Most Reliable)
+            try {
+              console.log(`[Vite Proxy] Strategy -1: Attempting Python youtube-transcript-api...`);
+              const transcript = await new Promise((resolve, reject) => {
+                exec(`python scripts/get_transcript.py ${videoId}`, (error, stdout, stderr) => {
+                  if (error) {
+                    reject(error);
+                    return;
+                  }
+                  try {
+                    const result = JSON.parse(stdout);
+                    if (result.error) {
+                      reject(new Error(result.error));
+                    } else {
+                      resolve(result.transcript);
+                    }
+                  } catch (e) {
+                    reject(new Error('Failed to parse Python output'));
+                  }
+                });
+              });
 
-                      const req = https.request(options, (res) => {
-                        let data = '';
-                        res.on('data', (chunk) => data += chunk);
-                        res.on('end', () => resolve(data));
-                      });
+              if (transcript && transcript.length > 0) {
+                const truncatedText = transcript.length > 50000 ? transcript.substring(0, 50000) + "...(truncated)" : transcript;
+                console.log(`[Vite Proxy] Success! Transcript length: ${truncatedText.length}`);
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ transcript: truncatedText, source: 'python_api' }));
+                return;
+              }
+            } catch (pythonError) {
+              console.warn(`[Vite Proxy] Python strategy failed:`, pythonError.message);
+            }
 
-                      req.on('error', (e) => reject(e));
-                      req.end();
-                    });
-                    console.log(`[Vite Proxy] Track XML length: ${trackXml.length}`);
-                    console.log(`[Vite Proxy] Track XML preview: ${trackXml.substring(0, 200)}`);
+            // Strategy 0: ytdl-core (New & Robust)
+            try {
+              console.log(`[Vite Proxy] Strategy 0: Attempting ytdl-core...`);
+              const ytdl = (await import('@distube/ytdl-core')).default;
+              const info = await ytdl.getInfo(videoId);
+              const tracks = info.player_response.captions?.playerCaptionsTracklistRenderer?.captionTracks;
 
-                    const textMatch = trackXml.match(/<text start="[\d.]+" dur="[\d.]+">([^<]+)<\/text>/g);
-                    console.log(`[Vite Proxy] XML regex match found: ${!!textMatch}`);
+              if (tracks && tracks.length > 0) {
+                const track = tracks.find(t => t.languageCode === 'en') || tracks[0];
+                if (track && track.baseUrl) {
+                  console.log(`[Vite Proxy] Fetching caption from: ${track.baseUrl}`);
+                  const captionRes = await fetch(track.baseUrl, {
+                    headers: { 'User-Agent': 'Mozilla/5.0' }
+                  });
+                  const captionXml = await captionRes.text();
 
+                  if (captionXml && captionXml.length > 0) {
+                    const textMatch = captionXml.match(/<text start="([\d.]+)" dur="[\d.]+">([^<]+)<\/text>/g);
                     if (textMatch) {
-                      const transcriptText = textMatch
-                        .map(line => line.replace(/<[^>]+>/g, ''))
-                        .join(' ')
-                        .replace(/&#39;/g, "'")
-                        .replace(/&quot;/g, '"');
+                      const transcriptText = textMatch.map(line => {
+                        const startMatch = line.match(/start="([\d.]+)"/);
+                        const contentMatch = line.match(/>([^<]+)</);
+                        if (startMatch && contentMatch) {
+                          const start = parseFloat(startMatch[1]);
+                          const content = contentMatch[1]
+                            .replace(/&#39;/g, "'")
+                            .replace(/&quot;/g, '"')
+                            .replace(/&amp;/g, '&');
+                          return `${formatTime(start)} ${content}`;
+                        }
+                        return '';
+                      }).join('\n');
 
-                      const truncatedText = transcriptText.length > 25000 ? transcriptText.substring(0, 25000) + "...(truncated)" : transcriptText;
-
+                      const truncatedText = transcriptText.length > 50000 ? transcriptText.substring(0, 50000) + "...(truncated)" : transcriptText;
                       res.setHeader('Content-Type', 'application/json');
-                      res.end(JSON.stringify({ transcript: truncatedText, source: 'direct_scrape' }));
+                      res.end(JSON.stringify({ transcript: truncatedText, source: 'ytdl-core' }));
                       return;
                     }
                   }
                 }
-              } catch (directError) {
-                console.warn('[Vite Proxy] Direct scrape failed, trying final fallback:', directError.message);
               }
-
-              // 3. Fallback method: Invidious API (Very Robust for Metadata/Captions)
-              try {
-                console.log(`[Vite Proxy] Attempting Invidious API fetch for: ${videoId}`);
-                // List of reliable instances
-                const instances = [
-                  'https://inv.tux.pizza',
-                  'https://invidious.projectsegfau.lt',
-                  'https://invidious.jing.rocks',
-                  'https://vid.puffyan.us'
-                ];
-
-                for (const instance of instances) {
-                  try {
-                    const infoRes = await fetch(`${instance}/api/v1/videos/${videoId}`);
-                    if (!infoRes.ok) continue;
-
-                    const info = await infoRes.json();
-                    const captions = info.captions;
-
-                    if (captions && captions.length > 0) {
-                      // Prefer English
-                      const track = captions.find(c => c.label.startsWith('English') || c.language === 'en') || captions[0];
-
-                      if (track && track.url) {
-                        const captionUrl = track.url.startsWith('http') ? track.url : `${instance}${track.url}`;
-                        const captionRes = await fetch(captionUrl);
-                        const captionText = await captionRes.text();
-
-                        // Invidious returns VTT usually. Simple cleanup:
-                        // Remove header
-                        let cleanText = captionText.replace(/^WEBVTT\s+/, '');
-                        // Remove timestamps and cues
-                        cleanText = cleanText.replace(/\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}.*\n/g, '');
-                        cleanText = cleanText.replace(/\n+/g, ' ').trim();
-
-                        const truncatedText = cleanText.length > 25000 ? cleanText.substring(0, 25000) + "...(truncated)" : cleanText;
-
-                        res.setHeader('Content-Type', 'application/json');
-                        res.end(JSON.stringify({ transcript: truncatedText, source: 'invidious' }));
-                        return;
-                      }
-                    }
-                  } catch (e) {
-                    console.warn(`[Vite Proxy] Invidious instance ${instance} failed:`, e.message);
-                  }
-                }
-              } catch (invidiousError) {
-                console.warn('[Vite Proxy] Invidious fetch failed:', invidiousError.message);
-              }
-
-              // 4. Ultimate Fallback: Python youtube-transcript-api (Local Only)
-              try {
-                console.log(`[Vite Proxy] Attempting Python fallback for: ${videoId}`);
-                const pythonTranscript = await new Promise((resolve, reject) => {
-                  const py = spawn('python', ['-m', 'youtube_transcript_api', videoId, '--format', 'json']);
-                  let data = '';
-                  let error = '';
-
-                  py.stdout.on('data', (chunk) => data += chunk);
-                  py.stderr.on('data', (chunk) => error += chunk);
-
-                  py.on('close', (code) => {
-                    if (code !== 0) {
-                      reject(new Error(`Python script exited with code ${code}: ${error}`));
-                    } else {
-                      resolve(data);
-                    }
-                  });
-                });
-
-                const json = JSON.parse(pythonTranscript);
-                // CLI returns a list of transcripts, usually [[{text:...}, ...]]
-                const transcriptList = (Array.isArray(json) && Array.isArray(json[0])) ? json[0] : json;
-
-                if (Array.isArray(transcriptList) && transcriptList.length > 0) {
-                  const fullText = transcriptList.map(item => item.text).join(' ');
-                  const truncatedText = fullText.length > 25000 ? fullText.substring(0, 25000) + "...(truncated)" : fullText;
-
-                  res.setHeader('Content-Type', 'application/json');
-                  res.end(JSON.stringify({ transcript: truncatedText, source: 'python_fallback' }));
-                  return;
-                }
-              } catch (pythonError) {
-                console.warn('[Vite Proxy] Python fallback failed:', pythonError.message);
-              }
-
-              // 5. Final Fallback: youtubetranscript.com scraping
-              try {
-                console.log(`[Vite Proxy] Attempting fallback scrape for: ${videoId}`);
-                const scrapeRes = await fetch(`https://youtubetranscript.com/?server_vid=${videoId}`);
-                const text = await scrapeRes.text();
-
-                // Extract XML content
-                const match = text.match(/<text start="[\d.]+" dur="[\d.]+">([^<]+)<\/text>/g);
-                if (match) {
-                  const transcriptText = match
-                    .map(line => line.replace(/<[^>]+>/g, ''))
-                    .join(' ')
-                    .replace(/&#39;/g, "'")
-                    .replace(/&quot;/g, '"');
-
-                  if (transcriptText.includes("Please stop using a bot") || transcriptText.includes("Bitte hören Sie auf")) {
-                    throw new Error('Fallback site blocked bot');
-                  }
-
-                  res.setHeader('Content-Type', 'application/json');
-                  res.end(JSON.stringify({ transcript: transcriptText, source: 'fallback_site' }));
-                  return;
-                }
-              } catch (fallbackError) {
-                console.error(`[Vite Proxy] Fallback scrape failed:`, fallbackError);
-              }
-
-              res.statusCode = 500;
-              res.end(JSON.stringify({ error: 'Failed to fetch transcript' }));
+            } catch (e) {
+              console.warn(`[Vite Proxy] ytdl-core failed:`, e.message);
             }
+
+            // Strategy 1: Invidious API (Primary - Most Robust against IP blocks)
+            try {
+              console.log(`[Vite Proxy] Strategy 1: Attempting Invidious API...`);
+              const instances = [
+                'https://inv.tux.pizza',
+                'https://invidious.projectsegfau.lt',
+                'https://invidious.jing.rocks',
+                'https://vid.puffyan.us',
+                'https://invidious.privacydev.net',
+                'https://invidious.nerdvpn.de',
+                'https://invidious.lunar.icu',
+                'https://yewtu.be'
+              ];
+
+              for (const instance of instances) {
+                try {
+                  console.log(`[Vite Proxy] Trying instance: ${instance}`);
+                  const controller = new AbortController();
+                  const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout per instance
+
+                  // First check if video exists and has captions
+                  const infoRes = await fetch(`${instance}/api/v1/videos/${videoId}`, {
+                    signal: controller.signal,
+                    headers: { 'User-Agent': 'Mozilla/5.0' }
+                  });
+                  clearTimeout(timeoutId);
+
+                  if (!infoRes.ok) {
+                    console.log(`[Vite Proxy] Instance ${instance} returned status ${infoRes.status}`);
+                    continue;
+                  }
+
+                  const info = await infoRes.json();
+                  const captions = info.captions;
+
+                  if (captions && captions.length > 0) {
+                    console.log(`[Vite Proxy] Found ${captions.length} captions on ${instance}`);
+                    // Prefer English
+                    const track = captions.find(c => c.label.startsWith('English') || c.language === 'en') || captions[0];
+
+                    if (track && track.url) {
+                      const captionUrl = track.url.startsWith('http') ? track.url : `${instance}${track.url}`;
+                      console.log(`[Vite Proxy] Fetching caption from: ${captionUrl}`);
+                      const captionRes = await fetch(captionUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+                      const captionText = await captionRes.text();
+
+                      let formattedText = captionText;
+                      if (captionText.startsWith('WEBVTT')) {
+                        const lines = captionText.split('\n');
+                        let output = [];
+                        let currentStart = null;
+
+                        for (let i = 0; i < lines.length; i++) {
+                          const line = lines[i].trim();
+                          if (line.includes('-->')) {
+                            const parts = line.split('-->');
+                            if (parts[0]) {
+                              currentStart = parts[0].trim().split('.')[0]; // Remove millis
+                            }
+                          } else if (line && !line.startsWith('WEBVTT') && !/^\d+$/.test(line)) {
+                            if (currentStart) {
+                              output.push(`[${currentStart}] ${line}`);
+                              currentStart = null; // Reset
+                            } else {
+                              output.push(line);
+                            }
+                          }
+                        }
+                        formattedText = output.join('\n');
+                      } else {
+                        // Fallback cleanup if not VTT
+                        formattedText = captionText.replace(/^WEBVTT\s+/, '');
+                        formattedText = formattedText.replace(/<[^>]+>/g, ''); // Remove XML tags if any
+                      }
+
+                      const truncatedText = formattedText.length > 50000 ? formattedText.substring(0, 50000) + "...(truncated)" : formattedText;
+                      console.log(`[Vite Proxy] Success! Transcript length: ${truncatedText.length}`);
+
+                      res.setHeader('Content-Type', 'application/json');
+                      res.end(JSON.stringify({ transcript: truncatedText, source: 'invidious' }));
+                      return;
+                    }
+                  } else {
+                    console.log(`[Vite Proxy] No captions found on ${instance}`);
+                  }
+                } catch (e) {
+                  console.warn(`[Vite Proxy] Invidious instance ${instance} failed:`, e.message);
+                }
+              }
+            } catch (invidiousError) {
+              console.warn('[Vite Proxy] Invidious strategy failed:', invidiousError.message);
+            }
+
+            // Strategy 2: YoutubeTranscript Library (Fast but prone to rate limits)
+            try {
+              console.log(`[Vite Proxy] Strategy 2: Attempting YoutubeTranscript Library...`);
+              const transcript = await YoutubeTranscript.fetchTranscript(videoId);
+              if (transcript && transcript.length > 0) {
+                const fullText = transcript.map(item => {
+                  return `${formatTime(item.offset / 1000)} ${item.text}`;
+                }).join('\n');
+
+                if (fullText.trim()) {
+                  const truncatedText = fullText.length > 50000 ? fullText.substring(0, 50000) + "...(truncated)" : fullText;
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({ transcript: truncatedText, source: 'library' }));
+                  return;
+                }
+              }
+            } catch (error) {
+              console.warn(`[Vite Proxy] Library fetch failed:`, error.message);
+            }
+
+            // Strategy 3: Direct YouTube Scrape (Fallback)
+            try {
+              console.log(`[Vite Proxy] Strategy 3: Attempting Direct Scrape...`);
+              const html = await new Promise((resolve, reject) => {
+                const options = {
+                  hostname: 'www.youtube.com',
+                  path: `/watch?v=${videoId}`,
+                  method: 'GET',
+                  headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                  }
+                };
+                const req = https.request(options, (res) => {
+                  let data = '';
+                  res.on('data', (chunk) => data += chunk);
+                  res.on('end', () => resolve(data));
+                });
+                req.on('error', (e) => reject(e));
+                req.end();
+              });
+
+              const captionsRegex = /"captionTracks":\s*(\[.*?\])/;
+              const match = html.match(captionsRegex);
+              if (match && match[1]) {
+                const captionTracks = JSON.parse(match[1]);
+                const track = captionTracks.find(t => t.languageCode === 'en') || captionTracks[0];
+                if (track && track.baseUrl) {
+                  const trackXml = await new Promise((resolve, reject) => {
+                    const u = new URL(track.baseUrl);
+                    const options = {
+                      hostname: u.hostname,
+                      path: u.pathname + u.search,
+                      method: 'GET',
+                      headers: { 'User-Agent': 'Mozilla/5.0' }
+                    };
+                    const req = https.request(options, (res) => {
+                      let data = '';
+                      res.on('data', (chunk) => data += chunk);
+                      res.on('end', () => resolve(data));
+                    });
+                    req.on('error', (e) => reject(e));
+                    req.end();
+                  });
+
+                  const textMatch = trackXml.match(/<text start="([\d.]+)" dur="[\d.]+">([^<]+)<\/text>/g);
+                  if (textMatch) {
+                    const transcriptText = textMatch.map(line => {
+                      const startMatch = line.match(/start="([\d.]+)"/);
+                      const contentMatch = line.match(/>([^<]+)</);
+                      if (startMatch && contentMatch) {
+                        const start = parseFloat(startMatch[1]);
+                        const content = contentMatch[1]
+                          .replace(/<[^>]+>/g, '')
+                          .replace(/&#39;/g, "'")
+                          .replace(/&quot;/g, '"');
+                        return `${formatTime(start)} ${content}`;
+                      }
+                      return '';
+                    }).join('\n');
+
+                    const truncatedText = transcriptText.length > 50000 ? transcriptText.substring(0, 50000) + "...(truncated)" : transcriptText;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify({ transcript: truncatedText, source: 'direct_scrape' }));
+                    return;
+                  }
+                }
+              }
+            } catch (directError) {
+              console.warn('[Vite Proxy] Direct scrape failed:', directError.message);
+            }
+
+            // Strategy 4: Fallback Site (youtubetranscript.com)
+            try {
+              console.log(`[Vite Proxy] Strategy 4: Attempting Fallback Site...`);
+              const response = await fetch(`https://youtubetranscript.com/?server_vid=${videoId}`, {
+                headers: { 'User-Agent': 'Mozilla/5.0' }
+              });
+              const text = await response.text();
+              const match = text.match(/<text start="([\d.]+)" dur="[\d.]+">([^<]+)<\/text>/g);
+              if (match) {
+                const transcriptText = match.map(line => {
+                  const startMatch = line.match(/start="([\d.]+)"/);
+                  const contentMatch = line.match(/>([^<]+)</);
+                  if (startMatch && contentMatch) {
+                    const start = parseFloat(startMatch[1]);
+                    const content = contentMatch[1]
+                      .replace(/<[^>]+>/g, '')
+                      .replace(/&#39;/g, "'")
+                      .replace(/&quot;/g, '"');
+                    return `${formatTime(start)} ${content}`;
+                  }
+                  return '';
+                }).join('\n');
+
+                if (!transcriptText.includes("Please stop using a bot") && !transcriptText.includes("Bitte hören Sie auf")) {
+                  const truncatedText = transcriptText.length > 50000 ? transcriptText.substring(0, 50000) + "...(truncated)" : transcriptText;
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({ transcript: truncatedText, source: 'fallback_site' }));
+                  return;
+                } else {
+                  console.warn('[Vite Proxy] Fallback site blocked bot');
+                }
+              }
+            } catch (fallbackError) {
+              console.warn('[Vite Proxy] Fallback site failed:', fallbackError.message);
+            }
+
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: 'Failed to fetch transcript from all sources' }));
             return;
           }
 
@@ -257,40 +388,104 @@ export default defineConfig({
               return;
             }
 
+            console.log(`[Vite Proxy] Fetching metadata for: ${videoId}`);
+
+            // Strategy 1: Invidious API (Best for duration/details without rate limits)
+            const instances = [
+              'https://inv.tux.pizza',
+              'https://invidious.projectsegfau.lt',
+              'https://invidious.jing.rocks',
+              'https://vid.puffyan.us',
+              'https://invidious.privacydev.net',
+              'https://invidious.nerdvpn.de',
+              'https://invidious.lunar.icu',
+              'https://yewtu.be'
+            ];
+
+            for (const instance of instances) {
+              try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+                const response = await fetch(`${instance}/api/v1/videos/${videoId}`, {
+                  signal: controller.signal,
+                  headers: { 'User-Agent': 'Mozilla/5.0' }
+                });
+                clearTimeout(timeoutId);
+
+                if (response.ok) {
+                  const data = await response.json();
+                  const lengthSeconds = data.lengthSeconds;
+                  const minutes = Math.floor(lengthSeconds / 60);
+                  const seconds = lengthSeconds % 60;
+                  const duration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({
+                    title: data.title,
+                    author: data.author,
+                    duration,
+                    thumbnail: data.videoThumbnails?.find(t => t.quality === 'medium')?.url || data.videoThumbnails?.[0]?.url
+                  }));
+                  return;
+                }
+              } catch (e) {
+                // Continue to next instance
+              }
+            }
+
+            // Strategy 2: Direct Scrape (Fallback)
             try {
-              console.log(`[Vite Proxy] Fetching metadata for: ${videoId}`);
               const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
                 headers: {
                   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
                 }
               });
               const text = await response.text();
-
               const jsonMatch = text.match(/ytInitialPlayerResponse\s*=\s*({.+?});/);
-              if (!jsonMatch) throw new Error('Could not find player response');
 
-              const data = JSON.parse(jsonMatch[1]);
-              const videoDetails = data.videoDetails;
+              if (jsonMatch) {
+                const data = JSON.parse(jsonMatch[1]);
+                const videoDetails = data.videoDetails;
+                if (videoDetails) {
+                  const lengthSeconds = parseInt(videoDetails.lengthSeconds);
+                  const minutes = Math.floor(lengthSeconds / 60);
+                  const seconds = lengthSeconds % 60;
+                  const duration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 
-              if (!videoDetails) throw new Error('No video details found');
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({
+                    title: videoDetails.title,
+                    author: videoDetails.author,
+                    duration,
+                    thumbnail: videoDetails.thumbnail.thumbnails.pop().url
+                  }));
+                  return;
+                }
+              }
+            } catch (error) {
+              console.error(`[Vite Proxy] Direct metadata scrape failed:`, error);
+            }
 
-              const lengthSeconds = parseInt(videoDetails.lengthSeconds);
-              const minutes = Math.floor(lengthSeconds / 60);
-              const seconds = lengthSeconds % 60;
-              const duration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            // Strategy 3: NoEmbed (Last Resort - No Duration)
+            try {
+              const response = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
+              const data = await response.json();
 
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({
-                title: videoDetails.title,
-                author: videoDetails.author,
-                duration,
-                thumbnail: videoDetails.thumbnail.thumbnails.pop().url
+                title: data.title,
+                author: data.author_name,
+                duration: '??:??',
+                thumbnail: data.thumbnail_url
               }));
+              return;
             } catch (error) {
-              console.error(`[Vite Proxy] Metadata fetch failed:`, error);
-              res.statusCode = 500;
-              res.end(JSON.stringify({ error: 'Failed to fetch metadata' }));
+              console.error(`[Vite Proxy] NoEmbed failed:`, error);
             }
+
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: 'Failed to fetch metadata' }));
             return;
           }
 

@@ -21,6 +21,30 @@ function App() {
     } else if (path === '/thumbnail-generator') {
       setIsPortalOpen(true);
       setPortalInitialView('packaging');
+    } else if (path === '/note-taker') {
+      setIsPortalOpen(true);
+      setPortalInitialView('note_taker');
+    } else if (path === '/short-form-scribe') {
+      setIsPortalOpen(true);
+      setPortalInitialView('short_form_scribe');
+    } else if (path === '/chat-config') {
+      setIsPortalOpen(true);
+      setPortalInitialView('messaging');
+    } else if (path === '/vsl') {
+      setIsPortalOpen(true);
+      setPortalInitialView('vsl');
+    } else if (path === '/title-generator') {
+      setIsPortalOpen(true);
+      setPortalInitialView('title_generator');
+    } else if (path === '/landing-page') {
+      setIsPortalOpen(true);
+      setPortalInitialView('landing_page');
+    } else if (path === '/masterclass') {
+      setIsPortalOpen(true);
+      setPortalInitialView('masterclass');
+    } else if (path === '/outlier-scout') {
+      setIsPortalOpen(true);
+      setPortalInitialView('outlier_scout');
     }
   }, []);
 

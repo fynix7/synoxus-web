@@ -408,7 +408,6 @@ const SingleGenerator = ({ onRequestSettings, activeTab, onTabChange, extraHeade
 
         if (newThumbs.length > 0) {
             setRefThumbs(prev => [...prev, ...newThumbs]);
-            alert(`Added ${newThumbs.length} image(s) from clipboard.`);
         }
     };
 
