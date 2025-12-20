@@ -626,6 +626,96 @@ export default defineConfig({
             return;
           }
 
+          // Handle /api/scout/save
+          if (req.url.startsWith('/api/scout/save')) {
+            if (req.method === 'OPTIONS') {
+              res.setHeader('Access-Control-Allow-Origin', '*');
+              res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+              res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+              res.statusCode = 200;
+              res.end();
+              return;
+            }
+
+            if (req.method !== 'POST') {
+              res.statusCode = 405;
+              res.end(JSON.stringify({ error: 'Method not allowed' }));
+              return;
+            }
+
+            let body = '';
+            req.on('data', chunk => body += chunk);
+            req.on('end', async () => {
+              try {
+                const { outliers, channelUrl } = JSON.parse(body);
+
+                if (!outliers || !Array.isArray(outliers)) {
+                  res.statusCode = 400;
+                  res.end(JSON.stringify({ error: 'Invalid outliers data' }));
+                  return;
+                }
+
+                // Dynamic import for Supabase
+                const { createClient } = await import('@supabase/supabase-js');
+                const supabase = createClient(
+                  process.env.VITE_SUPABASE_URL,
+                  process.env.VITE_SUPABASE_ANON_KEY
+                );
+
+                // 1. Upsert Channel
+                let channelId;
+                if (channelUrl) {
+                  const { data: channelData } = await supabase
+                    .from('os_channels')
+                    .select('id')
+                    .eq('url', channelUrl)
+                    .single();
+
+                  if (channelData) {
+                    channelId = channelData.id;
+                    await supabase.from('os_channels').update({ last_scouted: new Date().toISOString() }).eq('id', channelId);
+                  } else {
+                    const { data: newChannel } = await supabase
+                      .from('os_channels')
+                      .insert([{ url: channelUrl, last_scouted: new Date().toISOString() }])
+                      .select()
+                      .single();
+                    if (newChannel) channelId = newChannel.id;
+                  }
+                }
+
+                // 2. Insert Outliers
+                const outliersToInsert = outliers.map(o => ({
+                  video_id: o.video_id,
+                  title: o.video_title,
+                  views: o.views,
+                  outlier_score: o.outlier_score,
+                  thumbnail: o.local_webp_path || o.thumbnail_url,
+                  channel_id: channelId,
+                  published_at: null,
+                  scouted_at: new Date().toISOString()
+                }));
+
+                const { error: outliersError } = await supabase
+                  .from('os_outliers')
+                  .upsert(outliersToInsert, { onConflict: 'video_id' });
+
+                if (outliersError) throw outliersError;
+
+                res.setHeader('Content-Type', 'application/json');
+                res.setHeader('Access-Control-Allow-Origin', '*');
+                res.end(JSON.stringify({ success: true, count: outliers.length }));
+
+              } catch (error) {
+                console.error('[Vite Proxy] Scout save error:', error);
+                res.statusCode = 500;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ error: error.message }));
+              }
+            });
+            return;
+          }
+
           next();
         });
       },

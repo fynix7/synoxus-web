@@ -9,7 +9,7 @@ import path from 'path';
 // CONFIGURATION
 // User should update this path to their local extension path
 const EXTENSION_PATH = process.env.EXTENSION_PATH || 'C:\\Users\\iyoha\\AppData\\Local\\Google\\Chrome\\User Data\\Profile 67\\Extensions\\gkfdnmclhbgbidnpmimfdobgjpeblckn\\2.10_0';
-const API_URL = process.env.API_URL || 'http://localhost:3000/api/scout/save';
+const API_URL = process.env.API_URL || 'http://localhost:5173/api/scout/save';
 
 // Check for command line argument
 let targetUrl = process.argv[2];
