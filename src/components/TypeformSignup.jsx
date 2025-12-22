@@ -209,7 +209,7 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                         value={formData.youtubeChannel}
                         onChange={(e) => updateFormData('youtubeChannel', e.target.value)}
                         placeholder="https://youtube.com/@yourchannel"
-                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors mb-2"
+                        className="w-full bg-[#0c0b09] border border-white/10 rounded-xl px-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors mb-2"
                     />
                     {!canProceedFromYouTube() && formData.youtubeChannel.trim().length > 0 && (
                         <p className="text-red-400 text-sm mb-4">Please enter a valid YouTube URL or @handle</p>
@@ -253,7 +253,7 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                                 value={formData.instagramHandle}
                                 onChange={(e) => updateFormData('instagramHandle', e.target.value)}
                                 placeholder="yourhandle"
-                                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-10 pr-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors mb-2"
+                                className="w-full bg-[#0c0b09] border border-white/10 rounded-xl pl-10 pr-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors mb-2"
                             />
                         </div>
                         {!hasInstagram && (
@@ -337,7 +337,7 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                                 onChange={(e) => updateFormData('coachingDetails', e.target.value)}
                                 placeholder="I help entrepreneurs scale their businesses through..."
                                 rows={4}
-                                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors mb-4 resize-none"
+                                className="w-full bg-[#0c0b09] border border-white/10 rounded-xl px-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors mb-4 resize-none"
                             />
                             <div className="mb-4">
                                 <label className="block text-xs font-medium text-[#71717a] uppercase tracking-wider mb-2">
@@ -348,7 +348,7 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                                     value={formData.email}
                                     onChange={(e) => updateFormData('email', e.target.value)}
                                     placeholder="you@example.com"
-                                    className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                    className="w-full bg-[#0c0b09] border border-white/10 rounded-xl px-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                 />
                             </div>
                             <div className="flex gap-3">
@@ -559,7 +559,7 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                                     value={formData.displayName}
                                     onChange={(e) => updateFormData('displayName', e.target.value)}
                                     placeholder="Your name"
-                                    className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-14 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                    className="w-full bg-[#0c0b09] border border-white/10 rounded-xl pl-14 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                 />
                             </div>
                         </div>
@@ -577,7 +577,7 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                                     onChange={(e) => updateFormData('email', e.target.value)}
                                     placeholder="you@example.com"
                                     required
-                                    className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-14 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                    className="w-full bg-[#0c0b09] border border-white/10 rounded-xl pl-14 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                 />
                             </div>
                         </div>
@@ -596,7 +596,7 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                                     placeholder="••••••••"
                                     required
                                     minLength={6}
-                                    className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-14 pr-14 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                    className="w-full bg-[#0c0b09] border border-white/10 rounded-xl pl-14 pr-14 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                 />
                                 <button
                                     type="button"
@@ -622,7 +622,7 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                                     placeholder="••••••••"
                                     required
                                     minLength={6}
-                                    className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-14 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                    className="w-full bg-[#0c0b09] border border-white/10 rounded-xl pl-14 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                 />
                             </div>
                         </div>
@@ -698,7 +698,7 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
     // Show disqualified screen
     if (isDisqualified) {
         return (
-            <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6">
+            <div className="min-h-screen bg-[#080705] flex items-center justify-center p-6">
                 <div className="fixed inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#ff982b]/10 rounded-full blur-[150px]" />
                 </div>
@@ -722,7 +722,7 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
     // Show waitlisted screen
     if (isWaitlisted) {
         return (
-            <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6">
+            <div className="min-h-screen bg-[#080705] flex items-center justify-center p-6">
                 <div className="fixed inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#ff982b]/10 rounded-full blur-[150px]" />
                     <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#ffc972]/10 rounded-full blur-[150px]" />
@@ -750,7 +750,7 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
     // Show email verification pending screen
     if (emailVerificationPending) {
         return (
-            <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6">
+            <div className="min-h-screen bg-[#080705] flex items-center justify-center p-6">
                 <div className="fixed inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#ff982b]/10 rounded-full blur-[150px]" />
                     <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#ffc972]/10 rounded-full blur-[150px]" />
@@ -781,7 +781,7 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
     const progress = ((step + 1) / totalSteps) * 100;
 
     return (
-        <div className="min-h-screen bg-[#050505] flex flex-col">
+        <div className="min-h-screen bg-[#080705] flex flex-col">
             {/* Progress bar */}
             <div className="h-1 bg-white/10">
                 <motion.div

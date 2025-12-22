@@ -80,7 +80,7 @@ const AuthPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
+        <div className="min-h-screen bg-[#080705] flex items-center justify-center p-4">
             {/* Background gradient effect */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#ff982b]/10 rounded-full blur-[150px]" />
@@ -96,7 +96,7 @@ const AuthPage = () => {
                 {/* Logo and Title */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] mb-4 shadow-[0_0_40px_rgba(255,152,43,0.4)]">
-                        <Sparkles className="w-8 h-8 text-black" fill="black" />
+                        <Sparkles className="w-8 h-8" fill="black" strokeWidth={0} />
                     </div>
                     <h1 className="text-3xl font-bold text-white mb-2">
                         {mode === 'signin' ? 'Welcome Back' : mode === 'signup' ? 'Create Account' : 'Reset Password'}
@@ -112,7 +112,7 @@ const AuthPage = () => {
                 </div>
 
                 {/* Auth Card */}
-                <div className="bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl">
+                <div className="bg-[#141311] border border-white/10 rounded-2xl p-8 shadow-2xl">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {/* Display Name (signup only) */}
                         <AnimatePresence mode="wait">
@@ -133,7 +133,7 @@ const AuthPage = () => {
                                             value={displayName}
                                             onChange={(e) => setDisplayName(e.target.value)}
                                             placeholder="Your name"
-                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                            className="w-full bg-[#0c0b09] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                         />
                                     </div>
                                 </motion.div>
@@ -153,7 +153,7 @@ const AuthPage = () => {
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="you@example.com"
                                     required
-                                    className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                    className="w-full bg-[#0c0b09] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                 />
                             </div>
                         </div>
@@ -179,7 +179,7 @@ const AuthPage = () => {
                                             placeholder="••••••••"
                                             required
                                             minLength={6}
-                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-12 pr-14 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                            className="w-full bg-[#0c0b09] border border-white/10 rounded-xl pl-12 pr-14 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                         />
                                         <button
                                             type="button"
@@ -214,7 +214,7 @@ const AuthPage = () => {
                                             placeholder="••••••••"
                                             required
                                             minLength={6}
-                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                            className="w-full bg-[#0c0b09] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                         />
                                     </div>
                                 </motion.div>
