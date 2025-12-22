@@ -96,9 +96,9 @@ const AuthPage = () => {
                 {/* Logo and Title */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] mb-4 shadow-[0_0_40px_rgba(255,152,43,0.4)]">
-                        {/* Custom single sparkle icon */}
+                        {/* Custom sparkle icon matching favicon */}
                         <svg className="w-8 h-8" viewBox="0 0 24 24" fill="black">
-                            <path d="M12 2L13.5 9.5L21 11L13.5 12.5L12 20L10.5 12.5L3 11L10.5 9.5L12 2Z" />
+                            <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
                         </svg>
                     </div>
                     <h1 className="text-3xl font-bold text-white mb-2">
