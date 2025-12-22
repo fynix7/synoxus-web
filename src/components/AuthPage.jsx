@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Loader2, AlertCircle, CheckCircle, Sparkles, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const AuthPage = () => {
@@ -14,6 +14,8 @@ const AuthPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [agreeToEmails, setAgreeToEmails] = useState(false);
+    const [isHovering, setIsHovering] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -23,6 +25,11 @@ const AuthPage = () => {
 
         try {
             if (mode === 'signup') {
+                if (!agreeToEmails) {
+                    setError('You must agree to receive email communications');
+                    setLoading(false);
+                    return;
+                }
                 if (password !== confirmPassword) {
                     setError('Passwords do not match');
                     setLoading(false);
@@ -63,6 +70,7 @@ const AuthPage = () => {
         setMode(newMode);
         setError('');
         setSuccess('');
+        setAgreeToEmails(false);
     };
 
     return (
@@ -82,7 +90,7 @@ const AuthPage = () => {
                 {/* Logo and Title */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] mb-4 shadow-[0_0_40px_rgba(255,152,43,0.4)]">
-                        <span className="text-2xl font-bold text-black">S</span>
+                        <Sparkles className="w-8 h-8 text-black" />
                     </div>
                     <h1 className="text-3xl font-bold text-white mb-2">
                         {mode === 'signin' ? 'Welcome Back' : mode === 'signup' ? 'Create Account' : 'Reset Password'}
@@ -113,13 +121,13 @@ const AuthPage = () => {
                                         Display Name
                                     </label>
                                     <div className="relative">
-                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#52525b]" />
+                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#52525b] pointer-events-none z-10" />
                                         <input
                                             type="text"
                                             value={displayName}
                                             onChange={(e) => setDisplayName(e.target.value)}
-                                            placeholder="John Doe"
-                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-[#52525b] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                            placeholder="Your name"
+                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                         />
                                     </div>
                                 </motion.div>
@@ -132,14 +140,14 @@ const AuthPage = () => {
                                 Email Address
                             </label>
                             <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#52525b]" />
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#52525b] pointer-events-none z-10" />
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="you@example.com"
                                     required
-                                    className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-[#52525b] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                    className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                 />
                             </div>
                         </div>
@@ -157,7 +165,7 @@ const AuthPage = () => {
                                         Password
                                     </label>
                                     <div className="relative">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#52525b]" />
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#52525b] pointer-events-none z-10" />
                                         <input
                                             type={showPassword ? 'text' : 'password'}
                                             value={password}
@@ -165,7 +173,7 @@ const AuthPage = () => {
                                             placeholder="••••••••"
                                             required
                                             minLength={6}
-                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-12 pr-12 py-3.5 text-white placeholder-[#52525b] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-12 pr-12 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                         />
                                         <button
                                             type="button"
@@ -192,7 +200,7 @@ const AuthPage = () => {
                                         Confirm Password
                                     </label>
                                     <div className="relative">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#52525b]" />
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#52525b] pointer-events-none z-10" />
                                         <input
                                             type={showPassword ? 'text' : 'password'}
                                             value={confirmPassword}
@@ -200,9 +208,42 @@ const AuthPage = () => {
                                             placeholder="••••••••"
                                             required
                                             minLength={6}
-                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-[#52525b] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                         />
                                     </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* Email Agreement Checkbox (signup only) */}
+                        <AnimatePresence mode="wait">
+                            {mode === 'signup' && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="pt-2"
+                                >
+                                    <label className="flex items-start gap-3 cursor-pointer group">
+                                        <div className="relative flex-shrink-0 mt-0.5">
+                                            <input
+                                                type="checkbox"
+                                                checked={agreeToEmails}
+                                                onChange={(e) => setAgreeToEmails(e.target.checked)}
+                                                className="sr-only"
+                                            />
+                                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${agreeToEmails
+                                                    ? 'bg-gradient-to-br from-[#ff982b] to-[#ffc972] border-transparent'
+                                                    : 'border-white/20 group-hover:border-[#ff982b]'
+                                                }`}>
+                                                {agreeToEmails && <Check className="w-3 h-3 text-black" />}
+                                            </div>
+                                        </div>
+                                        <span className="text-sm text-[#a1a1aa]">
+                                            I agree to receive email communications from Synoxus including updates, tips, and promotional content. <span className="text-[#ff982b]">*</span>
+                                        </span>
+                                    </label>
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -250,11 +291,13 @@ const AuthPage = () => {
                             )}
                         </AnimatePresence>
 
-                        {/* Submit Button */}
+                        {/* Submit Button - No glow, shine only on hover (left-to-right only) */}
                         <button
                             type="submit"
                             disabled={loading}
-                            className="group relative w-full py-4 flex items-center justify-center gap-2 text-sm font-bold text-black bg-gradient-to-r from-[#ff982b] to-[#ffc972] rounded-xl overflow-hidden transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(255,152,43,0.4)] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
+                            onMouseEnter={() => setIsHovering(true)}
+                            onMouseLeave={() => setIsHovering(false)}
+                            className="group relative w-full py-4 flex items-center justify-center gap-2 text-sm font-bold text-black bg-gradient-to-r from-[#ff982b] to-[#ffc972] rounded-xl overflow-hidden transition-transform hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
                         >
                             {loading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -266,7 +309,14 @@ const AuthPage = () => {
                                     <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
-                            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                            {/* Shine effect - only animates when hovering */}
+                            <div
+                                className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent transition-none ${isHovering ? 'animate-shine' : 'opacity-0'
+                                    }`}
+                                style={{
+                                    transform: isHovering ? undefined : 'translateX(-100%)',
+                                }}
+                            />
                         </button>
                     </form>
 
@@ -298,9 +348,23 @@ const AuthPage = () => {
 
                 {/* Footer */}
                 <p className="text-center text-[#52525b] text-xs mt-6">
-                    By signing in, you agree to our Terms of Service and Privacy Policy
+                    By signing in, you agree to our{' '}
+                    <a href="/terms" className="text-[#ff982b] hover:text-[#ffc972] underline">Terms of Service</a>
+                    {' '}and{' '}
+                    <a href="/privacy" className="text-[#ff982b] hover:text-[#ffc972] underline">Privacy Policy</a>
                 </p>
             </motion.div>
+
+            {/* Custom animation keyframes */}
+            <style>{`
+                @keyframes shine {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
+                }
+                .animate-shine {
+                    animation: shine 0.6s ease-out forwards;
+                }
+            `}</style>
         </div>
     );
 };

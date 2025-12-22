@@ -6,6 +6,8 @@ import PackagingSection from './components/PackagingSection';
 import ServiceNotifications from './components/ServiceNotifications';
 import InternalPortal from './components/InternalPortal';
 import AuthPage from './components/AuthPage';
+import TermsOfService from './components/TermsOfService';
+import PrivacyPolicy from './components/PrivacyPolicy';
 import Footer from './components/Footer';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
@@ -116,6 +118,15 @@ function AppContent() {
         </div>
       </div>
     );
+  }
+
+  // Terms and Privacy pages - accessible without auth
+  const path = window.location.pathname;
+  if (path === '/terms') {
+    return <TermsOfService />;
+  }
+  if (path === '/privacy') {
+    return <PrivacyPolicy />;
   }
 
   // Show auth page if not authenticated
