@@ -1,21 +1,52 @@
 // Template storage using Supabase with user isolation
-// Falls back to localStorage for offline/unauthenticated use
+// Supports both Authenticated Users and Anonymous Sessions (via x-session-id header)
+// Falls back to localStorage ONLY if Supabase is completely unreachable
 
+import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../../../supabaseClient';
 
 const LOCAL_STORAGE_KEY = 'synoxus_templates_local';
+const SESSION_ID_KEY = 'synoxus_session_id';
 
 // Default templates (always available)
 const DEFAULT_TEMPLATES = [];
 
-// Get current user ID
+// --- Session Management ---
+
+const getSessionId = () => {
+    let sessionId = localStorage.getItem(SESSION_ID_KEY);
+    if (!sessionId) {
+        sessionId = crypto.randomUUID();
+        localStorage.setItem(SESSION_ID_KEY, sessionId);
+    }
+    return sessionId;
+};
+
+// Create a specific client for anonymous access that includes the session header
+const getSessionClient = () => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const sessionId = getSessionId();
+
+    if (!supabaseUrl || !supabaseAnonKey) return null;
+
+    return createClient(supabaseUrl, supabaseAnonKey, {
+        global: {
+            headers: {
+                'x-session-id': sessionId
+            }
+        }
+    });
+};
+
+// --- Helper Functions ---
+
 const getUserId = async () => {
     if (!supabase) return null;
     const { data: { user } } = await supabase.auth.getUser();
     return user?.id || null;
 };
 
-// LocalStorage fallback
 const getLocalTemplates = () => {
     try {
         const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -42,16 +73,18 @@ export const fileToBase64 = (file) => {
     });
 };
 
+// --- CRUD Operations ---
+
 export const getTemplates = async () => {
     const userId = await getUserId();
+    const client = userId ? supabase : getSessionClient();
 
     let userTemplates = [];
 
-    if (supabase && userId) {
-        const { data, error } = await supabase
+    if (client) {
+        const { data, error } = await client
             .from('user_templates')
             .select('*')
-            .eq('user_id', userId)
             .order('created_at', { ascending: true });
 
         if (!error && data) {
@@ -89,6 +122,11 @@ export const getTemplates = async () => {
 
 export const saveTemplate = async (templateData) => {
     const userId = await getUserId();
+    const sessionId = getSessionId();
+
+    // Determine which client and ID to use
+    const client = userId ? supabase : getSessionClient();
+    const idField = userId ? { user_id: userId } : { session_id: sessionId };
 
     // Generate ID if new
     if (!templateData.id) {
@@ -96,19 +134,19 @@ export const saveTemplate = async (templateData) => {
         templateData.isDefault = false;
     }
 
-    if (supabase && userId) {
-        const { data, error } = await supabase
+    if (client) {
+        const { data, error } = await client
             .from('user_templates')
             .upsert({
                 id: templateData.id,
-                user_id: userId,
                 label: templateData.label,
                 description: templateData.description,
                 prompt: templateData.context,
                 images: templateData.referenceImages || [],
                 feedback: templateData.feedback || [],
                 is_default: templateData.isDefault || false,
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
+                ...idField // Add user_id or session_id
             }, { onConflict: 'id' })
             .select()
             .single();
@@ -143,14 +181,13 @@ export const saveTemplate = async (templateData) => {
 
 export const deleteTemplate = async (id) => {
     const userId = await getUserId();
-    const isDefault = DEFAULT_TEMPLATES.some(t => t.id === id);
+    const client = userId ? supabase : getSessionClient();
 
-    if (supabase && userId) {
-        const { error } = await supabase
+    if (client) {
+        const { error } = await client
             .from('user_templates')
             .delete()
-            .eq('id', id)
-            .eq('user_id', userId);
+            .eq('id', id);
 
         if (error) {
             console.error('Error deleting template from Supabase:', error);
