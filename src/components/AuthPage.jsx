@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Loader2, AlertCircle, CheckCircle, Sparkles, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import TypeformSignup from './TypeformSignup';
 
 const AuthPage = () => {
     const { signIn, signUp, resetPassword, error: authError } = useAuth();
@@ -73,6 +74,11 @@ const AuthPage = () => {
         setAgreeToEmails(false);
     };
 
+    // Show TypeformSignup for signup mode
+    if (mode === 'signup') {
+        return <TypeformSignup onSwitchToSignIn={() => switchMode('signin')} />;
+    }
+
     return (
         <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
             {/* Background gradient effect */}
@@ -127,7 +133,7 @@ const AuthPage = () => {
                                             value={displayName}
                                             onChange={(e) => setDisplayName(e.target.value)}
                                             placeholder="Your name"
-                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-14 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                         />
                                     </div>
                                 </motion.div>
@@ -147,7 +153,7 @@ const AuthPage = () => {
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="you@example.com"
                                     required
-                                    className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-14 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                    className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                 />
                             </div>
                         </div>
@@ -173,7 +179,7 @@ const AuthPage = () => {
                                             placeholder="••••••••"
                                             required
                                             minLength={6}
-                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-14 pr-14 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-12 pr-14 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                         />
                                         <button
                                             type="button"
@@ -208,7 +214,7 @@ const AuthPage = () => {
                                             placeholder="••••••••"
                                             required
                                             minLength={6}
-                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-14 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                         />
                                     </div>
                                 </motion.div>
@@ -241,7 +247,7 @@ const AuthPage = () => {
                                             </div>
                                         </div>
                                         <span className="text-sm text-[#a1a1aa]">
-                                            I agree to receive email communications from Synoxus including updates, tips, and promotional content. <span className="text-[#ff982b]">*</span>
+                                            I agree to receive email communications from Synoxus including tips and promotional content. <span className="text-[#ff982b]">*</span>
                                         </span>
                                     </label>
                                 </motion.div>
