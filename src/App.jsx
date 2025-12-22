@@ -38,6 +38,8 @@ const saveSiteSettings = (settings) => {
   }
 };
 
+import SkoolTrackingSetup from './components/SkoolTrackingSetup';
+
 // Main App Content (uses auth context)
 function AppContent() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -47,9 +49,18 @@ function AppContent() {
   const [chatMode, setChatMode] = useState('default');
   const [siteSettings, setSiteSettings] = useState(getSiteSettings);
 
+
+
   useEffect(() => {
     const path = window.location.pathname;
     const settings = getSiteSettings();
+
+    // If authenticated, check for public routes too (so logged in users can see them)
+    if (path === '/s/x7k9p2m4-tracking') {
+      // For logged in users, we can either show the standalone component or redirect to portal view
+      // Let's show standalone for consistency with the link
+      return;
+    }
 
     // Only handle routing if authenticated
     if (!isAuthenticated && !loading) {
@@ -122,8 +133,14 @@ function AppContent() {
     );
   }
 
-  // Terms and Privacy pages - accessible without auth
+  // Public routes - accessible without auth
   const path = window.location.pathname;
+
+  // Complex slug for Skool Tracking Setup (publicly accessible)
+  if (path === '/s/x7k9p2m4-tracking') {
+    return <SkoolTrackingSetup />;
+  }
+
   if (path === '/terms') {
     return <TermsPage />;
   }

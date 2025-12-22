@@ -506,7 +506,9 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
             id: 'interestedInAudit',
             render: () => (
                 <div className="text-center max-w-lg mx-auto">
-                    <Sparkles className="w-16 h-16 text-[#ff982b] mx-auto mb-6" />
+                    <svg className="w-16 h-16 text-[#ff982b] mx-auto mb-6" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
+                    </svg>
                     <h2 className="text-3xl font-bold text-white mb-4">Would you like a free content audit?</h2>
                     <p className="text-[#a1a1aa] mb-8">
                         Get a personalized strategy call where we'll review your content and share actionable insights to help you grow.
