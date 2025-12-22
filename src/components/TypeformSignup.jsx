@@ -3,6 +3,37 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, ArrowRight, ArrowLeft, Eye, EyeOff, Loader2, AlertCircle, CheckCircle, Sparkles, Check, Youtube, Instagram, Target, DollarSign, Users, Zap, XCircle, MessageSquare } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
+// Shiny button component with one-way shine effect
+const ShinyButton = ({ children, onClick, className, disabled }) => {
+    const [isHovering, setIsHovering] = useState(false);
+
+    return (
+        <button
+            onClick={onClick}
+            disabled={disabled}
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => setIsHovering(false)}
+            className={`relative overflow-hidden ${className}`}
+        >
+            {children}
+            <div
+                className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none ${isHovering ? 'animate-shine' : 'opacity-0'
+                    }`}
+                style={{ transform: isHovering ? undefined : 'translateX(-100%)' }}
+            />
+            <style>{`
+                @keyframes shine {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
+                }
+                .animate-shine {
+                    animation: shine 0.6s ease-out forwards;
+                }
+            `}</style>
+        </button>
+    );
+};
+
 const TypeformSignup = ({ onSwitchToSignIn }) => {
     const { signUp, error: authError } = useAuth();
     const [step, setStep] = useState(0);
@@ -133,14 +164,14 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                 <div className="text-center">
                     <Youtube className="w-16 h-16 text-[#ff982b] mx-auto mb-6" />
                     <h2 className="text-3xl font-bold text-white mb-4">Do you have a YouTube channel?</h2>
-                    <p className="text-[#71717a] mb-8">We'd love to check out your content</p>
+                    <p className="text-[#71717a] mb-8">We'd love to check out your content and offer free value</p>
                     <div className="flex gap-4 justify-center">
-                        <button
+                        <ShinyButton
                             onClick={() => { updateFormData('hasYouTube', true); nextStep(); }}
                             className="px-8 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl hover:scale-105 transition-transform"
                         >
                             Yes, I do
-                        </button>
+                        </ShinyButton>
                         <button
                             onClick={() => { updateFormData('hasYouTube', false); setStep(2); }}
                             className="px-8 py-4 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors"
@@ -184,19 +215,19 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                 </div>
             )
         },
-        // Step 2: Instagram (always asked)
+        // Step 2: Instagram (always asked - required to continue)
         {
             id: 'instagram',
             render: () => {
-                const isRequired = !formData.hasYouTube;
+                const hasInstagram = formData.instagramHandle.trim().length > 0;
                 return (
                     <div className="max-w-md mx-auto">
                         <Instagram className="w-12 h-12 text-[#ff982b] mx-auto mb-6" />
                         <h2 className="text-2xl font-bold text-white mb-2 text-center">
-                            {formData.hasYouTube ? "What's your Instagram?" : "Do you have an Instagram account?"}
+                            What's your Instagram handle?
                         </h2>
                         <p className="text-[#71717a] mb-6 text-center">
-                            {formData.hasYouTube ? "We'd love to connect there too" : "We can connect with you there"}
+                            We'd love to connect with you there
                         </p>
                         <div className="relative">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#52525b]">@</span>
@@ -208,36 +239,36 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                                 className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-10 pr-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors mb-2"
                             />
                         </div>
-                        {isRequired && formData.instagramHandle.trim().length === 0 && (
-                            <p className="text-[#71717a] text-sm mb-4">Instagram is required if you don't have a YouTube channel</p>
+                        {!hasInstagram && (
+                            <p className="text-[#71717a] text-sm mb-4">Enter your Instagram handle to continue</p>
                         )}
                         <div className="flex gap-3 mt-4">
                             <button onClick={() => formData.hasYouTube ? setStep(1) : setStep(0)} className="px-6 py-3 text-[#71717a] hover:text-white transition-colors">
                                 <ArrowLeft className="w-5 h-5" />
                             </button>
-                            {formData.hasYouTube ? (
-                                // Has YouTube - Instagram optional, can skip
-                                <button
+                            {hasInstagram ? (
+                                // Has Instagram - can proceed
+                                <ShinyButton
                                     onClick={() => setStep(4)}
                                     className="flex-1 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"
                                 >
                                     Continue <ArrowRight className="w-4 h-4" />
-                                </button>
-                            ) : formData.instagramHandle.trim().length > 0 ? (
-                                // No YouTube but has Instagram - can proceed
-                                <button
-                                    onClick={() => setStep(4)}
-                                    className="flex-1 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"
-                                >
-                                    Continue <ArrowRight className="w-4 h-4" />
-                                </button>
-                            ) : (
+                                </ShinyButton>
+                            ) : !formData.hasYouTube ? (
                                 // No YouTube, no Instagram - go to coaching question
                                 <button
                                     onClick={() => setStep(3)}
                                     className="flex-1 py-4 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors flex items-center justify-center gap-2"
                                 >
                                     I don't have Instagram
+                                </button>
+                            ) : (
+                                // Has YouTube but no Instagram entry - show disabled continue
+                                <button
+                                    disabled
+                                    className="flex-1 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl opacity-50 cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    Continue <ArrowRight className="w-4 h-4" />
                                 </button>
                             )}
                         </div>
@@ -254,12 +285,12 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                     <h2 className="text-3xl font-bold text-white mb-4">Are you interested in coaching or consulting?</h2>
                     <p className="text-[#71717a] mb-8">We work with coaches, consultants, and course creators</p>
                     <div className="flex gap-4 justify-center">
-                        <button
+                        <ShinyButton
                             onClick={() => { updateFormData('interestedInCoaching', true); nextStep(); }}
                             className="px-8 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl hover:scale-105 transition-transform"
                         >
                             Yes, I am
-                        </button>
+                        </ShinyButton>
                         <button
                             onClick={handleDisqualify}
                             className="px-8 py-4 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors"
@@ -470,12 +501,12 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                         Get a personalized strategy call where we'll review your content and share actionable insights to help you grow.
                     </p>
                     <div className="flex gap-4 justify-center">
-                        <button
+                        <ShinyButton
                             onClick={() => { updateFormData('interestedInAudit', true); nextStep(); }}
                             className="px-8 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl hover:scale-105 transition-transform"
                         >
                             Yes, I'm interested!
-                        </button>
+                        </ShinyButton>
                         <button
                             onClick={() => { updateFormData('interestedInAudit', false); nextStep(); }}
                             className="px-8 py-4 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors"
