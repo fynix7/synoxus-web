@@ -165,6 +165,41 @@ const ThumbnailCarousel = ({ examples }) => {
 const BlueprintCard = ({ blueprint, index, showRank = true }) => {
     const [variableValues, setVariableValues] = useState({});
     const [copied, setCopied] = useState(false);
+    const [concept, setConcept] = useState(null);
+    const [generating, setGenerating] = useState(false);
+
+    const handleGenerateConcept = async () => {
+        const apiKey = localStorage.getItem('gemini_api_key');
+        if (!apiKey) {
+            const userKey = prompt("Please enter your Google Gemini API Key to generate a concept:");
+            if (!userKey) return;
+            localStorage.setItem('gemini_api_key', userKey);
+        }
+
+        setGenerating(true);
+        try {
+            const res = await fetch('/api/generate_concept', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    apiKey: localStorage.getItem('gemini_api_key'),
+                    pattern: blueprint.pattern,
+                    examples: examples.slice(0, 3),
+                    blueprintId: blueprint.id
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setConcept(data.concept);
+            } else {
+                alert('Generation failed: ' + (data.error || 'Unknown error'));
+            }
+        } catch (e) {
+            alert('Error: ' + e.message);
+        } finally {
+            setGenerating(false);
+        }
+    };
 
     // Parse examples from JSON
     let examples = [];
@@ -272,9 +307,26 @@ const BlueprintCard = ({ blueprint, index, showRank = true }) => {
                         <TrendingUp className="w-3 h-3" />
                         AI Generated Concept
                     </h4>
-                    <p className="text-emerald-400/90 text-sm font-medium italic bg-emerald-500/5 p-3 rounded-lg border border-emerald-500/10">
-                        "{blueprint.generated_example || 'No generated concept available'}"
-                    </p>
+                    {blueprint.generated_example || concept ? (
+                        <p className="text-emerald-400/90 text-sm font-medium italic bg-emerald-500/5 p-3 rounded-lg border border-emerald-500/10">
+                            "{concept || blueprint.generated_example}"
+                        </p>
+                    ) : (
+                        <button
+                            onClick={handleGenerateConcept}
+                            disabled={generating}
+                            className="w-full py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 rounded-lg border border-emerald-500/20 text-sm font-bold flex items-center justify-center gap-2 transition-all"
+                        >
+                            {generating ? (
+                                <span className="animate-pulse">Generating...</span>
+                            ) : (
+                                <>
+                                    <TrendingUp className="w-4 h-4" />
+                                    Generate Concept
+                                </>
+                            )}
+                        </button>
+                    )}
                 </div>
 
                 {/* Stats Footer */}

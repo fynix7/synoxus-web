@@ -20,8 +20,6 @@ const OutlierScout = ({ isPublic }) => {
         if (stored) {
             setSavedApiKey(stored);
             setApiKey(stored);
-        } else if (isPublic) {
-            setShowSettings(true);
         }
     }, [isPublic]);
 

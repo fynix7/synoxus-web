@@ -120,10 +120,14 @@ export default async function handler(req, res) {
                 - [Better Alternative] - An upgraded approach
                 - [Topic/Subject] - The main topic being discussed
                 - [Action/Verb] - An action word
+                - [Year/Time Period] - A specific year (e.g., 2024, 2025) or era
 
                 EXAMPLES:
                 Input: "1 Habit That Fixes 90% of Problems"
                 Output: "[Number] [Practices/Doctrine] That [Positive Quantifiable Change] [Negative Attribute]"
+                
+                Input: "Best Gaming Laptops of 2025"
+                Output: "Best [Topic/Subject] of [Year/Time Period]"
                 
                 Input: "How I Made $1,000,000 in 30 Days"
                 Output: "How I Made [Desired Outcome] in [Short Timeframe]"
@@ -257,28 +261,8 @@ export default async function handler(req, res) {
                 generatedExample = conceptCache.get(group.canonical_format);
                 console.log(`Using cached concept for: ${group.canonical_format}`);
             } else {
-                try {
-                    const conceptPrompt = `
-                    Given this YouTube title format: "${group.canonical_format}"
-
-                    Original examples using this format:
-                    ${examples.slice(0, 3).map(e => `- "${e.title}"`).join('\n')}
-
-                    Generate ONE new video title idea using this format in a DIFFERENT niche than the examples.
-                    The generated title must:
-                    1. Follow the format structure exactly
-                    2. Be grammatically correct and natural-sounding
-                    3. Be in a completely different topic/niche than the originals
-                    4. Sound like a real, clickable YouTube title
-
-                    Return ONLY the generated title, nothing else.
-                    `;
-
-                    const conceptResult = await model.generateContent(conceptPrompt);
-                    generatedExample = conceptResult.response.text().trim().replace(/"/g, '');
-                } catch (e) {
-                    generatedExample = 'Concept generation failed';
-                }
+                // Skip automatic generation to save tokens/allow on-demand
+                generatedExample = null;
             }
 
             blueprints.push({

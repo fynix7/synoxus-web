@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Settings } from 'lucide-react';
 import CreateTab from './components/CreateTab';
 import TitleGenerator from './components/TitleGenerator';
