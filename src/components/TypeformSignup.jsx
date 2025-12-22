@@ -17,19 +17,9 @@ const ShinyButton = ({ children, onClick, className, disabled }) => {
         >
             {children}
             <div
-                className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none ${isHovering ? 'animate-shine' : 'opacity-0'
-                    }`}
+                className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none ${isHovering ? 'animate-shine' : 'opacity-0'}`}
                 style={{ transform: isHovering ? undefined : 'translateX(-100%)' }}
             />
-            <style>{`
-                @keyframes shine {
-                    0% { transform: translateX(-100%); }
-                    100% { transform: translateX(100%); }
-                }
-                .animate-shine {
-                    animation: shine 0.6s ease-out forwards;
-                }
-            `}</style>
         </button>
     );
 };

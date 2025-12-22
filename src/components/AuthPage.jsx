@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Loader2, AlertCircle, CheckCircle, Star, Check } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Loader2, AlertCircle, CheckCircle, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import TypeformSignup from './TypeformSignup';
 
@@ -80,11 +80,11 @@ const AuthPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#080705] flex items-center justify-center p-4">
+        <div className="min-h-screen bg-[#080705] flex items-center justify-center p-4 overflow-hidden">
             {/* Background gradient effect */}
-            <div className="fixed inset-0 pointer-events-none">
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#ff982b]/10 rounded-full blur-[150px]" />
-                <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-[#ffc972]/10 rounded-full blur-[150px]" />
+            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-[20%] left-[15%] w-[500px] h-[500px] bg-[#ff982b]/8 rounded-full blur-[180px]" />
+                <div className="absolute top-[40%] right-[10%] w-[400px] h-[400px] bg-[#ffc972]/8 rounded-full blur-[180px]" />
             </div>
 
             <motion.div
@@ -96,7 +96,10 @@ const AuthPage = () => {
                 {/* Logo and Title */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] mb-4 shadow-[0_0_40px_rgba(255,152,43,0.4)]">
-                        <Star className="w-8 h-8" fill="black" strokeWidth={0} />
+                        {/* Custom single sparkle icon */}
+                        <svg className="w-8 h-8" viewBox="0 0 24 24" fill="black">
+                            <path d="M12 2L13.5 9.5L21 11L13.5 12.5L12 20L10.5 12.5L3 11L10.5 9.5L12 2Z" />
+                        </svg>
                     </div>
                     <h1 className="text-3xl font-bold text-white mb-2">
                         {mode === 'signin' ? 'Welcome Back' : mode === 'signup' ? 'Create Account' : 'Reset Password'}

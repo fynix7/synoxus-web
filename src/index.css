@@ -17,3 +17,13 @@ body {
 button:hover {
     cursor: pointer;
 }
+
+/* Shine animation for buttons */
+@keyframes shine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.animate-shine {
+    animation: shine 0.6s ease-out forwards;
+}
