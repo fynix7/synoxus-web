@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, ArrowRight, ArrowLeft, Eye, EyeOff, Loader2, AlertCircle, CheckCircle, Sparkles, Check, Youtube, Instagram, Target, DollarSign, Users, Zap } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, ArrowLeft, Eye, EyeOff, Loader2, AlertCircle, CheckCircle, Sparkles, Check, Youtube, Instagram, Target, DollarSign, Users, Zap, XCircle, MessageSquare } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const TypeformSignup = ({ onSwitchToSignIn }) => {
@@ -9,21 +9,27 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [isDisqualified, setIsDisqualified] = useState(false);
+    const [isWaitlisted, setIsWaitlisted] = useState(false);
 
     // Form data
     const [formData, setFormData] = useState({
         hasYouTube: null,
         youtubeChannel: '',
-        hasInstagram: null,
         instagramHandle: '',
         businessType: '',
         primaryGoal: '',
         audienceSize: '',
+        monthlyRevenue: '',
+        interestedInAudit: null,
         displayName: '',
         email: '',
         password: '',
         confirmPassword: '',
-        agreeToEmails: false
+        agreeToEmails: false,
+        // For non-creator path
+        interestedInCoaching: null,
+        coachingDetails: ''
     });
 
     const [showPassword, setShowPassword] = useState(false);
@@ -34,6 +40,23 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
 
     const nextStep = () => setStep(s => s + 1);
     const prevStep = () => setStep(s => Math.max(0, s - 1));
+
+    // Send form data via email
+    const sendFormEmail = async (status) => {
+        try {
+            await fetch('/api/form-submission', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...formData,
+                    status, // 'qualified', 'waitlisted', 'disqualified'
+                    submittedAt: new Date().toISOString()
+                })
+            });
+        } catch (err) {
+            console.error('Error sending form email:', err);
+        }
+    };
 
     const handleSubmit = async () => {
         setError('');
@@ -56,19 +79,49 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
         }
 
         try {
+            // Send email notification
+            await sendFormEmail('qualified');
+
             const result = await signUp(formData.email, formData.password, formData.displayName);
             if (!result.success) {
                 setError(result.error);
             } else if (result.message) {
                 setSuccess(result.message);
             }
-            // Note: User metadata like youtubeChannel, businessType, etc. 
-            // can be saved to Supabase user_metadata or a separate profiles table
         } catch (err) {
             setError(err.message || 'An error occurred');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleWaitlistSubmit = async () => {
+        setLoading(true);
+        await sendFormEmail('waitlisted');
+        setIsWaitlisted(true);
+        setLoading(false);
+    };
+
+    const handleDisqualify = async () => {
+        await sendFormEmail('disqualified');
+        setIsDisqualified(true);
+    };
+
+    // Validation helpers
+    const canProceedFromYouTube = () => {
+        if (formData.hasYouTube === true) {
+            return formData.youtubeChannel.trim().length > 0;
+        }
+        return true;
+    };
+
+    const canProceedFromInstagram = () => {
+        // If they have YouTube, Instagram is optional but encouraged
+        // If they don't have YouTube, Instagram is required to proceed normally
+        if (!formData.hasYouTube && formData.instagramHandle.trim().length === 0) {
+            return false;
+        }
+        return true;
     };
 
     // Question components
@@ -98,7 +151,7 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                 </div>
             )
         },
-        // Step 1: YouTube link
+        // Step 1: YouTube link (required if they said yes)
         {
             id: 'youtubeChannel',
             render: () => (
@@ -111,15 +164,19 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                         value={formData.youtubeChannel}
                         onChange={(e) => updateFormData('youtubeChannel', e.target.value)}
                         placeholder="https://youtube.com/@yourchannel"
-                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors mb-4"
+                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors mb-2"
                     />
-                    <div className="flex gap-3">
+                    {!canProceedFromYouTube() && (
+                        <p className="text-red-400 text-sm mb-4">Please enter your YouTube channel to continue</p>
+                    )}
+                    <div className="flex gap-3 mt-4">
                         <button onClick={prevStep} className="px-6 py-3 text-[#71717a] hover:text-white transition-colors">
                             <ArrowLeft className="w-5 h-5" />
                         </button>
                         <button
-                            onClick={() => setStep(4)}
-                            className="flex-1 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"
+                            onClick={() => canProceedFromYouTube() && nextStep()}
+                            disabled={!canProceedFromYouTube()}
+                            className="flex-1 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                         >
                             Continue <ArrowRight className="w-4 h-4" />
                         </button>
@@ -127,100 +184,174 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                 </div>
             )
         },
-        // Step 2: Instagram question (shown if no YouTube)
+        // Step 2: Instagram (always asked)
         {
-            id: 'hasInstagram',
+            id: 'instagram',
+            render: () => {
+                const isRequired = !formData.hasYouTube;
+                return (
+                    <div className="max-w-md mx-auto">
+                        <Instagram className="w-12 h-12 text-[#ff982b] mx-auto mb-6" />
+                        <h2 className="text-2xl font-bold text-white mb-2 text-center">
+                            {formData.hasYouTube ? "What's your Instagram?" : "Do you have an Instagram account?"}
+                        </h2>
+                        <p className="text-[#71717a] mb-6 text-center">
+                            {formData.hasYouTube ? "We'd love to connect there too" : "We can connect with you there"}
+                        </p>
+                        <div className="relative">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#52525b]">@</span>
+                            <input
+                                type="text"
+                                value={formData.instagramHandle}
+                                onChange={(e) => updateFormData('instagramHandle', e.target.value)}
+                                placeholder="yourhandle"
+                                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-10 pr-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors mb-2"
+                            />
+                        </div>
+                        {isRequired && formData.instagramHandle.trim().length === 0 && (
+                            <p className="text-[#71717a] text-sm mb-4">Instagram is required if you don't have a YouTube channel</p>
+                        )}
+                        <div className="flex gap-3 mt-4">
+                            <button onClick={() => formData.hasYouTube ? setStep(1) : setStep(0)} className="px-6 py-3 text-[#71717a] hover:text-white transition-colors">
+                                <ArrowLeft className="w-5 h-5" />
+                            </button>
+                            {formData.hasYouTube ? (
+                                // Has YouTube - Instagram optional, can skip
+                                <button
+                                    onClick={() => setStep(4)}
+                                    className="flex-1 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"
+                                >
+                                    Continue <ArrowRight className="w-4 h-4" />
+                                </button>
+                            ) : formData.instagramHandle.trim().length > 0 ? (
+                                // No YouTube but has Instagram - can proceed
+                                <button
+                                    onClick={() => setStep(4)}
+                                    className="flex-1 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"
+                                >
+                                    Continue <ArrowRight className="w-4 h-4" />
+                                </button>
+                            ) : (
+                                // No YouTube, no Instagram - go to coaching question
+                                <button
+                                    onClick={() => setStep(3)}
+                                    className="flex-1 py-4 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    I don't have Instagram
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                );
+            }
+        },
+        // Step 3: Coaching/Consulting interest (for those without YT or IG)
+        {
+            id: 'coachingInterest',
             render: () => (
-                <div className="text-center">
-                    <Instagram className="w-16 h-16 text-[#ff982b] mx-auto mb-6" />
-                    <h2 className="text-3xl font-bold text-white mb-4">Do you have an Instagram account?</h2>
-                    <p className="text-[#71717a] mb-8">We can connect with you there</p>
+                <div className="text-center max-w-md mx-auto">
+                    <MessageSquare className="w-16 h-16 text-[#ff982b] mx-auto mb-6" />
+                    <h2 className="text-3xl font-bold text-white mb-4">Are you interested in coaching or consulting?</h2>
+                    <p className="text-[#71717a] mb-8">We work with coaches, consultants, and course creators</p>
                     <div className="flex gap-4 justify-center">
                         <button
-                            onClick={() => { updateFormData('hasInstagram', true); nextStep(); }}
+                            onClick={() => { updateFormData('interestedInCoaching', true); nextStep(); }}
                             className="px-8 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl hover:scale-105 transition-transform"
                         >
-                            Yes, I do
+                            Yes, I am
                         </button>
                         <button
-                            onClick={() => { updateFormData('hasInstagram', false); setStep(4); }}
+                            onClick={handleDisqualify}
                             className="px-8 py-4 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors"
                         >
-                            No
+                            No, I'm not
                         </button>
                     </div>
-                    <button onClick={() => setStep(0)} className="mt-6 text-[#52525b] hover:text-white text-sm">
+                    <button onClick={() => setStep(2)} className="mt-6 text-[#52525b] hover:text-white text-sm">
                         ← Go back
                     </button>
                 </div>
             )
         },
-        // Step 3: Instagram handle
+        // Step 4: Coaching details (freeform) OR Business type (for qualified users)
         {
-            id: 'instagramHandle',
-            render: () => (
-                <div className="max-w-md mx-auto">
-                    <Instagram className="w-12 h-12 text-[#ff982b] mx-auto mb-6" />
-                    <h2 className="text-2xl font-bold text-white mb-2 text-center">What's your Instagram handle?</h2>
-                    <p className="text-[#71717a] mb-6 text-center">We'll check out your profile</p>
-                    <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#52525b]">@</span>
-                        <input
-                            type="text"
-                            value={formData.instagramHandle}
-                            onChange={(e) => updateFormData('instagramHandle', e.target.value)}
-                            placeholder="yourhandle"
-                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-10 pr-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors mb-4"
-                        />
-                    </div>
-                    <div className="flex gap-3">
-                        <button onClick={prevStep} className="px-6 py-3 text-[#71717a] hover:text-white transition-colors">
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
-                        <button
-                            onClick={nextStep}
-                            className="flex-1 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"
-                        >
-                            Continue <ArrowRight className="w-4 h-4" />
-                        </button>
-                    </div>
-                </div>
-            )
-        },
-        // Step 4: Business type
-        {
-            id: 'businessType',
-            render: () => (
-                <div className="text-center">
-                    <Target className="w-16 h-16 text-[#ff982b] mx-auto mb-6" />
-                    <h2 className="text-3xl font-bold text-white mb-4">What best describes you?</h2>
-                    <p className="text-[#71717a] mb-8">This helps us personalize your experience</p>
-                    <div className="grid grid-cols-1 gap-3 max-w-md mx-auto">
-                        {[
-                            { value: 'creator', label: 'Content Creator', icon: Youtube },
-                            { value: 'coach', label: 'Coach / Consultant', icon: Users },
-                            { value: 'educator', label: 'Course Creator / Educator', icon: Zap },
-                            { value: 'agency', label: 'Agency Owner', icon: Target },
-                            { value: 'other', label: 'Other', icon: Sparkles }
-                        ].map(option => (
-                            <button
-                                key={option.value}
-                                onClick={() => { updateFormData('businessType', option.value); nextStep(); }}
-                                className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${formData.businessType === option.value
+            id: 'coachingDetailsOrBusinessType',
+            render: () => {
+                // If they're on the coaching path (no accounts)
+                if (formData.interestedInCoaching === true && !formData.hasYouTube && !formData.instagramHandle.trim()) {
+                    return (
+                        <div className="max-w-md mx-auto">
+                            <MessageSquare className="w-12 h-12 text-[#ff982b] mx-auto mb-6" />
+                            <h2 className="text-2xl font-bold text-white mb-2 text-center">Tell us about your coaching or consulting</h2>
+                            <p className="text-[#71717a] mb-6 text-center">What do you help people with? What's your expertise?</p>
+                            <textarea
+                                value={formData.coachingDetails}
+                                onChange={(e) => updateFormData('coachingDetails', e.target.value)}
+                                placeholder="I help entrepreneurs scale their businesses through..."
+                                rows={4}
+                                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors mb-4 resize-none"
+                            />
+                            <div className="mb-4">
+                                <label className="block text-xs font-medium text-[#71717a] uppercase tracking-wider mb-2">
+                                    Your Email (so we can reach you)
+                                </label>
+                                <input
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={(e) => updateFormData('email', e.target.value)}
+                                    placeholder="you@example.com"
+                                    className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                />
+                            </div>
+                            <div className="flex gap-3">
+                                <button onClick={prevStep} className="px-6 py-3 text-[#71717a] hover:text-white transition-colors">
+                                    <ArrowLeft className="w-5 h-5" />
+                                </button>
+                                <button
+                                    onClick={handleWaitlistSubmit}
+                                    disabled={loading || !formData.coachingDetails.trim() || !formData.email.trim()}
+                                    className="flex-1 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Submit <ArrowRight className="w-4 h-4" /></>}
+                                </button>
+                            </div>
+                        </div>
+                    );
+                }
+
+                // Normal path - Business type
+                return (
+                    <div className="text-center">
+                        <Target className="w-16 h-16 text-[#ff982b] mx-auto mb-6" />
+                        <h2 className="text-3xl font-bold text-white mb-4">What best describes you?</h2>
+                        <p className="text-[#71717a] mb-8">This helps us personalize your experience</p>
+                        <div className="grid grid-cols-1 gap-3 max-w-md mx-auto">
+                            {[
+                                { value: 'creator', label: 'Content Creator', icon: Youtube },
+                                { value: 'coach', label: 'Coach / Consultant', icon: Users },
+                                { value: 'educator', label: 'Course Creator / Educator', icon: Zap },
+                                { value: 'agency', label: 'Agency Owner', icon: Target },
+                                { value: 'other', label: 'Other', icon: Sparkles }
+                            ].map(option => (
+                                <button
+                                    key={option.value}
+                                    onClick={() => { updateFormData('businessType', option.value); nextStep(); }}
+                                    className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${formData.businessType === option.value
                                         ? 'bg-[#ff982b]/20 border-[#ff982b]'
                                         : 'bg-white/5 border-white/10 hover:border-[#ff982b]/50'
-                                    }`}
-                            >
-                                <option.icon className="w-6 h-6 text-[#ff982b]" />
-                                <span className="text-white font-medium">{option.label}</span>
-                            </button>
-                        ))}
+                                        }`}
+                                >
+                                    <option.icon className="w-6 h-6 text-[#ff982b]" />
+                                    <span className="text-white font-medium">{option.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                        <button onClick={() => setStep(2)} className="mt-6 text-[#52525b] hover:text-white text-sm">
+                            ← Go back
+                        </button>
                     </div>
-                    <button onClick={() => formData.hasYouTube ? setStep(1) : setStep(formData.hasInstagram ? 3 : 2)} className="mt-6 text-[#52525b] hover:text-white text-sm">
-                        ← Go back
-                    </button>
-                </div>
-            )
+                );
+            }
         },
         // Step 5: Primary goal
         {
@@ -241,8 +372,8 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                                 key={option.value}
                                 onClick={() => { updateFormData('primaryGoal', option.value); nextStep(); }}
                                 className={`text-left p-4 rounded-xl border transition-all ${formData.primaryGoal === option.value
-                                        ? 'bg-[#ff982b]/20 border-[#ff982b]'
-                                        : 'bg-white/5 border-white/10 hover:border-[#ff982b]/50'
+                                    ? 'bg-[#ff982b]/20 border-[#ff982b]'
+                                    : 'bg-white/5 border-white/10 hover:border-[#ff982b]/50'
                                     }`}
                             >
                                 <span className="text-white font-medium block">{option.label}</span>
@@ -277,8 +408,8 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                                 key={option.value}
                                 onClick={() => { updateFormData('audienceSize', option.value); nextStep(); }}
                                 className={`p-4 rounded-xl border transition-all ${formData.audienceSize === option.value
-                                        ? 'bg-[#ff982b]/20 border-[#ff982b]'
-                                        : 'bg-white/5 border-white/10 hover:border-[#ff982b]/50'
+                                    ? 'bg-[#ff982b]/20 border-[#ff982b]'
+                                    : 'bg-white/5 border-white/10 hover:border-[#ff982b]/50'
                                     }`}
                             >
                                 <span className="text-white font-medium">{option.label}</span>
@@ -291,7 +422,74 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                 </div>
             )
         },
-        // Step 7: Account details
+        // Step 7: Monthly Revenue
+        {
+            id: 'monthlyRevenue',
+            render: () => (
+                <div className="text-center">
+                    <DollarSign className="w-16 h-16 text-[#ff982b] mx-auto mb-6" />
+                    <h2 className="text-3xl font-bold text-white mb-4">What's your current monthly revenue?</h2>
+                    <p className="text-[#71717a] mb-8">From your content, courses, or services</p>
+                    <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
+                        {[
+                            { value: '0-1k', label: '$0 - $1K' },
+                            { value: '1k-5k', label: '$1K - $5K' },
+                            { value: '5k-10k', label: '$5K - $10K' },
+                            { value: '10k-25k', label: '$10K - $25K' },
+                            { value: '25k-50k', label: '$25K - $50K' },
+                            { value: '50k-100k', label: '$50K - $100K' },
+                            { value: '100k+', label: '$100K+' },
+                            { value: 'prefer-not-to-say', label: 'Prefer Not to Say' }
+                        ].map(option => (
+                            <button
+                                key={option.value}
+                                onClick={() => { updateFormData('monthlyRevenue', option.value); nextStep(); }}
+                                className={`p-4 rounded-xl border transition-all ${formData.monthlyRevenue === option.value
+                                    ? 'bg-[#ff982b]/20 border-[#ff982b]'
+                                    : 'bg-white/5 border-white/10 hover:border-[#ff982b]/50'
+                                    } ${option.value === 'prefer-not-to-say' ? 'col-span-2' : ''}`}
+                            >
+                                <span className="text-white font-medium">{option.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                    <button onClick={prevStep} className="mt-6 text-[#52525b] hover:text-white text-sm">
+                        ← Go back
+                    </button>
+                </div>
+            )
+        },
+        // Step 8: Free Audit Interest
+        {
+            id: 'interestedInAudit',
+            render: () => (
+                <div className="text-center max-w-lg mx-auto">
+                    <Sparkles className="w-16 h-16 text-[#ff982b] mx-auto mb-6" />
+                    <h2 className="text-3xl font-bold text-white mb-4">Would you like a free content audit?</h2>
+                    <p className="text-[#a1a1aa] mb-8">
+                        Get a personalized strategy call where we'll review your content and share actionable insights to help you grow.
+                    </p>
+                    <div className="flex gap-4 justify-center">
+                        <button
+                            onClick={() => { updateFormData('interestedInAudit', true); nextStep(); }}
+                            className="px-8 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl hover:scale-105 transition-transform"
+                        >
+                            Yes, I'm interested!
+                        </button>
+                        <button
+                            onClick={() => { updateFormData('interestedInAudit', false); nextStep(); }}
+                            className="px-8 py-4 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors"
+                        >
+                            Skip for now
+                        </button>
+                    </div>
+                    <button onClick={prevStep} className="mt-6 text-[#52525b] hover:text-white text-sm">
+                        ← Go back
+                    </button>
+                </div>
+            )
+        },
+        // Step 9: Account details
         {
             id: 'accountDetails',
             render: () => (
@@ -391,8 +589,8 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                                     className="sr-only"
                                 />
                                 <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${formData.agreeToEmails
-                                        ? 'bg-gradient-to-br from-[#ff982b] to-[#ffc972] border-transparent'
-                                        : 'border-white/20 group-hover:border-[#ff982b]'
+                                    ? 'bg-gradient-to-br from-[#ff982b] to-[#ffc972] border-transparent'
+                                    : 'border-white/20 group-hover:border-[#ff982b]'
                                     }`}>
                                     {formData.agreeToEmails && <Check className="w-3 h-3 text-black" />}
                                 </div>
@@ -449,8 +647,60 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
         }
     ];
 
+    // Show disqualified screen
+    if (isDisqualified) {
+        return (
+            <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6">
+                <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#ff982b]/10 rounded-full blur-[150px]" />
+                </div>
+                <div className="text-center max-w-md relative">
+                    <XCircle className="w-20 h-20 text-[#52525b] mx-auto mb-6" />
+                    <h2 className="text-3xl font-bold text-white mb-4">Sorry</h2>
+                    <p className="text-[#a1a1aa] text-lg mb-8">
+                        This tool is only for existing creators, coaches, and consultants.
+                    </p>
+                    <button
+                        onClick={() => window.location.href = '/'}
+                        className="px-8 py-4 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors"
+                    >
+                        Return Home
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // Show waitlisted screen
+    if (isWaitlisted) {
+        return (
+            <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6">
+                <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#ff982b]/10 rounded-full blur-[150px]" />
+                    <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#ffc972]/10 rounded-full blur-[150px]" />
+                </div>
+                <div className="text-center max-w-md relative">
+                    <CheckCircle className="w-20 h-20 text-[#ff982b] mx-auto mb-6" />
+                    <h2 className="text-3xl font-bold text-white mb-4">Thank You!</h2>
+                    <p className="text-[#a1a1aa] text-lg mb-4">
+                        We've received your application.
+                    </p>
+                    <p className="text-[#71717a] mb-8">
+                        We'll review your information and reach out to <span className="text-white">{formData.email}</span> if you qualify to use the tool.
+                    </p>
+                    <button
+                        onClick={() => window.location.href = '/'}
+                        className="px-8 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl hover:scale-105 transition-transform"
+                    >
+                        Return Home
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     // Progress bar
-    const totalSteps = 8;
+    const totalSteps = 10;
     const progress = ((step + 1) / totalSteps) * 100;
 
     return (
