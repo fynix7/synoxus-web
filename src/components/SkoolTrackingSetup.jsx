@@ -10,6 +10,10 @@ const SkoolTrackingSetup = () => {
     });
     const [checkedSteps, setCheckedSteps] = useState({});
 
+    React.useEffect(() => {
+        document.title = 'Skool Tracking Setup - Synoxus';
+    }, []);
+
     const generateUrl = () => {
         let baseInput = formData.baseUrl.trim();
         if (!baseInput) return 'Waiting for input...';

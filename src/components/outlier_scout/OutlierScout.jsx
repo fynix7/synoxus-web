@@ -21,6 +21,10 @@ const OutlierScout = ({ isPublic }) => {
             setSavedApiKey(stored);
             setApiKey(stored);
         }
+
+        if (isPublic) {
+            document.title = 'Outlier Scout - Synoxus';
+        }
     }, [isPublic]);
 
     const fetchStats = async () => {
@@ -128,9 +132,22 @@ const OutlierScout = ({ isPublic }) => {
             {/* Header */}
             <div className="text-center space-y-6 mb-8">
                 <div className="flex items-center justify-center gap-4">
-                    <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#ff982b] to-[#ffc972] uppercase tracking-tight">
-                        Outlier Scout
-                    </h1>
+                    <div className="w-20 h-20">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                            <defs>
+                                <linearGradient id="binoculars-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stopColor="#ff982b" />
+                                    <stop offset="100%" stopColor="#ffc972" />
+                                </linearGradient>
+                            </defs>
+                            <path
+                                fillRule="evenodd"
+                                clipRule="evenodd"
+                                d="M6 4C4.89543 4 4 4.89543 4 6V18C4 19.1046 4.89543 20 6 20C7.10457 20 8 19.1046 8 18V13H16V18C16 19.1046 16.8954 20 18 20C19.1046 20 20 19.1046 20 18V6C20 4.89543 19.1046 4 18 4C16.8954 4 16 4.89543 16 6V11H8V6C8 4.89543 7.10457 4 6 4ZM6 6V9H8V6H6ZM16 6V9H18V6H16Z"
+                                fill="url(#binoculars-gradient)"
+                            />
+                        </svg>
+                    </div>
                     <button
                         onClick={() => setShowSettings(true)}
                         className="p-2 rounded-lg bg-[#121212] border border-white/10 text-[#a1a1aa] hover:text-white hover:border-[#ff982b]/50 transition-all"

@@ -224,26 +224,99 @@ const InternalPortal = ({ onExit, initialView = 'menu', siteSettings = { landing
         setView(initialView);
     }, [initialView]);
 
-    // Sync URL with view
+    // Sync URL and Title with view
     useEffect(() => {
         let path = '/portal';
+        let title = 'Synoxus: More Views, More Cash';
+
         switch (view) {
-            case 'packaging': path = '/thumbnail-generator'; break;
-            case 'outlier_scout': path = '/outlier-scout'; break;
-            case 'note_taker': path = '/note-taker'; break;
-            case 'short_form_scribe': path = '/short-form-scribe'; break;
-            case 'messaging': path = '/chat-config'; break;
-            case 'vsl': path = '/vsl'; break;
-            case 'title_generator': path = '/title-generator'; break;
-            case 'landing_page': path = '/landing-page'; break;
-            case 'masterclass': path = '/masterclass'; break;
-            case 'skool_tracking': path = '/skool-tracking'; break;
-            case 'menu': path = '/portal'; break;
-            default: path = '/portal';
+            case 'packaging':
+                path = '/thumbnail-generator';
+                title = 'Thumbnail Generator - Synoxus';
+                break;
+            case 'outlier_scout':
+                path = '/outlier-scout';
+                title = 'Outlier Scout - Synoxus';
+                break;
+            case 'note_taker':
+                path = '/note-taker';
+                title = 'Note Taker - Synoxus';
+                break;
+            case 'short_form_scribe':
+                path = '/short-form-scribe';
+                title = 'ShortForm Scribe - Synoxus';
+                break;
+            case 'messaging':
+                path = '/chat-config';
+                title = 'Chat Configuration - Synoxus';
+                break;
+            case 'vsl':
+                path = '/vsl';
+                title = 'VSL - Synoxus';
+                break;
+            case 'title_generator':
+                path = '/title-generator';
+                title = 'Title Generator - Synoxus';
+                break;
+            case 'landing_page':
+            case 'landing_page_builder':
+                path = '/landing-page';
+                title = 'Landing Page Builder - Synoxus';
+                break;
+            case 'masterclass':
+                path = '/masterclass';
+                title = 'Instagram Masterclass - Synoxus';
+                break;
+            case 'skool_tracking':
+                path = '/skool-tracking';
+                title = 'Skool Tracking Setup - Synoxus';
+                break;
+            case 'youtube_masterclass':
+                title = 'YouTube Masterclass - Synoxus';
+                break;
+            case 'onboarding':
+                title = 'Onboarding - Synoxus';
+                break;
+            case 'crm':
+                title = 'Pipeline - Synoxus';
+                break;
+            case 'vault':
+                title = 'Short Form Vault - Synoxus';
+                break;
+            case 'long_form':
+                title = 'Long Form - Synoxus';
+                break;
+            case 'funnel':
+                title = 'Funnel - Synoxus';
+                break;
+            case 'resources':
+                title = 'Resources - Synoxus';
+                break;
+            case 'sops':
+                title = 'SOPs - Synoxus';
+                break;
+            case 'brand_identity':
+                title = 'Brand Identity - Synoxus';
+                break;
+            case 'menu':
+                path = '/portal';
+                title = 'Synoxus: More Views, More Cash';
+                break;
+            default:
+                path = '/portal';
+                if (view.startsWith('brand_sheets')) {
+                    title = 'Brand Sheets - Synoxus';
+                } else if (['mission_statement', 'vision_statement', 'core_values', 'target_audience', 'usp', 'key_competitors'].includes(view)) {
+                    // Convert snake_case to Title Case
+                    const readable = view.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                    title = `${readable} - Synoxus`;
+                }
         }
+
         if (window.location.pathname !== path) {
             window.history.pushState({}, '', path);
         }
+        document.title = title;
     }, [view]);
 
     // Brand Identity State

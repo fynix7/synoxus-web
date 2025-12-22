@@ -17,7 +17,11 @@ const PackagingTool = ({ isPublic }) => {
         if (!apiKey) {
             setShowSettings(true);
         }
-    }, []);
+
+        if (isPublic) {
+            document.title = 'Thumbnail Generator - Synoxus';
+        }
+    }, [isPublic]);
 
     // Enforce dark theme
     const theme = 'dark';
