@@ -42,6 +42,7 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
     const [success, setSuccess] = useState('');
     const [isDisqualified, setIsDisqualified] = useState(false);
     const [isWaitlisted, setIsWaitlisted] = useState(false);
+    const [emailVerificationPending, setEmailVerificationPending] = useState(false);
 
     // Form data
     const [formData, setFormData] = useState({
@@ -117,7 +118,8 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
             if (!result.success) {
                 setError(result.error);
             } else if (result.message) {
-                setSuccess(result.message);
+                // Email verification required
+                setEmailVerificationPending(true);
             }
         } catch (err) {
             setError(err.message || 'An error occurred');
@@ -739,6 +741,35 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                         className="px-8 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl hover:scale-105 transition-transform"
                     >
                         Return Home
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // Show email verification pending screen
+    if (emailVerificationPending) {
+        return (
+            <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6">
+                <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#ff982b]/10 rounded-full blur-[150px]" />
+                    <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#ffc972]/10 rounded-full blur-[150px]" />
+                </div>
+                <div className="text-center max-w-md relative">
+                    <Mail className="w-20 h-20 text-[#ff982b] mx-auto mb-6" />
+                    <h2 className="text-3xl font-bold text-white mb-4">Check Your Email</h2>
+                    <p className="text-[#a1a1aa] text-lg mb-4">
+                        We've sent a verification link to:
+                    </p>
+                    <p className="text-white font-medium text-lg mb-6">{formData.email}</p>
+                    <p className="text-[#71717a] mb-8">
+                        Click the link in your email to verify your account and get started.
+                    </p>
+                    <button
+                        onClick={onSwitchToSignIn}
+                        className="px-8 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl hover:scale-105 transition-transform"
+                    >
+                        Back to Sign In
                     </button>
                 </div>
             </div>

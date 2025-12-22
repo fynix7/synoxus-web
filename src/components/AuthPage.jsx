@@ -96,7 +96,7 @@ const AuthPage = () => {
                 {/* Logo and Title */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] mb-4 shadow-[0_0_40px_rgba(255,152,43,0.4)]">
-                        <Sparkles className="w-8 h-8 text-black" />
+                        <Sparkles className="w-8 h-8 text-black" fill="black" />
                     </div>
                     <h1 className="text-3xl font-bold text-white mb-2">
                         {mode === 'signin' ? 'Welcome Back' : mode === 'signup' ? 'Create Account' : 'Reset Password'}
