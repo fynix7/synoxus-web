@@ -202,8 +202,8 @@ export const fileToBase64 = (file) => {
             const img = new Image();
             img.src = event.target.result;
             img.onload = () => {
-                const MAX_WIDTH = 800;
-                const MAX_HEIGHT = 800;
+                const MAX_WIDTH = 1500;
+                const MAX_HEIGHT = 1500;
                 let width = img.width;
                 let height = img.height;
 
@@ -223,8 +223,8 @@ export const fileToBase64 = (file) => {
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
 
-                // Compress to JPEG 0.8
-                resolve(canvas.toDataURL('image/jpeg', 0.8));
+                // Compress to JPEG 0.85 (High Quality)
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
             };
             img.onerror = (error) => reject(error);
         };
