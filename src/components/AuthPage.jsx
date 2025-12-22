@@ -173,7 +173,7 @@ const AuthPage = () => {
                                             placeholder="••••••••"
                                             required
                                             minLength={6}
-                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-12 pr-12 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-14 pr-14 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                         />
                                         <button
                                             type="button"
@@ -208,7 +208,7 @@ const AuthPage = () => {
                                             placeholder="••••••••"
                                             required
                                             minLength={6}
-                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl pl-14 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                         />
                                     </div>
                                 </motion.div>
@@ -234,8 +234,8 @@ const AuthPage = () => {
                                                 className="sr-only"
                                             />
                                             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${agreeToEmails
-                                                    ? 'bg-gradient-to-br from-[#ff982b] to-[#ffc972] border-transparent'
-                                                    : 'border-white/20 group-hover:border-[#ff982b]'
+                                                ? 'bg-gradient-to-br from-[#ff982b] to-[#ffc972] border-transparent'
+                                                : 'border-white/20 group-hover:border-[#ff982b]'
                                                 }`}>
                                                 {agreeToEmails && <Check className="w-3 h-3 text-black" />}
                                             </div>
