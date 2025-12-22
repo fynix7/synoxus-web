@@ -25,6 +25,20 @@ export default async function handler(req, res) {
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
+        // STEP 0: Fetch existing blueprints to preserve generated concepts
+        const { data: existingBlueprints } = await supabase
+            .from('os_blueprints')
+            .select('pattern, generated_example');
+
+        const conceptCache = new Map();
+        if (existingBlueprints) {
+            existingBlueprints.forEach(bp => {
+                if (bp.pattern && bp.generated_example) {
+                    conceptCache.set(bp.pattern, bp.generated_example);
+                }
+            });
+        }
+
         // Clear existing blueprints
         const { error: deleteError } = await supabase
             .from('os_blueprints')
@@ -237,27 +251,34 @@ export default async function handler(req, res) {
 
             // Generate a concept for this pattern
             let generatedExample = '';
-            try {
-                const conceptPrompt = `
-                Given this YouTube title format: "${group.canonical_format}"
 
-                Original examples using this format:
-                ${examples.slice(0, 3).map(e => `- "${e.title}"`).join('\n')}
+            // Check cache first
+            if (conceptCache.has(group.canonical_format)) {
+                generatedExample = conceptCache.get(group.canonical_format);
+                console.log(`Using cached concept for: ${group.canonical_format}`);
+            } else {
+                try {
+                    const conceptPrompt = `
+                    Given this YouTube title format: "${group.canonical_format}"
 
-                Generate ONE new video title idea using this format in a DIFFERENT niche than the examples.
-                The generated title must:
-                1. Follow the format structure exactly
-                2. Be grammatically correct and natural-sounding
-                3. Be in a completely different topic/niche than the originals
-                4. Sound like a real, clickable YouTube title
+                    Original examples using this format:
+                    ${examples.slice(0, 3).map(e => `- "${e.title}"`).join('\n')}
 
-                Return ONLY the generated title, nothing else.
-                `;
+                    Generate ONE new video title idea using this format in a DIFFERENT niche than the examples.
+                    The generated title must:
+                    1. Follow the format structure exactly
+                    2. Be grammatically correct and natural-sounding
+                    3. Be in a completely different topic/niche than the originals
+                    4. Sound like a real, clickable YouTube title
 
-                const conceptResult = await model.generateContent(conceptPrompt);
-                generatedExample = conceptResult.response.text().trim().replace(/"/g, '');
-            } catch (e) {
-                generatedExample = 'Concept generation failed';
+                    Return ONLY the generated title, nothing else.
+                    `;
+
+                    const conceptResult = await model.generateContent(conceptPrompt);
+                    generatedExample = conceptResult.response.text().trim().replace(/"/g, '');
+                } catch (e) {
+                    generatedExample = 'Concept generation failed';
+                }
             }
 
             blueprints.push({
