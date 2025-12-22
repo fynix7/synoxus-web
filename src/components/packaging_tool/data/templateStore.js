@@ -6,24 +6,7 @@ import { supabase } from '../../../supabaseClient';
 const LOCAL_STORAGE_KEY = 'synoxus_templates_local';
 
 // Default templates (always available)
-const DEFAULT_TEMPLATES = [
-    {
-        id: 'money',
-        label: 'Make Money Online',
-        description: 'High CTR thumbnails for finance and side hustles.',
-        context: 'Focus on clear outcomes (money, graphs), surprised or serious expressions, and high contrast text. Key elements: Green/Red arrows, currency symbols, "Before/After" splits.',
-        referenceImages: [],
-        isDefault: true
-    },
-    {
-        id: 'explainer',
-        label: 'Explainer / Video Essay',
-        description: 'Clean, intriguing visuals for deep dives.',
-        context: 'Use a central subject with a mysterious or contrasting background. Minimal text (1-3 words). Focus on the "Curiosity Gap".',
-        referenceImages: [],
-        isDefault: true
-    },
-];
+const DEFAULT_TEMPLATES = [];
 
 // Get current user ID
 const getUserId = async () => {
