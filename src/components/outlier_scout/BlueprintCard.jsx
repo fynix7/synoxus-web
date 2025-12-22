@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LayoutTemplate, TrendingUp, Copy, Check } from 'lucide-react';
+import { LayoutTemplate, TrendingUp, Copy, Check, ChevronLeft, ChevronRight, ExternalLink, Users, Eye } from 'lucide-react';
 
 const VariablePill = ({ label, value, onChange }) => {
     const [isEditing, setIsEditing] = useState(false);
@@ -47,9 +47,152 @@ const VariablePill = ({ label, value, onChange }) => {
     );
 };
 
+const ThumbnailCarousel = ({ examples }) => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    if (!examples || examples.length === 0) {
+        return (
+            <div className="w-full aspect-video bg-[#0a0a0a] rounded-lg flex items-center justify-center border border-white/10">
+                <span className="text-[#52525b]">No thumbnails</span>
+            </div>
+        );
+    }
+
+    const currentExample = examples[currentIndex];
+    const hasMultiple = examples.length > 1;
+
+    const goNext = (e) => {
+        e.stopPropagation();
+        setCurrentIndex((prev) => (prev + 1) % examples.length);
+    };
+
+    const goPrev = (e) => {
+        e.stopPropagation();
+        setCurrentIndex((prev) => (prev - 1 + examples.length) % examples.length);
+    };
+
+    return (
+        <div className="relative group/carousel">
+            {/* Main Thumbnail */}
+            <div className="w-full aspect-video bg-[#0a0a0a] rounded-lg overflow-hidden border border-white/10 relative">
+                <img
+                    src={currentExample.thumbnail?.startsWith('data:image') ? currentExample.thumbnail : (currentExample.thumbnail || '/assets/placeholder.svg')}
+                    alt={currentExample.title}
+                    className="w-full h-full object-cover transition-all duration-300"
+                    onError={(e) => { e.target.src = 'https://via.placeholder.com/320x180?text=No+Thumbnail'; }}
+                />
+
+                {/* Score Badge */}
+                <div className={`absolute top-2 right-2 px-2 py-0.5 rounded text-xs font-bold shadow-lg ${currentExample.score >= 5 ? 'bg-yellow-500 text-black' : 'bg-[#ff982b] text-black'
+                    }`}>
+                    {currentExample.score?.toFixed(1)}x
+                </div>
+
+                {/* YouTube Link */}
+                {currentExample.video_id && (
+                    <a
+                        href={`https://www.youtube.com/watch?v=${currentExample.video_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute top-2 left-2 p-1.5 bg-black/70 rounded-md text-white hover:bg-black/90 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                )}
+
+                {/* Navigation Arrows */}
+                {hasMultiple && (
+                    <>
+                        <button
+                            onClick={goPrev}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 bg-black/70 rounded-full text-white hover:bg-black/90 transition-all opacity-0 group-hover/carousel:opacity-100"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={goNext}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-black/70 rounded-full text-white hover:bg-black/90 transition-all opacity-0 group-hover/carousel:opacity-100"
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </>
+                )}
+            </div>
+
+            {/* Thumbnail Strip (Mini thumbnails) */}
+            {hasMultiple && (
+                <div className="flex gap-1.5 mt-2 overflow-x-auto pb-1">
+                    {examples.map((ex, idx) => (
+                        <button
+                            key={idx}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setCurrentIndex(idx);
+                            }}
+                            className={`flex-shrink-0 w-14 h-8 rounded overflow-hidden border-2 transition-all ${idx === currentIndex
+                                ? 'border-[#ff982b] opacity-100'
+                                : 'border-transparent opacity-60 hover:opacity-100'
+                                }`}
+                        >
+                            <img
+                                src={ex.thumbnail?.startsWith('data:image') ? ex.thumbnail : (ex.thumbnail || '/assets/placeholder.svg')}
+                                alt=""
+                                className="w-full h-full object-cover"
+                                onError={(e) => { e.target.src = 'https://via.placeholder.com/56x32?text=...'; }}
+                            />
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            {/* Current Title */}
+            <div className="mt-2">
+                <p className="text-white text-sm font-medium leading-snug line-clamp-2">
+                    {currentExample.title}
+                </p>
+                {currentExample.views && (
+                    <p className="text-[#71717a] text-xs mt-1 flex items-center gap-1">
+                        <Eye className="w-3 h-3" />
+                        {currentExample.views.toLocaleString()} views
+                    </p>
+                )}
+            </div>
+        </div>
+    );
+};
+
 const BlueprintCard = ({ blueprint, index, showRank = true }) => {
     const [variableValues, setVariableValues] = useState({});
     const [copied, setCopied] = useState(false);
+
+    // Parse examples from JSON
+    let examples = [];
+    try {
+        examples = blueprint.examples ? JSON.parse(blueprint.examples) : [];
+    } catch (e) {
+        // Fallback to legacy single example
+        if (blueprint.example1 && blueprint.thumbnail1) {
+            examples = [{
+                title: blueprint.example1,
+                thumbnail: blueprint.thumbnail1,
+                video_id: blueprint.video_id || '',
+                views: blueprint.median_views,
+                score: blueprint.median_score
+            }];
+        }
+    }
+
+    // Fallback for legacy blueprints without examples JSON
+    if (examples.length === 0 && blueprint.example1) {
+        examples = [{
+            title: blueprint.example1,
+            thumbnail: blueprint.thumbnail1,
+            video_id: '',
+            views: blueprint.median_views,
+            score: blueprint.median_score
+        }];
+    }
 
     // Parse pattern to identify variables
     const parts = blueprint.pattern.split(/(\[.*?\])/g);
@@ -71,28 +214,30 @@ const BlueprintCard = ({ blueprint, index, showRank = true }) => {
     return (
         <div className="bg-[#121212] border border-white/10 rounded-xl p-5 hover:border-[#ff982b]/30 transition-all group h-full">
             <div className="flex flex-col gap-4">
-                {/* Thumbnail */}
-                <div className="w-full aspect-video bg-[#0a0a0a] rounded-lg overflow-hidden border border-white/10 relative">
-                    <img
-                        src={blueprint.thumbnail1?.startsWith('data:image') ? blueprint.thumbnail1 : (blueprint.thumbnail1 || '/assets/placeholder.svg')}
-                        alt="Original"
-                        className="w-full h-full object-cover"
-                        onError={(e) => { e.target.src = 'https://via.placeholder.com/320x180?text=No+Thumbnail'; }}
-                    />
+                {/* Header with count badge */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <div className="bg-[#ff982b]/10 text-[#ff982b] px-2 py-0.5 rounded-md text-xs font-bold flex items-center gap-1">
+                            <Users className="w-3 h-3" />
+                            {blueprint.count || 1} example{(blueprint.count || 1) > 1 ? 's' : ''}
+                        </div>
+                        <span className="text-[#52525b] text-xs">|</span>
+                        <span className="text-[#ff982b] text-xs font-medium">{blueprint.archetype || 'Unclassified'}</span>
+                    </div>
+                    <div className="bg-[#1a1a1a] px-2 py-0.5 rounded-md border border-white/5 text-white font-bold text-xs">
+                        {blueprint.median_score}x avg
+                    </div>
                 </div>
 
-                {/* Original Title */}
-                <div>
-                    <h4 className="text-[#a1a1aa] text-xs font-bold uppercase tracking-wider mb-1">Original Title</h4>
-                    <p className="text-white text-base font-medium leading-snug">{blueprint.example1}</p>
-                </div>
+                {/* Thumbnail Carousel */}
+                <ThumbnailCarousel examples={examples} />
 
                 {/* Interactive Format */}
                 <div>
                     <div className="flex items-center justify-between mb-2">
                         <h4 className="text-[#ff982b] text-xs font-bold uppercase tracking-wider flex items-center gap-2">
                             <LayoutTemplate className="w-3 h-3" />
-                            Format / Builder
+                            Title Format
                         </h4>
                         <button
                             onClick={handleCopy}
@@ -103,7 +248,7 @@ const BlueprintCard = ({ blueprint, index, showRank = true }) => {
                         </button>
                     </div>
                     <div className="bg-[#0a0a0a] p-3 rounded-lg border border-white/5 border-l-4 border-l-[#ff982b]">
-                        <div className="text-base font-semibold text-white leading-relaxed">
+                        <div className="text-base font-semibold text-white leading-relaxed flex flex-wrap items-center">
                             {parts.map((part, i) => {
                                 if (part.startsWith('[') && part.endsWith(']')) {
                                     return (
@@ -125,9 +270,9 @@ const BlueprintCard = ({ blueprint, index, showRank = true }) => {
                 <div>
                     <h4 className="text-emerald-500 text-xs font-bold uppercase tracking-wider mb-1 flex items-center gap-2">
                         <TrendingUp className="w-3 h-3" />
-                        Generated Concept
+                        AI Generated Concept
                     </h4>
-                    <p className="text-emerald-400/90 text-base font-medium italic">
+                    <p className="text-emerald-400/90 text-sm font-medium italic bg-emerald-500/5 p-3 rounded-lg border border-emerald-500/10">
                         "{blueprint.generated_example || 'No generated concept available'}"
                     </p>
                 </div>
@@ -135,16 +280,16 @@ const BlueprintCard = ({ blueprint, index, showRank = true }) => {
                 {/* Stats Footer */}
                 <div className="flex flex-wrap gap-2 pt-3 border-t border-white/5">
                     <div className="bg-[#1a1a1a] px-2 py-1 rounded-md border border-white/5 flex items-center gap-1.5">
-                        <span className="text-[#a1a1aa] text-xs">Score:</span>
+                        <span className="text-[#a1a1aa] text-xs">Avg Score:</span>
                         <span className="text-white font-bold text-xs">{blueprint.median_score}x</span>
                     </div>
                     <div className="bg-[#1a1a1a] px-2 py-1 rounded-md border border-white/5 flex items-center gap-1.5">
-                        <span className="text-[#a1a1aa] text-xs">Views:</span>
+                        <span className="text-[#a1a1aa] text-xs">Avg Views:</span>
                         <span className="text-white font-bold text-xs">{blueprint.median_views?.toLocaleString()}</span>
                     </div>
                     <div className="bg-[#1a1a1a] px-2 py-1 rounded-md border border-white/5 flex items-center gap-1.5">
-                        <span className="text-[#a1a1aa] text-xs">Archetype:</span>
-                        <span className="text-[#ff982b] font-medium text-xs">{blueprint.archetype || 'Unclassified'}</span>
+                        <span className="text-[#a1a1aa] text-xs">Examples:</span>
+                        <span className="text-[#ff982b] font-bold text-xs">{blueprint.count || 1}</span>
                     </div>
                 </div>
             </div>
@@ -153,4 +298,3 @@ const BlueprintCard = ({ blueprint, index, showRank = true }) => {
 };
 
 export default BlueprintCard;
-

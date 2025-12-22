@@ -105,7 +105,7 @@ const OutlierScout = () => {
             const result = await response.json();
 
             if (result.success) {
-                setArchitectStatus(`✅ Complete! Processed ${result.processed} outliers.`);
+                setArchitectStatus(`✅ Complete! Analyzed ${result.processed} outliers → Created ${result.blueprints || 0} grouped patterns.`);
                 fetchStats(); // Refresh stats
             } else {
                 setArchitectStatus(`❌ Error: ${result.error}`);

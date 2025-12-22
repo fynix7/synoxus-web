@@ -1,2 +1,6 @@
-2025/12/20-00:37:17.228 5980 Creating DB C:\Users\iyoha\.gemini\antigravity\scratch\Synoxus\user_data\Default\IndexedDB\https_www.youtube.com_0.indexeddb.leveldb since it was missing.
-2025/12/20-00:37:17.237 5980 Reusing MANIFEST C:\Users\iyoha\.gemini\antigravity\scratch\Synoxus\user_data\Default\IndexedDB\https_www.youtube.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/12/20-01:12:13.279 8d84 Reusing MANIFEST C:\Users\iyoha\.gemini\antigravity\scratch\Synoxus\user_data\Default\IndexedDB\https_www.youtube.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/12/20-01:12:13.280 8d84 Recovering log #3
+2025/12/20-01:12:13.285 8d84 Reusing old log C:\Users\iyoha\.gemini\antigravity\scratch\Synoxus\user_data\Default\IndexedDB\https_www.youtube.com_0.indexeddb.leveldb/000003.log 
+2025/12/20-01:13:35.425 7a68 Level-0 table #5: started
+2025/12/20-01:13:35.448 7a68 Level-0 table #5: 1892982 bytes OK
+2025/12/20-01:13:35.451 7a68 Delete type=0 #3

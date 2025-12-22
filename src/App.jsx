@@ -45,6 +45,9 @@ function App() {
     } else if (path === '/outlier-scout') {
       setIsPortalOpen(true);
       setPortalInitialView('outlier_scout');
+    } else if (path === '/skool-tracking') {
+      setIsPortalOpen(true);
+      setPortalInitialView('skool_tracking');
     }
   }, []);
 

@@ -626,6 +626,77 @@ export default defineConfig({
             return;
           }
 
+          // Handle /api/scout/run - Run scout script locally
+          if (req.url.startsWith('/api/scout/run')) {
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+            res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+            if (req.method === 'OPTIONS') {
+              res.statusCode = 200;
+              res.end();
+              return;
+            }
+
+            if (req.method !== 'POST') {
+              res.statusCode = 405;
+              res.end(JSON.stringify({ error: 'Method not allowed' }));
+              return;
+            }
+
+            let body = '';
+            req.on('data', chunk => body += chunk);
+            req.on('end', async () => {
+              try {
+                const { channelUrl } = JSON.parse(body);
+
+                if (!channelUrl) {
+                  res.statusCode = 400;
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({ error: 'Channel URL is required', success: false }));
+                  return;
+                }
+
+                // Spawn the scout script in the background
+                const { spawn } = await import('child_process');
+
+                // Get the current port from the request
+                const port = req.headers.host?.split(':')[1] || '5173';
+
+                const scoutProcess = spawn('node', [
+                  'scripts/outlier_scout/scout.js',
+                  channelUrl
+                ], {
+                  cwd: process.cwd(),
+                  env: {
+                    ...process.env,
+                    API_URL: `http://localhost:${port}/api/scout/save`
+                  },
+                  detached: true,
+                  stdio: 'ignore'
+                });
+
+                scoutProcess.unref(); // Allow the parent to exit independently
+
+                console.log(`[Vite Proxy] Scout started for: ${channelUrl} (PID: ${scoutProcess.pid})`);
+
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({
+                  success: true,
+                  message: 'Scout started in background. Check the terminal for progress.',
+                  pid: scoutProcess.pid
+                }));
+
+              } catch (error) {
+                console.error('[Vite Proxy] Scout run error:', error);
+                res.statusCode = 500;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ error: error.message, success: false }));
+              }
+            });
+            return;
+          }
+
           // Handle /api/scout/save
           if (req.url.startsWith('/api/scout/save')) {
             if (req.method === 'OPTIONS') {

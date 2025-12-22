@@ -6,6 +6,7 @@ import ShortFormScribe from './ShortFormScribe';
 import ChatConfiguration from './ChatConfiguration';
 import NoteTaker from './NoteTaker';
 import OutlierScout from './outlier_scout/OutlierScout';
+import SkoolTrackingSetup from './SkoolTrackingSetup';
 import { Plus, X, Trash2, ChevronLeft, ChevronRight, Save, LogOut, LayoutGrid, Package, MessageSquare, ArrowLeft, ArrowRight, Database, GraduationCap, Calendar, Tag, Clock, Users, Settings, Edit3, CheckSquare, Rocket, FileText, Video, User, Fingerprint, Briefcase, Globe, Search, Lightbulb, Mic, Image, TrendingUp, BookOpen, Palette, Type, Upload, LayoutTemplate, Target, Eye, Heart, Zap, Swords } from 'lucide-react';
 import { HexColorPicker } from "react-colorful";
 
@@ -227,6 +228,7 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
             case 'title_generator': path = '/title-generator'; break;
             case 'landing_page': path = '/landing-page'; break;
             case 'masterclass': path = '/masterclass'; break;
+            case 'skool_tracking': path = '/skool-tracking'; break;
             case 'menu': path = '/portal'; break;
             default: path = '/portal';
         }
@@ -570,7 +572,7 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                         <span className="font-bold text-black text-xs">S</span>
                     </div>
                     <h1 className="font-medium text-lg tracking-tight">
-                        <span onClick={() => { isAuthenticated ? setView('menu') : onExit(); window.history.pushState({}, '', '/portal'); }} className="cursor-pointer hover:text-[#ff982b] transition-colors">Synoxus</span> <span className="text-[#52525b] font-light">/ {isAuthenticated ? (view === 'menu' ? 'Portal' : view === 'crm' ? 'Pipeline' : view === 'packaging' ? 'Thumbnail Generator' : view === 'messaging' ? 'Chat Configuration' : view === 'note_taker' ? 'Note Taker' : view === 'vault' ? 'Short Form' : view === 'long_form' ? 'Long Form' : view === 'funnel' ? 'Funnel' : view === 'course' ? 'Course' : view === 'onboarding' ? 'Onboarding' : view === 'brand_identity' ? 'Brand Identity' : view === 'strategic_identity' ? 'Strategic Identity' : view === 'masterclass' ? 'Masterclass' : view === 'youtube_masterclass' ? 'YouTube Masterclass' : view === 'short_form_scribe' ? 'ShortForm Scribe' : view === 'vsl' ? 'VSL' : view === 'title_generator' ? 'Title Generator' : view === 'landing_page' ? 'Landing Page' : view === 'sheet_wip' ? 'Work in Progress' : view === 'mission_statement' ? 'Mission Statement' : view === 'vision_statement' ? 'Vision Statement' : view === 'core_values' ? 'Core Values' : view === 'target_audience' ? 'Target Audience' : view === 'usp' ? 'USP' : view === 'key_competitors' ? 'Competitors' : view.startsWith('brand_sheets') ? 'Brand Sheet' : 'Sheet') : 'Login'}</span>
+                        <span onClick={() => { isAuthenticated ? setView('menu') : onExit(); window.history.pushState({}, '', '/portal'); }} className="cursor-pointer hover:text-[#ff982b] transition-colors">Synoxus</span> <span className="text-[#52525b] font-light">/ {isAuthenticated ? (view === 'menu' ? 'Portal' : view === 'crm' ? 'Pipeline' : view === 'packaging' ? 'Thumbnail Generator' : view === 'messaging' ? 'Chat Configuration' : view === 'note_taker' ? 'Note Taker' : view === 'vault' ? 'Short Form' : view === 'long_form' ? 'Long Form' : view === 'funnel' ? 'Funnel' : view === 'course' ? 'Course' : view === 'onboarding' ? 'Onboarding' : view === 'brand_identity' ? 'Brand Identity' : view === 'strategic_identity' ? 'Strategic Identity' : view === 'masterclass' ? 'Masterclass' : view === 'youtube_masterclass' ? 'YouTube Masterclass' : view === 'short_form_scribe' ? 'ShortForm Scribe' : view === 'vsl' ? 'VSL' : view === 'title_generator' ? 'Title Generator' : view === 'landing_page' ? 'Landing Page' : view === 'sheet_wip' ? 'Work in Progress' : view === 'mission_statement' ? 'Mission Statement' : view === 'vision_statement' ? 'Vision Statement' : view === 'core_values' ? 'Core Values' : view === 'target_audience' ? 'Target Audience' : view === 'usp' ? 'USP' : view === 'key_competitors' ? 'Competitors' : view === 'resources' ? 'Resources' : view === 'sops' ? 'SOPs' : view === 'skool_tracking' ? 'Skool Tracking' : view === 'outlier_scout' ? 'Outlier Scout' : view.startsWith('brand_sheets') ? 'Brand Sheet' : 'Portal') : 'Login'}</span>
                         {isAuthenticated && <span className="ml-2 text-[10px] font-bold uppercase bg-white/10 px-2 py-0.5 rounded text-[#71717a]">{userRole.replace('_', ' ')}</span>}
                     </h1>
                 </div>
@@ -603,6 +605,8 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                 setView('funnel');
                             } else if (view === 'sops') {
                                 setView('resources');
+                            } else if (view === 'skool_tracking') {
+                                setView('sops');
                             } else if (view.startsWith('brand_sheets_') && view !== 'brand_sheets') {
                                 setView('brand_sheets');
                             } else {
@@ -782,7 +786,7 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full p-4">
                                     <motion.div
                                         whileHover={{ scale: 1.02 }}
-                                        onClick={() => window.open('https://drive.google.com/file/d/1sRp_J5Bdh3q3WRwOW5xiq5oovfB8QkNw/view?usp=sharing', '_blank')}
+                                        onClick={() => setView('skool_tracking')}
                                         className="bg-[#121212] border border-white/10 p-10 rounded-2xl cursor-pointer transition-all group min-h-[320px] flex flex-col justify-between hover:bg-gradient-to-br hover:from-[#ff982b] hover:to-[#ffc972] hover:border-transparent hover:shadow-[0_0_30px_rgba(255,152,43,0.4)]"
                                     >
                                         <div>
@@ -795,6 +799,10 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                                     </motion.div>
                                 </div>
                             </div>
+                        )}
+
+                        {view === 'skool_tracking' && (
+                            <SkoolTrackingSetup />
                         )}
 
                         {view === 'onboarding' && (

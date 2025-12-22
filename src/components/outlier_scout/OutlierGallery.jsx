@@ -121,12 +121,36 @@ const OutlierGallery = () => {
                 if (error) throw error;
             }
 
-            // In a real app, this would trigger a background job.
-            // For now, we just acknowledge the request.
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Try to call the scout API
+            try {
+                const response = await fetch('/api/scout/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ channelUrl })
+                });
+                const result = await response.json();
 
-            setProgress(100);
-            alert('Channel added to scout queue! Run the scout script to process.');
+                if (result.success) {
+                    setProgress(100);
+                    alert('✅ Scouting complete! Refresh to see new outliers.');
+                } else {
+                    setProgress(100);
+                    // Show the command in a copyable format
+                    const command = `node scripts/outlier_scout/scout.js "${channelUrl}"`;
+                    prompt(
+                        '⚠️ Web scouting requires running locally. Copy this command and run it in your terminal:',
+                        command
+                    );
+                }
+            } catch (apiError) {
+                // API not available, show command
+                setProgress(100);
+                const command = `node scripts/outlier_scout/scout.js "${channelUrl}"`;
+                prompt(
+                    '⚠️ Web scouting requires running locally. Copy this command and run it in your terminal:',
+                    command
+                );
+            }
         } catch (e) {
             console.error(e);
             alert('Error adding channel to queue');
