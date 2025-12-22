@@ -221,12 +221,12 @@ const CharacterManager = ({ isOpen, onClose, onSaveSuccess, initialCharacters = 
                 {view !== 'list' && (
                     <div className="modal-footer">
                         <button
-                            className="btn-primary icon-only-btn"
+                            className="w-12 h-12 rounded-full flex items-center justify-center transition-colors bg-white text-black hover:bg-[#22c55e] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={handleSave}
                             disabled={!name || images.length === 0 || isSaving}
                             title={view === 'edit' ? 'Update Character' : 'Save Character'}
                         >
-                            {isSaving ? <Loader2 className="spin" size={20} /> : <Save size={20} />}
+                            {isSaving ? <Loader2 className="spin" size={20} /> : <Save size={20} fill="currentColor" />}
                         </button>
                     </div>
                 )}
