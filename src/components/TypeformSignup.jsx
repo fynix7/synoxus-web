@@ -139,9 +139,21 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
     };
 
     // Validation helpers
+    const isValidYouTubeLink = (input) => {
+        const trimmed = input.trim();
+        if (!trimmed) return false;
+        // Accept YouTube URLs or @handles
+        const youtubePatterns = [
+            /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)/i,
+            /^(www\.)?youtube\.com/i,
+            /^@[\w.-]+$/  // @handle format
+        ];
+        return youtubePatterns.some(pattern => pattern.test(trimmed));
+    };
+
     const canProceedFromYouTube = () => {
         if (formData.hasYouTube === true) {
-            return formData.youtubeChannel.trim().length > 0;
+            return isValidYouTubeLink(formData.youtubeChannel);
         }
         return true;
     };
@@ -197,8 +209,11 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                         placeholder="https://youtube.com/@yourchannel"
                         className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors mb-2"
                     />
-                    {!canProceedFromYouTube() && (
-                        <p className="text-red-400 text-sm mb-4">Please enter your YouTube channel to continue</p>
+                    {!canProceedFromYouTube() && formData.youtubeChannel.trim().length > 0 && (
+                        <p className="text-red-400 text-sm mb-4">Please enter a valid YouTube URL or @handle</p>
+                    )}
+                    {!canProceedFromYouTube() && formData.youtubeChannel.trim().length === 0 && (
+                        <p className="text-[#71717a] text-sm mb-4">Enter your YouTube channel link to continue</p>
                     )}
                     <div className="flex gap-3 mt-4">
                         <button onClick={prevStep} className="px-6 py-3 text-[#71717a] hover:text-white transition-colors">
