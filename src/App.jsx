@@ -6,8 +6,8 @@ import PackagingSection from './components/PackagingSection';
 import ServiceNotifications from './components/ServiceNotifications';
 import InternalPortal from './components/InternalPortal';
 import AuthPage from './components/AuthPage';
-import TermsOfService from './components/TermsOfService';
-import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsPage from './components/TermsPage';
+import PrivacyPage from './components/PrivacyPage';
 import Footer from './components/Footer';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
@@ -123,10 +123,10 @@ function AppContent() {
   // Terms and Privacy pages - accessible without auth
   const path = window.location.pathname;
   if (path === '/terms') {
-    return <TermsOfService />;
+    return <TermsPage />;
   }
   if (path === '/privacy') {
-    return <PrivacyPolicy />;
+    return <PrivacyPage />;
   }
 
   // Show auth page if not authenticated
