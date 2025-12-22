@@ -85,7 +85,7 @@ const SkoolTrackingSetup = () => {
         <div className="min-h-screen bg-[#0a0a0a] text-white p-6 md:p-10 overflow-y-auto">
             <div className="max-w-4xl mx-auto bg-[#121212] border border-white/10 rounded-3xl p-8 md:p-16 shadow-2xl">
                 {/* Header */}
-                <h1 className="text-4xl md:text-5xl font-bold mb-4 pb-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] bg-clip-text text-transparent">
+                <h1 className="text-4xl md:text-5xl font-bold mb-4 py-2 leading-tight bg-gradient-to-r from-[#ff982b] to-[#ffc972] bg-clip-text text-transparent">
                     Tracking Skool Conversions
                 </h1>
 
