@@ -185,7 +185,7 @@ const Column = ({ title, id, tasks, onAdd, onDelete, onMove, onEdit, userRole, c
     );
 };
 
-const InternalPortal = ({ onExit, initialView = 'menu' }) => {
+const InternalPortal = ({ onExit, initialView = 'menu', siteSettings = { landingEnabled: false }, onUpdateSiteSettings, settingsPassword = '' }) => {
     const [columns, setColumns] = useState([]);
     const [editingTask, setEditingTask] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -205,6 +205,12 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
         const saved = localStorage.getItem('synoxus_chat_enabled');
         return saved !== null ? JSON.parse(saved) : true;
     });
+
+    // Site Settings Modal State
+    const [isSiteSettingsOpen, setIsSiteSettingsOpen] = useState(false);
+    const [siteSettingsPassword, setSiteSettingsPassword] = useState('');
+    const [isSiteSettingsUnlocked, setIsSiteSettingsUnlocked] = useState(false);
+    const [siteSettingsError, setSiteSettingsError] = useState(false);
 
     useEffect(() => {
         localStorage.setItem('synoxus_chat_enabled', JSON.stringify(isChatEnabled));
@@ -581,6 +587,13 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                         <div className="w-2 h-2 rounded-full bg-[#ffc175] animate-pulse"></div>
                         <span className="text-xs text-[#fcf0d4] font-medium">System Online</span>
                     </div>
+                    <button
+                        onClick={() => setIsSiteSettingsOpen(true)}
+                        className="p-2 hover:bg-white/5 rounded-lg text-[#a1a1aa] hover:text-[#ff982b] transition-colors cursor-pointer"
+                        title="Site Settings"
+                    >
+                        <Settings className="w-5 h-5" />
+                    </button>
                     <button
                         onClick={isAuthenticated ? handleLogout : onExit}
                         className="p-2 hover:bg-white/5 rounded-lg text-[#a1a1aa] hover:text-white transition-colors cursor-pointer"
@@ -1657,6 +1670,134 @@ const InternalPortal = ({ onExit, initialView = 'menu' }) => {
                     )
                 }
             </AnimatePresence >
+
+            {/* Site Settings Modal */}
+            <AnimatePresence>
+                {isSiteSettingsOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+                        onClick={() => {
+                            setIsSiteSettingsOpen(false);
+                            setIsSiteSettingsUnlocked(false);
+                            setSiteSettingsPassword('');
+                            setSiteSettingsError(false);
+                        }}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-[#121212] border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                    <Settings className="w-5 h-5 text-[#ff982b]" />
+                                    Site Settings
+                                </h2>
+                                <button
+                                    onClick={() => {
+                                        setIsSiteSettingsOpen(false);
+                                        setIsSiteSettingsUnlocked(false);
+                                        setSiteSettingsPassword('');
+                                        setSiteSettingsError(false);
+                                    }}
+                                    className="text-[#52525b] hover:text-white transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {!isSiteSettingsUnlocked ? (
+                                <div className="space-y-4">
+                                    <p className="text-[#a1a1aa] text-sm">
+                                        Enter the admin password to access site settings.
+                                    </p>
+                                    <div>
+                                        <input
+                                            type="password"
+                                            value={siteSettingsPassword}
+                                            onChange={(e) => setSiteSettingsPassword(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    if (siteSettingsPassword === settingsPassword) {
+                                                        setIsSiteSettingsUnlocked(true);
+                                                        setSiteSettingsError(false);
+                                                    } else {
+                                                        setSiteSettingsError(true);
+                                                        setTimeout(() => setSiteSettingsError(false), 2000);
+                                                    }
+                                                }
+                                            }}
+                                            placeholder="Enter admin password..."
+                                            className={`w-full bg-[#0a0a0a] border ${siteSettingsError ? 'border-red-500' : 'border-white/10'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#ff982b] transition-colors`}
+                                        />
+                                        {siteSettingsError && (
+                                            <p className="text-red-500 text-xs mt-2">Incorrect password</p>
+                                        )}
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            if (siteSettingsPassword === settingsPassword) {
+                                                setIsSiteSettingsUnlocked(true);
+                                                setSiteSettingsError(false);
+                                            } else {
+                                                setSiteSettingsError(true);
+                                                setTimeout(() => setSiteSettingsError(false), 2000);
+                                            }
+                                        }}
+                                        className="w-full py-3 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl hover:opacity-90 transition-all"
+                                    >
+                                        Unlock Settings
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-6">
+                                    <div className="bg-[#0a0a0a] border border-white/10 rounded-xl p-4">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h3 className="text-white font-medium">Landing Page</h3>
+                                                <p className="text-[#71717a] text-sm mt-1">
+                                                    {siteSettings?.landingEnabled
+                                                        ? 'Visitors see the marketing landing page'
+                                                        : 'Visitors are redirected to the portal'
+                                                    }
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    const newSettings = {
+                                                        ...siteSettings,
+                                                        landingEnabled: !siteSettings?.landingEnabled
+                                                    };
+                                                    if (onUpdateSiteSettings) {
+                                                        onUpdateSiteSettings(newSettings);
+                                                    }
+                                                }}
+                                                className={`relative w-14 h-8 rounded-full transition-colors ${siteSettings?.landingEnabled ? 'bg-[#ff982b]' : 'bg-[#3a3a3c]'}`}
+                                            >
+                                                <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${siteSettings?.landingEnabled ? 'translate-x-7' : 'translate-x-1'}`} />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-4 border-t border-white/10">
+                                        <p className="text-xs text-[#52525b] text-center">
+                                            {siteSettings?.landingEnabled
+                                                ? '✓ Landing page is enabled for all visitors'
+                                                : '✓ All visitors are redirected to the portal'
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div >
     );
 };
