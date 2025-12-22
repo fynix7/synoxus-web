@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Loader2, AlertCircle, CheckCircle, Sparkles, Check } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Loader2, AlertCircle, CheckCircle, Star, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import TypeformSignup from './TypeformSignup';
 
@@ -82,9 +82,9 @@ const AuthPage = () => {
     return (
         <div className="min-h-screen bg-[#080705] flex items-center justify-center p-4">
             {/* Background gradient effect */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+            <div className="fixed inset-0 pointer-events-none">
                 <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#ff982b]/10 rounded-full blur-[150px]" />
-                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#ffc972]/10 rounded-full blur-[150px]" />
+                <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-[#ffc972]/10 rounded-full blur-[150px]" />
             </div>
 
             <motion.div
@@ -96,7 +96,7 @@ const AuthPage = () => {
                 {/* Logo and Title */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] mb-4 shadow-[0_0_40px_rgba(255,152,43,0.4)]">
-                        <Sparkles className="w-8 h-8" fill="black" strokeWidth={0} />
+                        <Star className="w-8 h-8" fill="black" strokeWidth={0} />
                     </div>
                     <h1 className="text-3xl font-bold text-white mb-2">
                         {mode === 'signin' ? 'Welcome Back' : mode === 'signup' ? 'Create Account' : 'Reset Password'}
@@ -179,7 +179,7 @@ const AuthPage = () => {
                                             placeholder="••••••••"
                                             required
                                             minLength={6}
-                                            className="w-full bg-[#0c0b09] border border-white/10 rounded-xl pl-12 pr-14 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                            className="w-full bg-[#0c0b09] border border-white/10 rounded-xl pl-14 pr-14 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                         />
                                         <button
                                             type="button"
