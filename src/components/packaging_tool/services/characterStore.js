@@ -1,18 +1,49 @@
 // Character storage using Supabase with user isolation
-// Falls back to localStorage for offline/unauthenticated use
+// Supports both Authenticated Users and Anonymous Sessions (via x-session-id header)
+// Falls back to localStorage ONLY if Supabase is completely unreachable
 
+import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../../../supabaseClient';
 
 const LOCAL_STORAGE_KEY = 'synoxus_characters_local';
+const SESSION_ID_KEY = 'synoxus_session_id';
 
-// Get current user ID from Supabase auth
+// --- Session Management ---
+
+const getSessionId = () => {
+    let sessionId = localStorage.getItem(SESSION_ID_KEY);
+    if (!sessionId) {
+        sessionId = crypto.randomUUID();
+        localStorage.setItem(SESSION_ID_KEY, sessionId);
+    }
+    return sessionId;
+};
+
+// Create a specific client for anonymous access that includes the session header
+const getSessionClient = () => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const sessionId = getSessionId();
+
+    if (!supabaseUrl || !supabaseAnonKey) return null;
+
+    return createClient(supabaseUrl, supabaseAnonKey, {
+        global: {
+            headers: {
+                'x-session-id': sessionId
+            }
+        }
+    });
+};
+
+// --- Helper Functions ---
+
 const getUserId = async () => {
     if (!supabase) return null;
     const { data: { user } } = await supabase.auth.getUser();
     return user?.id || null;
 };
 
-// Fallback to localStorage
 const getLocalCharacters = () => {
     try {
         const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -27,38 +58,39 @@ const saveLocalCharacters = (characters) => {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(characters));
     } catch (e) {
         console.error('Error saving characters to localStorage:', e);
-        throw e; // Re-throw so UI knows it failed
+        throw e;
     }
 };
 
+// --- CRUD Operations ---
+
 export const saveCharacter = async (name, images, colors = {}) => {
     const userId = await getUserId();
+    const sessionId = getSessionId();
+
+    // Determine which client and ID to use
+    const client = userId ? supabase : getSessionClient();
+    const idField = userId ? { user_id: userId } : { session_id: sessionId };
 
     const character = {
         id: crypto.randomUUID(),
         name,
         images,
         colors,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        ...idField // Add user_id or session_id
     };
 
-    // If we have Supabase and a user, save to cloud
-    if (supabase && userId) {
-        const { data, error } = await supabase
+    if (client) {
+        const { data, error } = await client
             .from('user_characters')
-            .insert({
-                id: character.id,
-                user_id: userId,
-                name: character.name,
-                images: character.images,
-                colors: character.colors
-            })
+            .insert(character)
             .select()
             .single();
 
         if (error) {
             console.error('Error saving character to Supabase:', error);
-            // Fallback to local
+            // Fallback to local if cloud fails
             try {
                 const local = getLocalCharacters();
                 local.push(character);
@@ -70,7 +102,7 @@ export const saveCharacter = async (name, images, colors = {}) => {
             return data;
         }
     } else {
-        // No auth, save locally
+        // No Supabase config, save locally
         const local = getLocalCharacters();
         local.push(character);
         saveLocalCharacters(local);
@@ -81,13 +113,14 @@ export const saveCharacter = async (name, images, colors = {}) => {
 
 export const getCharacters = async () => {
     const userId = await getUserId();
+    const client = userId ? supabase : getSessionClient();
 
-    // If we have Supabase and a user, fetch from cloud
-    if (supabase && userId) {
-        const { data, error } = await supabase
+    if (client) {
+        // The RLS policy handles filtering based on user_id OR x-session-id header
+        // We just need to make the query.
+        const { data, error } = await client
             .from('user_characters')
             .select('*')
-            .eq('user_id', userId)
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -95,7 +128,6 @@ export const getCharacters = async () => {
             return getLocalCharacters();
         }
 
-        // Transform to match expected format
         return data.map(char => ({
             id: char.id,
             name: char.name,
@@ -110,31 +142,25 @@ export const getCharacters = async () => {
         );
     }
 
-    // Fallback to local storage
-    return getLocalCharacters().filter(char =>
-        char &&
-        typeof char.name === 'string' &&
-        Array.isArray(char.images) &&
-        char.images.length > 0
-    );
+    return getLocalCharacters();
 };
 
 export const deleteCharacter = async (id) => {
     const userId = await getUserId();
+    const client = userId ? supabase : getSessionClient();
 
-    if (supabase && userId) {
-        const { error } = await supabase
+    if (client) {
+        const { error } = await client
             .from('user_characters')
             .delete()
-            .eq('id', id)
-            .eq('user_id', userId);
+            .eq('id', id);
 
         if (error) {
             console.error('Error deleting character from Supabase:', error);
         }
     }
 
-    // Also remove from local storage
+    // Also remove from local storage (sync)
     const local = getLocalCharacters();
     const filtered = local.filter(c => c.id !== id);
     saveLocalCharacters(filtered);
@@ -142,9 +168,10 @@ export const deleteCharacter = async (id) => {
 
 export const updateCharacter = async (id, updates) => {
     const userId = await getUserId();
+    const client = userId ? supabase : getSessionClient();
 
-    if (supabase && userId) {
-        const { data, error } = await supabase
+    if (client) {
+        const { data, error } = await client
             .from('user_characters')
             .update({
                 name: updates.name,
@@ -153,7 +180,6 @@ export const updateCharacter = async (id, updates) => {
                 updated_at: new Date().toISOString()
             })
             .eq('id', id)
-            .eq('user_id', userId)
             .select()
             .single();
 
@@ -178,19 +204,20 @@ export const updateCharacter = async (id, updates) => {
 
 export const clearAllCharacters = async () => {
     const userId = await getUserId();
+    const client = userId ? supabase : getSessionClient();
 
-    if (supabase && userId) {
-        const { error } = await supabase
+    if (client) {
+        // RLS will ensure we only delete our own rows
+        const { error } = await client
             .from('user_characters')
             .delete()
-            .eq('user_id', userId);
+            .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all rows matching RLS
 
         if (error) {
             console.error('Error clearing characters from Supabase:', error);
         }
     }
 
-    // Clear local storage
     saveLocalCharacters([]);
 };
 
