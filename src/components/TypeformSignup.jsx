@@ -593,7 +593,7 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                                     placeholder="••••••••"
                                     required
                                     minLength={6}
-                                    className="w-full bg-[#0c0b09] border border-white/10 rounded-xl pl-14 pr-14 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                    className={`w-full bg-[#0c0b09] border border-white/10 rounded-xl ${showPassword ? 'pl-20' : 'pl-14'} pr-14 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors`}
                                 />
                                 <button
                                     type="button"
@@ -619,7 +619,7 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                                     placeholder="••••••••"
                                     required
                                     minLength={6}
-                                    className="w-full bg-[#0c0b09] border border-white/10 rounded-xl pl-14 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                    className={`w-full bg-[#0c0b09] border border-white/10 rounded-xl ${showPassword ? 'pl-20' : 'pl-14'} pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors`}
                                 />
                             </div>
                         </div>

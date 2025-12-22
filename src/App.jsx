@@ -39,6 +39,8 @@ const saveSiteSettings = (settings) => {
 };
 
 import SkoolTrackingSetup from './components/SkoolTrackingSetup';
+import OutlierScout from './components/outlier_scout/OutlierScout';
+import PackagingTool from './components/packaging_tool/PackagingTool';
 
 // Main App Content (uses auth context)
 function AppContent() {
@@ -56,7 +58,7 @@ function AppContent() {
     const settings = getSiteSettings();
 
     // If authenticated, check for public routes too (so logged in users can see them)
-    if (path === '/s/x7k9p2m4-tracking') {
+    if (path === '/s/k9p2m' || path === '/s/z4r8q' || path === '/s/m2n5v') {
       // For logged in users, we can either show the standalone component or redirect to portal view
       // Let's show standalone for consistency with the link
       return;
@@ -136,9 +138,15 @@ function AppContent() {
   // Public routes - accessible without auth
   const path = window.location.pathname;
 
-  // Complex slug for Skool Tracking Setup (publicly accessible)
-  if (path === '/s/x7k9p2m4-tracking') {
+  // Complex slugs for direct tool access (publicly accessible)
+  if (path === '/s/k9p2m') {
     return <SkoolTrackingSetup />;
+  }
+  if (path === '/s/z4r8q') {
+    return <OutlierScout />;
+  }
+  if (path === '/s/m2n5v') {
+    return <PackagingTool />;
   }
 
   if (path === '/terms') {
