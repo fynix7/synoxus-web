@@ -243,11 +243,14 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                                 value={formData.instagramHandle}
                                 onChange={(e) => updateFormData('instagramHandle', e.target.value)}
                                 placeholder="yourhandle"
-                                className="w-full bg-[#0c0b09] border border-white/10 rounded-xl pl-10 pr-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors mb-2"
+                                className="w-full bg-[#0c0b09] border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors mb-2"
                             />
                         </div>
-                        {!hasInstagram && (
+                        {!hasInstagram && !formData.hasYouTube && (
                             <p className="text-[#71717a] text-sm mb-4">Enter your Instagram handle to continue</p>
+                        )}
+                        {!hasInstagram && formData.hasYouTube && (
+                            <p className="text-[#71717a] text-sm mb-4">Optional - you can skip if you don't have Instagram</p>
                         )}
                         <div className="flex gap-3 mt-4">
                             <button onClick={() => formData.hasYouTube ? setStep(1) : setStep(0)} className="px-6 py-3 text-[#71717a] hover:text-white transition-colors">
@@ -261,21 +264,21 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                                 >
                                     Continue <ArrowRight className="w-4 h-4" />
                                 </ShinyButton>
-                            ) : !formData.hasYouTube ? (
+                            ) : formData.hasYouTube ? (
+                                // Has YouTube, no Instagram - can skip
+                                <button
+                                    onClick={() => setStep(4)}
+                                    className="flex-1 py-4 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    Skip <ArrowRight className="w-4 h-4" />
+                                </button>
+                            ) : (
                                 // No YouTube, no Instagram - go to coaching question
                                 <button
                                     onClick={() => setStep(3)}
                                     className="flex-1 py-4 bg-white/10 text-white font-bold rounded-xl hover:bg-white/20 transition-colors flex items-center justify-center gap-2"
                                 >
                                     I don't have Instagram
-                                </button>
-                            ) : (
-                                // Has YouTube but no Instagram entry - show disabled continue
-                                <button
-                                    disabled
-                                    className="flex-1 py-4 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black font-bold rounded-xl opacity-50 cursor-not-allowed flex items-center justify-center gap-2"
-                                >
-                                    Continue <ArrowRight className="w-4 h-4" />
                                 </button>
                             )}
                         </div>
