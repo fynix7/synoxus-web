@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, ArrowRight, ArrowLeft, Eye, EyeOff, Loader2, AlertCircle, CheckCircle, Sparkles, Check, Youtube, Instagram, Target, DollarSign, Users, Zap, XCircle, MessageSquare } from 'lucide-react';
+import { Mail, Lock, ArrowRight, ArrowLeft, Eye, EyeOff, Loader2, AlertCircle, CheckCircle, Sparkles, Check, Youtube, Instagram, Target, DollarSign, Users, Zap, XCircle, MessageSquare } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 // Shiny button component with one-way shine effect
@@ -547,13 +547,12 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                                 Display Name
                             </label>
                             <div className="relative">
-                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#52525b]" />
                                 <input
                                     type="text"
                                     value={formData.displayName}
                                     onChange={(e) => updateFormData('displayName', e.target.value)}
                                     placeholder="Your name"
-                                    className="w-full bg-[#0c0b09] border border-white/10 rounded-xl pl-14 pr-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
+                                    className="w-full bg-[#0c0b09] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors"
                                 />
                             </div>
                         </div>
