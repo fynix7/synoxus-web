@@ -243,7 +243,8 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
                                 value={formData.instagramHandle}
                                 onChange={(e) => updateFormData('instagramHandle', e.target.value)}
                                 placeholder="yourhandle"
-                                className="w-full bg-[#0c0b09] border border-white/10 rounded-xl pl-14 pr-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors mb-2"
+                                className="w-full bg-[#0c0b09] border border-white/10 rounded-xl pr-4 py-4 text-white placeholder-[#3f3f46] focus:outline-none focus:border-[#ff982b] transition-colors mb-2"
+                                style={{ paddingLeft: '3.5rem' }}
                             />
                         </div>
                         {!hasInstagram && !formData.hasYouTube && (
