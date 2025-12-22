@@ -5,7 +5,9 @@ import RevenueCalculator from './components/RevenueCalculator';
 import PackagingSection from './components/PackagingSection';
 import ServiceNotifications from './components/ServiceNotifications';
 import InternalPortal from './components/InternalPortal';
+import AuthPage from './components/AuthPage';
 import Footer from './components/Footer';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Site settings key for localStorage
 const SITE_SETTINGS_KEY = 'synoxus_site_settings';
@@ -34,7 +36,9 @@ const saveSiteSettings = (settings) => {
   }
 };
 
-function App() {
+// Main App Content (uses auth context)
+function AppContent() {
+  const { user, loading, isAuthenticated } = useAuth();
   const [isPortalOpen, setIsPortalOpen] = useState(false);
   const [portalInitialView, setPortalInitialView] = useState('menu');
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -45,7 +49,12 @@ function App() {
     const path = window.location.pathname;
     const settings = getSiteSettings();
 
-    // If landing page is disabled and we're at root, redirect to portal
+    // Only handle routing if authenticated
+    if (!isAuthenticated && !loading) {
+      return;
+    }
+
+    // If landing page is disabled and we're at root, go to portal
     if ((path === '/' || path === '') && !settings.landingEnabled) {
       setIsPortalOpen(true);
       setPortalInitialView('menu');
@@ -87,7 +96,7 @@ function App() {
       setIsPortalOpen(true);
       setPortalInitialView('skool_tracking');
     }
-  }, []);
+  }, [isAuthenticated, loading]);
 
   // Handler to update site settings from portal
   const handleUpdateSiteSettings = (newSettings) => {
@@ -95,6 +104,26 @@ function App() {
     saveSiteSettings(newSettings);
   };
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center animate-pulse">
+            <span className="text-xl font-bold text-black">S</span>
+          </div>
+          <p className="text-[#71717a] text-sm">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show auth page if not authenticated
+  if (!isAuthenticated) {
+    return <AuthPage />;
+  }
+
+  // Show portal if open
   if (isPortalOpen) {
     return (
       <InternalPortal
@@ -112,6 +141,7 @@ function App() {
         siteSettings={siteSettings}
         onUpdateSiteSettings={handleUpdateSiteSettings}
         settingsPassword={SETTINGS_PASSWORD}
+        user={user}
       />
     );
   }
@@ -121,6 +151,7 @@ function App() {
     setIsChatOpen(true);
   };
 
+  // Show landing page
   return (
     <Layout>
       <ServiceNotifications
@@ -133,6 +164,15 @@ function App() {
       <PackagingSection />
       <Footer />
     </Layout>
+  );
+}
+
+// App wrapper with AuthProvider
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

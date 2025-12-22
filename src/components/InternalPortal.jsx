@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../supabaseClient';
+import { useAuth } from '../contexts/AuthContext';
 import PackagingTool from './packaging_tool/PackagingTool';
 import ShortFormScribe from './ShortFormScribe';
 import ChatConfiguration from './ChatConfiguration';
@@ -185,7 +186,8 @@ const Column = ({ title, id, tasks, onAdd, onDelete, onMove, onEdit, userRole, c
     );
 };
 
-const InternalPortal = ({ onExit, initialView = 'menu', siteSettings = { landingEnabled: false }, onUpdateSiteSettings, settingsPassword = '' }) => {
+const InternalPortal = ({ onExit, initialView = 'menu', siteSettings = { landingEnabled: false }, onUpdateSiteSettings, settingsPassword = '', user }) => {
+    const { signOut } = useAuth();
     const [columns, setColumns] = useState([]);
     const [editingTask, setEditingTask] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -549,11 +551,8 @@ const InternalPortal = ({ onExit, initialView = 'menu', siteSettings = { landing
         }
     };
 
-    const handleLogout = () => {
-        setIsAuthenticated(false);
-        setClientKey('');
-        setUserKey('');
-        setUserRole('employee');
+    const handleLogout = async () => {
+        await signOut();
     };
 
     const openEditModal = (task, columnId) => {
@@ -578,8 +577,8 @@ const InternalPortal = ({ onExit, initialView = 'menu', siteSettings = { landing
                         <span className="font-bold text-black text-xs">S</span>
                     </div>
                     <h1 className="font-medium text-lg tracking-tight">
-                        <span onClick={() => { isAuthenticated ? setView('menu') : onExit(); window.history.pushState({}, '', '/portal'); }} className="cursor-pointer hover:text-[#ff982b] transition-colors">Synoxus</span> <span className="text-[#52525b] font-light">/ {isAuthenticated ? (view === 'menu' ? 'Portal' : view === 'crm' ? 'Pipeline' : view === 'packaging' ? 'Thumbnail Generator' : view === 'messaging' ? 'Chat Configuration' : view === 'note_taker' ? 'Note Taker' : view === 'vault' ? 'Short Form' : view === 'long_form' ? 'Long Form' : view === 'funnel' ? 'Funnel' : view === 'course' ? 'Course' : view === 'onboarding' ? 'Onboarding' : view === 'brand_identity' ? 'Brand Identity' : view === 'strategic_identity' ? 'Strategic Identity' : view === 'masterclass' ? 'Masterclass' : view === 'youtube_masterclass' ? 'YouTube Masterclass' : view === 'short_form_scribe' ? 'ShortForm Scribe' : view === 'vsl' ? 'VSL' : view === 'title_generator' ? 'Title Generator' : view === 'landing_page' ? 'Landing Page' : view === 'sheet_wip' ? 'Work in Progress' : view === 'mission_statement' ? 'Mission Statement' : view === 'vision_statement' ? 'Vision Statement' : view === 'core_values' ? 'Core Values' : view === 'target_audience' ? 'Target Audience' : view === 'usp' ? 'USP' : view === 'key_competitors' ? 'Competitors' : view === 'resources' ? 'Resources' : view === 'sops' ? 'SOPs' : view === 'skool_tracking' ? 'Skool Tracking' : view === 'outlier_scout' ? 'Outlier Scout' : view.startsWith('brand_sheets') ? 'Brand Sheet' : 'Portal') : 'Login'}</span>
-                        {isAuthenticated && <span className="ml-2 text-[10px] font-bold uppercase bg-white/10 px-2 py-0.5 rounded text-[#71717a]">{userRole.replace('_', ' ')}</span>}
+                        <span onClick={() => { setView('menu'); window.history.pushState({}, '', '/portal'); }} className="cursor-pointer hover:text-[#ff982b] transition-colors">Synoxus</span> <span className="text-[#52525b] font-light">/ {view === 'menu' ? 'Portal' : view === 'crm' ? 'Pipeline' : view === 'packaging' ? 'Thumbnail Generator' : view === 'messaging' ? 'Chat Configuration' : view === 'note_taker' ? 'Note Taker' : view === 'vault' ? 'Short Form' : view === 'long_form' ? 'Long Form' : view === 'funnel' ? 'Funnel' : view === 'course' ? 'Course' : view === 'onboarding' ? 'Onboarding' : view === 'brand_identity' ? 'Brand Identity' : view === 'strategic_identity' ? 'Strategic Identity' : view === 'masterclass' ? 'Masterclass' : view === 'youtube_masterclass' ? 'YouTube Masterclass' : view === 'short_form_scribe' ? 'ShortForm Scribe' : view === 'vsl' ? 'VSL' : view === 'title_generator' ? 'Title Generator' : view === 'landing_page' ? 'Landing Page' : view === 'sheet_wip' ? 'Work in Progress' : view === 'mission_statement' ? 'Mission Statement' : view === 'vision_statement' ? 'Vision Statement' : view === 'core_values' ? 'Core Values' : view === 'target_audience' ? 'Target Audience' : view === 'usp' ? 'USP' : view === 'key_competitors' ? 'Competitors' : view === 'resources' ? 'Resources' : view === 'sops' ? 'SOPs' : view === 'skool_tracking' ? 'Skool Tracking' : view === 'outlier_scout' ? 'Outlier Scout' : view.startsWith('brand_sheets') ? 'Brand Sheet' : 'Portal'}</span>
+                        {user && <span className="ml-2 text-[10px] font-medium bg-white/10 px-2 py-0.5 rounded text-[#a1a1aa]">{user.user_metadata?.display_name || user.email?.split('@')[0]}</span>}
                     </h1>
                 </div>
                 <div className="flex items-center gap-4">
