@@ -536,7 +536,9 @@ const TypeformSignup = ({ onSwitchToSignIn }) => {
             id: 'accountDetails',
             render: () => (
                 <div className="max-w-md mx-auto">
-                    <Sparkles className="w-12 h-12 text-[#ff982b] mx-auto mb-6" />
+                    <svg className="w-12 h-12 text-[#ff982b] mx-auto mb-6" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
+                    </svg>
                     <h2 className="text-2xl font-bold text-white mb-2 text-center">Create your account</h2>
                     <p className="text-[#71717a] mb-6 text-center">Almost there! Just a few more details.</p>
 
