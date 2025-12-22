@@ -80,12 +80,16 @@ const AuthPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#080705] flex items-center justify-center p-4 overflow-hidden">
-            {/* Background gradient effect */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-[20%] left-[15%] w-[500px] h-[500px] bg-[#ff982b]/8 rounded-full blur-[180px]" />
-                <div className="absolute top-[40%] right-[10%] w-[400px] h-[400px] bg-[#ffc972]/8 rounded-full blur-[180px]" />
-            </div>
+        <div
+            className="min-h-screen flex items-center justify-center p-4"
+            style={{
+                background: `
+                    radial-gradient(ellipse 80% 50% at 20% 30%, rgba(255, 152, 43, 0.08) 0%, transparent 50%),
+                    radial-gradient(ellipse 60% 40% at 80% 60%, rgba(255, 201, 114, 0.06) 0%, transparent 50%),
+                    #080705
+                `
+            }}
+        >
 
             <motion.div
                 initial={{ opacity: 0, y: 20 }}

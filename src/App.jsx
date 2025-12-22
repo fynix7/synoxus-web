@@ -109,10 +109,12 @@ function AppContent() {
   // Show loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+      <div className="min-h-screen bg-[#080705] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ff982b] to-[#ffc972] flex items-center justify-center animate-pulse">
-            <span className="text-xl font-bold text-black">S</span>
+            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="black">
+              <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
+            </svg>
           </div>
           <p className="text-[#71717a] text-sm">Loading...</p>
         </div>
