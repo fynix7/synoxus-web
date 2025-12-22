@@ -261,7 +261,7 @@ const SkoolTrackingSetup = () => {
                     </button>
                     <div className="flex-1">
                         <h3 className="text-xl font-bold underline mb-3">1. Foundation and admin exclusion</h3>
-                        <MicroStep><strong>Open GA4 Admin:</strong> go to analytics.google.com and click <Kbd>Admin</Kbd>.</MicroStep>
+                        <MicroStep><strong>Open GA4 Admin:</strong> go to <Code>analytics.google.com</Code>, make sure you are inside the correct GA4 property (use the property selector if needed), then click the <Kbd>Admin</Kbd> gear in the bottom-left. If you do not see <Kbd>Admin</Kbd>, you may not have GA4 access or you are not inside a property yet.</MicroStep>
                         <MicroStep><strong>Data retention:</strong> <Kbd>Admin</Kbd> → <strong>Data settings</strong> → <strong>Data retention</strong> → set to <strong>14 months</strong>.</MicroStep>
                         <MicroStep><strong>If you do not see it:</strong> use the GA4 Admin search and type <Code>retention</Code>.</MicroStep>
                         <MicroStep><strong>Google Signals:</strong> <Kbd>Admin</Kbd> → <strong>Data settings</strong> → <strong>Data collection</strong> → toggle <strong>Google signals ON</strong>.</MicroStep>

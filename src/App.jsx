@@ -54,7 +54,9 @@ function AppContent() {
 
 
   useEffect(() => {
-    const path = window.location.pathname;
+    const rawPath = window.location.pathname;
+    // Normalize path: remove trailing slash if present (unless it's just '/')
+    const path = rawPath.length > 1 && rawPath.endsWith('/') ? rawPath.slice(0, -1) : rawPath;
     const settings = getSiteSettings();
 
     // If authenticated, check for public routes too (so logged in users can see them)
@@ -136,7 +138,8 @@ function AppContent() {
   }
 
   // Public routes - accessible without auth
-  const path = window.location.pathname;
+  const rawPath = window.location.pathname;
+  const path = rawPath.length > 1 && rawPath.endsWith('/') ? rawPath.slice(0, -1) : rawPath;
 
   // Complex slugs for direct tool access (publicly accessible)
   if (path === '/s/k9p2m') {
