@@ -27,6 +27,7 @@ const saveLocalCharacters = (characters) => {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(characters));
     } catch (e) {
         console.error('Error saving characters to localStorage:', e);
+        throw e; // Re-throw so UI knows it failed
     }
 };
 
@@ -58,9 +59,13 @@ export const saveCharacter = async (name, images, colors = {}) => {
         if (error) {
             console.error('Error saving character to Supabase:', error);
             // Fallback to local
-            const local = getLocalCharacters();
-            local.push(character);
-            saveLocalCharacters(local);
+            try {
+                const local = getLocalCharacters();
+                local.push(character);
+                saveLocalCharacters(local);
+            } catch (localError) {
+                throw new Error("Failed to save to cloud (API Error) and local storage is full. Please delete some characters.");
+            }
         } else {
             return data;
         }
@@ -193,7 +198,36 @@ export const fileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const MAX_WIDTH = 800;
+                const MAX_HEIGHT = 800;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+                    if (width > height) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    } else {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Compress to JPEG 0.8
+                resolve(canvas.toDataURL('image/jpeg', 0.8));
+            };
+            img.onerror = (error) => reject(error);
+        };
         reader.onerror = error => reject(error);
     });
 };

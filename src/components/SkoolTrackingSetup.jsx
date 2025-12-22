@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 const SkoolTrackingSetup = () => {
     const [formData, setFormData] = useState({
-        baseUrl: '',
+        baseUrl: 'https://www.skool.com/makerschool',
         utmSource: '',
         utmMedium: '',
         utmCampaign: '',
