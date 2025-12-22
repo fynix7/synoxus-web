@@ -4,7 +4,7 @@ import OutlierGallery from './OutlierGallery';
 import OutlierRankings from './OutlierRankings';
 import { LayoutGrid, Type, Settings, Key, X, Check, Loader2, Play } from 'lucide-react';
 
-const OutlierScout = () => {
+const OutlierScout = ({ isPublic }) => {
     const [activeTab, setActiveTab] = useState('gallery'); // 'gallery' | 'rankings'
     const [stats, setStats] = useState({ outliers: 0, blueprints: 0, totalViews: 0, maxScore: 0 });
     const [showSettings, setShowSettings] = useState(false);
@@ -20,8 +20,10 @@ const OutlierScout = () => {
         if (stored) {
             setSavedApiKey(stored);
             setApiKey(stored);
+        } else if (isPublic) {
+            setShowSettings(true);
         }
-    }, []);
+    }, [isPublic]);
 
     const fetchStats = async () => {
         if (!supabase) return;

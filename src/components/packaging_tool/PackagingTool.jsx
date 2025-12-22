@@ -7,10 +7,17 @@ import ThumbnailRater from './components/ThumbnailRater';
 import SettingsModal from './components/SettingsModal';
 import './PackagingTool.css';
 
-const PackagingTool = () => {
+const PackagingTool = ({ isPublic }) => {
     const [activeTab, setActiveTab] = useState('create');
     const [showSettings, setShowSettings] = useState(false);
     const [imageToRate, setImageToRate] = useState(null);
+
+    useEffect(() => {
+        const apiKey = localStorage.getItem('google_api_key');
+        if (!apiKey) {
+            setShowSettings(true);
+        }
+    }, []);
 
     // Enforce dark theme
     const theme = 'dark';

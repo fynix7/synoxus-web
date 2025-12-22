@@ -143,10 +143,10 @@ function AppContent() {
     return <SkoolTrackingSetup />;
   }
   if (path === '/s/z4r8q') {
-    return <OutlierScout />;
+    return <OutlierScout isPublic={true} />;
   }
   if (path === '/s/m2n5v') {
-    return <PackagingTool />;
+    return <PackagingTool isPublic={true} />;
   }
 
   if (path === '/terms') {
