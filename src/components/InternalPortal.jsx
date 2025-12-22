@@ -8,6 +8,7 @@ import ChatConfiguration from './ChatConfiguration';
 import NoteTaker from './NoteTaker';
 import OutlierScout from './outlier_scout/OutlierScout';
 import SkoolTrackingSetup from './SkoolTrackingSetup';
+import LandingPageBuilder from './LandingPageBuilder';
 import { Plus, X, Trash2, ChevronLeft, ChevronRight, Save, LogOut, LayoutGrid, Package, MessageSquare, ArrowLeft, ArrowRight, Database, GraduationCap, Calendar, Tag, Clock, Users, Settings, Edit3, CheckSquare, Rocket, FileText, Video, User, Fingerprint, Briefcase, Globe, Search, Lightbulb, Mic, Image, TrendingUp, BookOpen, Palette, Type, Upload, LayoutTemplate, Target, Eye, Heart, Zap, Swords } from 'lucide-react';
 import { HexColorPicker } from "react-colorful";
 
@@ -815,6 +816,10 @@ const InternalPortal = ({ onExit, initialView = 'menu', siteSettings = { landing
 
                         {view === 'skool_tracking' && (
                             <SkoolTrackingSetup />
+                        )}
+
+                        {view === 'landing_page_builder' && (
+                            <LandingPageBuilder />
                         )}
 
                         {view === 'onboarding' && (

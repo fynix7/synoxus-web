@@ -85,7 +85,7 @@ function AppContent() {
       setPortalInitialView('title_generator');
     } else if (path === '/landing-page') {
       setIsPortalOpen(true);
-      setPortalInitialView('landing_page');
+      setPortalInitialView('landing_page_builder');
     } else if (path === '/masterclass') {
       setIsPortalOpen(true);
       setPortalInitialView('masterclass');
