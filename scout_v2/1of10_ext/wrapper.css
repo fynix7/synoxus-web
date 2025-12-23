@@ -1,0 +1,10 @@
+body {
+	width: 280px;
+}
+
+.wrapper {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 96%;
+}

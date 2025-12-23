@@ -43,7 +43,6 @@ const OutlierGallery = () => {
             } else {
                 query = query.order('views', { ascending: false });
             }
-
             // Apply Pagination
             const from = (isLoadMore ? page + 1 : 0) * PAGE_SIZE;
             const to = from + PAGE_SIZE - 1;
@@ -121,35 +120,35 @@ const OutlierGallery = () => {
                 if (error) throw error;
             }
 
-            // Try to call the scout API
+            // Call Scout Server (Hosted or Local)
+            const SCOUT_API_URL = import.meta.env.VITE_SCOUT_API_URL || 'http://localhost:5000';
+
             try {
-                const response = await fetch('/api/scout/run', {
+                const response = await fetch(`${SCOUT_API_URL}/scout`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ channelUrl })
                 });
-                const result = await response.json();
 
-                if (result.success) {
-                    setProgress(100);
-                    alert('✅ Scouting complete! Refresh to see new outliers.');
-                } else {
-                    setProgress(100);
-                    // Show the command in a copyable format
-                    const command = `node scripts/outlier_scout/scout.js "${channelUrl}"`;
-                    prompt(
-                        '⚠️ Web scouting requires running locally. Copy this command and run it in your terminal:',
-                        command
-                    );
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Scouting failed');
                 }
-            } catch (apiError) {
-                // API not available, show command
+
                 setProgress(100);
-                const command = `node scripts/outlier_scout/scout.js "${channelUrl}"`;
-                prompt(
-                    '⚠️ Web scouting requires running locally. Copy this command and run it in your terminal:',
-                    command
+                setTimeout(() => fetchOutliers(), 1000);
+
+            } catch (networkError) {
+                console.error("Scout server error:", networkError);
+                setStatus('error');
+                setErrorMessage(
+                    `Could not connect to Scout Service.\n\n` +
+                    `Please ensure the Scout Service is deployed and running.\n` +
+                    `Technical: Failed to connect to ${SCOUT_API_URL}`
                 );
+                setLoading(false);
+                return;
             }
         } catch (e) {
             console.error(e);
@@ -316,6 +315,7 @@ const OutlierGallery = () => {
                                     </div>
                                 </div>
                             </div>
+
                         ))}
                     </div>
 
@@ -327,13 +327,26 @@ const OutlierGallery = () => {
                     )}
                 </>
             )}
+
+
+
+
+
+
             {/* Debug Info */}
             <div className="mt-8 p-4 bg-black/50 rounded-lg border border-white/10 text-xs font-mono text-[#52525b]">
-                <p>Debug Info:</p>
+                <div className="flex items-center justify-between mb-2">
+                    <p className="font-bold text-white">System Status</p>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[#a1a1aa]">Scout Service:</span>
+                        <span className={`w-2 h-2 rounded-full ${debugError ? 'bg-red-500' : 'bg-emerald-500'}`}></span>
+                    </div>
+                </div>
                 <p>Loading: {loading.toString()}</p>
                 <p>Outliers Count: {outliers.length}</p>
                 <p>Supabase Connected: {!!supabase ? 'Yes' : 'No'}</p>
-                {debugError && <p className="text-red-500">Error: {JSON.stringify(debugError)}</p>}
+                {debugError && <p className="text-red-500 mt-2">Error: {JSON.stringify(debugError)}</p>}
+                <p className="mt-2 text-[#3f3f46]">Service URL: {import.meta.env.VITE_SCOUT_API_URL || 'Localhost (Default)'}</p>
             </div>
         </div>
     );

@@ -3,6 +3,7 @@ import { supabase } from '../../supabaseClient';
 import OutlierGallery from './OutlierGallery';
 import OutlierRankings from './OutlierRankings';
 import { LayoutGrid, Type, Settings, Key, X, Check, Loader2, Play } from 'lucide-react';
+import binocularsIcon from '../../assets/binoculars_icon.png';
 
 const OutlierScout = ({ isPublic }) => {
     const [activeTab, setActiveTab] = useState('gallery'); // 'gallery' | 'rankings'
@@ -126,27 +127,13 @@ const OutlierScout = ({ isPublic }) => {
         if (!key || key.length < 8) return '••••••••';
         return key.slice(0, 4) + '••••' + key.slice(-4);
     };
-
     return (
         <div className="space-y-8 p-6 bg-[#050505] min-h-screen text-white">
             {/* Header */}
             <div className="text-center space-y-6 mb-8">
                 <div className="flex items-center justify-center gap-4">
                     <div className="w-20 h-20">
-                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                            <defs>
-                                <linearGradient id="binoculars-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" stopColor="#ff982b" />
-                                    <stop offset="100%" stopColor="#ffc972" />
-                                </linearGradient>
-                            </defs>
-                            <path
-                                fillRule="evenodd"
-                                clipRule="evenodd"
-                                d="M22.5 7.5h-3.75c-.62 0-1.125.5-1.125 1.125v2.25c0 .62.5 1.125 1.125 1.125h.75v3.75c0 .62.5 1.125 1.125 1.125h1.875c.62 0 1.125-.5 1.125-1.125v-7.125c0-.62-.5-1.125-1.125-1.125zm-16.875 0h-3.75c-.62 0-1.125.5-1.125 1.125v7.125c0 .62.5 1.125 1.125 1.125h1.875c.62 0 1.125-.5 1.125-1.125v-3.75h.75c.62 0 1.125-.5 1.125-1.125v-2.25c0-.62-.5-1.125-1.125-1.125zm11.25-3.75h-9.75c-.62 0-1.125.5-1.125 1.125v1.5c0 .62.5 1.125 1.125 1.125h9.75c.62 0 1.125-.5 1.125-1.125v-1.5c0-.62-.5-1.125-1.125-1.125z"
-                                fill="url(#binoculars-gradient)"
-                            />
-                        </svg>
+                        <img src={binocularsIcon} alt="Outlier Scout" className="w-full h-full object-contain" />
                     </div>
                     <button
                         onClick={() => setShowSettings(true)}

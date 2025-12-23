@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>YtbThumb</title>
+    <meta charset="UTF-8" />
+    <meta name="author" content="Raxo" />
+    <link rel="stylesheet" href="master.css" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+
+  <body>
+    <!-- Extension Body -->
+    <div class="popup">
+      <div id="alert-stack"></div>
+      <div class="header">
+        <div class="logo-header">
+          <h2 class="title">
+            <a target="_blank" title="1of10.com" href="https://1of10.com"
+              >1of10.com →</a
+            >
+          </h2>
+        </div>
+        <!-- <button class="small" id="settings-btn">⚙️</button> -->
+      </div>
+      <div class="user-header-container" id="user-header-container">
+        <div class="user-header">
+          <img src="./images/placeholder-user.webp" class="user-avatar" />
+          <div class="user-header-info">
+            <span class="username" id="username">test0</span>
+            <span class="plan" id="plan">Premium plan</span>
+          </div>
+        </div>
+        <div class="logout" id="logout">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path fill="none" d="M0 0h24v24H0z"></path>
+            <path
+              d="M5 22C4.44772 22 4 21.5523 4 21V3C4 2.44772 4.44772 2 5 2H19C19.5523 2 20 2.44772 20 3V6H18V4H6V20H18V18H20V21C20 21.5523 19.5523 22 19 22H5ZM18 16V13H11V11H18V8L23 12L18 16Z"
+            ></path>
+          </svg>
+        </div>
+      </div>
+      <a
+        class="login"
+        id="login"
+        href="https://1of10.com/app/auth"
+        target="_blank"
+      >
+        Login to 1of10
+      </a>
+      <div class="form">
+        <h3 style="text-align: left">Thumbnail Viewer</h3>
+
+        <div class="block">
+          <label class="text-label" for="channel-name-input"
+            ><span>Channel name</span></label
+          >
+          <input type="text" id="channel-name-input" />
+        </div>
+
+        <div class="block">
+          <input type="file" id="thumbnail-input" />
+          <label class="file-label" for="thumbnail-input">
+            <img src="./images/thumbnail_logo.png" />
+            <!-- + Circle Icon for Thumbnail Input -->
+            <span>
+              <svg
+                width="25"
+                height="24"
+                viewBox="0 0 25 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <g>
+                  <path
+                    d="M12.5 22.5C18.299 22.5 23 17.799 23 12C23 6.20101 18.299 1.5 12.5 1.5C6.70101 1.5 2 6.20101 2 12C2 17.799 6.70101 22.5 12.5 22.5Z"
+                    stroke="white"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M8 12H17"
+                    stroke="white"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M12.5 7.5V16.5"
+                    stroke="white"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </g>
+              </svg>
+            </span>
+            <span>Drop thumbnail here or click</span>
+          </label>
+        </div>
+
+        <div class="block">
+          <label class="text-label" for="title-input"
+            ><span>Video Title</span></label
+          >
+          <input type="text" id="title-input" />
+        </div>
+
+        <div
+          class="block"
+          style="
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+          "
+        >
+          <label for="random-placement-checkbox"
+            ><span>Random Placement</span></label
+          >
+          <label class="switch" for="random-placement-checkbox">
+            <input type="checkbox" id="random-placement-checkbox" />
+            <div class="slider round"></div>
+          </label>
+        </div>
+
+        <button id="preview-btn">Preview</button>
+
+        <!-- 1of10 Finder -->
+
+        <!-- <div
+          class="block"
+          style="
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+          "
+        >
+          <label for="search-checkbox"
+            ><span>Video Searching ( Log in to enable )</span></label
+          >
+          <label class="switch" for="search-checkbox">
+            <input type="checkbox" id="search-checkbox" disabled />
+            <div class="slider round disabled"></div>
+          </label>
+        </div>
+        <button id="login-button">Login</button> -->
+        <!--
+        <h3 style="text-align: left">Privacy</h3>
+        <div
+          class="block"
+          style="
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+          "
+        >
+          <label for="tracking-checkbox"><span>Tracking</span></label>
+          <label class="switch" for="tracking-checkbox">
+            <input type="checkbox" id="tracking-checkbox" />
+            <div class="slider round"></div>
+          </label>
+        </div>
+        -->
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="popup.js"></script>
+  </body>
+</html>

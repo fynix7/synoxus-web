@@ -347,12 +347,15 @@ const ThumbnailRater = ({ activeTab, onTabChange, imageToRate, onClearImageToRat
         }
     };
 
+    const [isComparing, setIsComparing] = useState(false);
+
     const handleCompare = async () => {
         if (!thumb1 || !thumb2) {
             alert("Please upload both thumbnails to compare.");
             return;
         }
 
+        setIsComparing(true);
         try {
             setComparisonResult(null);
             const result = await compareThumbnails(thumb1.file || thumb1.preview, thumb2.file || thumb2.preview);
@@ -375,6 +378,8 @@ const ThumbnailRater = ({ activeTab, onTabChange, imageToRate, onClearImageToRat
         } catch (error) {
             console.error("Comparison failed:", error);
             alert(`Comparison failed: ${error.message}`);
+        } finally {
+            setIsComparing(false);
         }
     };
 
@@ -578,7 +583,7 @@ const ThumbnailRater = ({ activeTab, onTabChange, imageToRate, onClearImageToRat
                             style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '48px' }}
                             title={compareMode ? 'Compare Thumbnails' : 'Rate Thumbnail'}
                         >
-                            {queueState.processing || queueState.queue.some(j => j.type === 'rating') ? (
+                            {queueState.processing || queueState.queue.some(j => j.type === 'rating') || isComparing ? (
                                 <div className="spinner-small" style={{ borderTopColor: 'white', borderRightColor: 'rgba(255,255,255,0.3)', borderBottomColor: 'rgba(255,255,255,0.3)', borderLeftColor: 'rgba(255,255,255,0.3)' }}></div>
                             ) : (
                                 <Pentagon size={28} fill="currentColor" fillOpacity={0.2} />

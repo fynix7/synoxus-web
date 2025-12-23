@@ -400,7 +400,7 @@ const ServiceNotifications = ({ isOpen, setIsOpen, mode = 'default' }) => {
 
                         <motion.div
                             initial={mode === 'qualification'
-                                ? { opacity: 0, scale: 0.9, y: 20, x: "-50%", y: "-50%" }
+                                ? { opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }
                                 : { opacity: 0, scale: 0.9, y: 20 }}
                             animate={mode === 'qualification'
                                 ? { opacity: 1, scale: 1, y: "-50%", x: "-50%" }

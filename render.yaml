@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: outlier-scout-service
+    env: docker
+    region: ohio
+    plan: free
+    dockerContext: ./scout_v2
+    dockerfilePath: ./scout_v2/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 10000
