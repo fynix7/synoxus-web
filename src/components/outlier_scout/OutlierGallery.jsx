@@ -102,32 +102,41 @@ const OutlierGallery = () => {
 
     const handleScout = async () => {
         if (!channelUrl) return;
+
+        // Split by comma or newline and clean up
+        const urls = channelUrl.split(/[\n,]+/).map(u => u.trim()).filter(u => u.length > 0);
+
+        if (urls.length === 0) return;
+
         setIsScouting(true);
-        setProgress(10);
+        setProgress(0);
 
-        // Simulate progress
-        const interval = setInterval(() => {
-            setProgress(p => p < 90 ? p + 5 : p);
-        }, 500);
+        const SCOUT_API_URL = import.meta.env.VITE_SCOUT_API_URL || 'http://localhost:5000';
+        let successCount = 0;
+        let failCount = 0;
 
-        try {
-            // Add to queue (Channels table)
-            if (supabase) {
-                const { error } = await supabase
-                    .from('os_channels')
-                    .upsert([{ url: channelUrl, last_scouted: null }], { onConflict: 'url' });
+        for (let i = 0; i < urls.length; i++) {
+            const currentUrl = urls[i];
+            // Update progress to show which one we are on
+            setProgress(Math.round(((i) / urls.length) * 100));
 
-                if (error) throw error;
-            }
-
-            // Call Scout Server (Hosted or Local)
-            const SCOUT_API_URL = import.meta.env.VITE_SCOUT_API_URL || 'http://localhost:5000';
+            // Optional: You could add a state to show "Scouting 1/5: url..." in the UI
+            console.log(`Scouting ${i + 1}/${urls.length}: ${currentUrl}`);
 
             try {
+                // 1. Add to Supabase Queue
+                if (supabase) {
+                    const { error } = await supabase
+                        .from('os_channels')
+                        .upsert([{ url: currentUrl, last_scouted: null }], { onConflict: 'url' });
+                    if (error) console.warn(`Supabase upsert warning for ${currentUrl}:`, error);
+                }
+
+                // 2. Call Scout Service
                 const response = await fetch(`${SCOUT_API_URL}/scout`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ channelUrl })
+                    body: JSON.stringify({ channelUrl: currentUrl })
                 });
 
                 const data = await response.json();
@@ -136,30 +145,30 @@ const OutlierGallery = () => {
                     throw new Error(data.error || 'Scouting failed');
                 }
 
-                setProgress(100);
-                setTimeout(() => fetchOutliers(), 1000);
+                successCount++;
 
-            } catch (networkError) {
-                console.error("Scout server error:", networkError);
-                setDebugError(networkError);
-                alert(
-                    `Could not connect to Scout Service.\n\n` +
-                    `Please ensure the Scout Service is deployed and running.\n` +
-                    `Technical: Failed to connect to ${SCOUT_API_URL}`
-                );
-                setLoading(false);
-                return;
+            } catch (e) {
+                console.error(`Failed to scout ${currentUrl}:`, e);
+                failCount++;
+                // Don't stop the whole batch, just log and continue
+                if (urls.length === 1) {
+                    setDebugError(e);
+                    alert(`Error scouting ${currentUrl}: ${e.message}`);
+                }
             }
-        } catch (e) {
-            console.error("Scouting Error:", e);
-            alert(`Error adding channel to queue: ${e.message || JSON.stringify(e)}`);
         }
 
-        clearInterval(interval);
-        setIsScouting(false);
-        setChannelUrl('');
-        setTimeout(() => setProgress(0), 2000);
+        setProgress(100);
+        setTimeout(() => {
+            fetchOutliers();
+            setIsScouting(false);
+            setChannelUrl('');
+            if (urls.length > 1) {
+                alert(`Batch Complete!\nScouted: ${successCount}\nFailed: ${failCount}`);
+            }
+        }, 1000);
     };
+
 
     const handleDelete = async (videoId) => {
         if (!confirm('Are you sure you want to delete this outlier?')) return;
@@ -184,7 +193,7 @@ const OutlierGallery = () => {
                         <div className="relative">
                             <input
                                 type="text"
-                                placeholder="Paste YouTube Channel URL..."
+                                placeholder="Paste Channel URLs (comma or newline separated)..."
                                 className="w-full bg-[#121212] text-white px-5 py-3 rounded-lg border border-white/10 focus:outline-none focus:border-[#ff982b] focus:ring-1 focus:ring-[#ff982b] transition-all placeholder:text-[#52525b]"
                                 value={channelUrl}
                                 onChange={(e) => setChannelUrl(e.target.value)}
