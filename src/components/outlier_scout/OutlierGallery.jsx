@@ -29,7 +29,7 @@ const OutlierGallery = () => {
         try {
             let query = supabase
                 .from('os_outliers')
-                .select('*, channel:os_channels(name, url)')
+                .select('*')
                 .gte('outlier_score', minScore);
 
             // Apply Search
