@@ -141,8 +141,8 @@ const OutlierGallery = () => {
 
             } catch (networkError) {
                 console.error("Scout server error:", networkError);
-                setStatus('error');
-                setErrorMessage(
+                setDebugError(networkError);
+                alert(
                     `Could not connect to Scout Service.\n\n` +
                     `Please ensure the Scout Service is deployed and running.\n` +
                     `Technical: Failed to connect to ${SCOUT_API_URL}`
