@@ -151,8 +151,8 @@ const OutlierGallery = () => {
                 return;
             }
         } catch (e) {
-            console.error(e);
-            alert('Error adding channel to queue');
+            console.error("Scouting Error:", e);
+            alert(`Error adding channel to queue: ${e.message || JSON.stringify(e)}`);
         }
 
         clearInterval(interval);
