@@ -37,7 +37,10 @@ const OutlierScout = ({ isPublic }) => {
                 .from('os_outliers')
                 .select('*', { count: 'exact', head: true });
 
-            if (countError) console.error('Error counting outliers:', countError);
+            if (countError) {
+                console.warn('Stats unavailable. (Tables likely missing in Supabase)');
+                return;
+            }
 
             // 2. Get Max Score (efficiently)
             const { data: maxData, error: maxError } = await supabase
