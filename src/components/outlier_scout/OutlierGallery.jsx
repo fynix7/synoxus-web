@@ -278,7 +278,7 @@ const OutlierGallery = () => {
                                         src={video.thumbnail?.startsWith('data:image') ? video.thumbnail : (video.thumbnail || video.thumbnail_url || '/assets/placeholder.svg')}
                                         alt={video.title}
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/320x180?text=No+Thumbnail'; }}
+                                        onError={(e) => { e.target.src = 'https://placehold.co/320x180?text=No+Thumbnail'; }}
                                     />
                                     <div className={`absolute top-2 right-2 px-2 py-1 rounded-md text-xs font-bold shadow-lg ${video.outlier_score >= 5 ? 'bg-yellow-500 text-black' : 'bg-[#ff982b] text-black'
                                         }`}>
