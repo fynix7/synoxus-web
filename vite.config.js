@@ -626,6 +626,50 @@ export default defineConfig({
             return;
           }
 
+          // Handle /api/architect
+          if (req.url.startsWith('/api/architect')) {
+            if (req.method !== 'POST') {
+              res.statusCode = 405;
+              res.end(JSON.stringify({ error: 'Method not allowed' }));
+              return;
+            }
+
+            let body = '';
+            req.on('data', chunk => body += chunk);
+            req.on('end', async () => {
+              try {
+                req.body = JSON.parse(body);
+
+                // Dynamic import of the API handler
+                const { default: handler } = await import('./api/architect.js');
+
+                // Mock response object to match Vercel/Express
+                const mockRes = {
+                  status: (code) => {
+                    res.statusCode = code;
+                    return mockRes;
+                  },
+                  json: (data) => {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify(data));
+                    return mockRes;
+                  },
+                  setHeader: (name, value) => res.setHeader(name, value),
+                  end: (data) => res.end(data)
+                };
+
+                await handler(req, mockRes);
+
+              } catch (error) {
+                console.error('[Vite Proxy] Architect error:', error);
+                res.statusCode = 500;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ error: error.message }));
+              }
+            });
+            return;
+          }
+
           // Handle /api/scout/run - Run scout script locally
           if (req.url.startsWith('/api/scout/run')) {
             res.setHeader('Access-Control-Allow-Origin', '*');
