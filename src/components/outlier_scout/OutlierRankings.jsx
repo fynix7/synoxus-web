@@ -87,7 +87,7 @@ const OutlierRankings = () => {
         if (error) {
             console.error('Error fetching blueprints:', error);
         } else {
-            setBlueprints(data || []);
+            setBlueprints((data || []).filter(b => b.pattern !== 'Test Pattern'));
             setPage(pageNum);
         }
         setLoading(false);
@@ -101,7 +101,7 @@ const OutlierRankings = () => {
         const { data, error } = await buildQuery(nextPageNum);
 
         if (!error) {
-            setNextPageData(data || []);
+            setNextPageData((data || []).filter(b => b.pattern !== 'Test Pattern'));
         }
         setLoadingNext(false);
     };
