@@ -303,23 +303,23 @@ const OutlierGallery = ({ isPublic = false }) => {
                         onChange={(e) => setDateFilter(e.target.value)}
                         className="bg-transparent text-sm font-medium focus:outline-none text-white"
                     >
-                        <option value="any">Any Time</option>
-                        <option value="6months">Last 6 Months</option>
-                        <option value="year">Last Year</option>
-                        <option value="3years">Last 3 Years</option>
+                        <option value="any" className="bg-[#0a0a0a] text-white">Any Time</option>
+                        <option value="6months" className="bg-[#0a0a0a] text-white">Last 6 Months</option>
+                        <option value="year" className="bg-[#0a0a0a] text-white">Last Year</option>
+                        <option value="3years" className="bg-[#0a0a0a] text-white">Last 3 Years</option>
                     </select>
                 </div>
 
-                <div className="flex items-center gap-4 text-[#a1a1aa] ml-auto flex-wrap justify-end">
+                <div className="flex items-center gap-4 text-[#a1a1aa] ml-auto">
                     <div className="flex items-center gap-2 bg-[#0a0a0a] px-3 py-1.5 rounded-lg border border-white/10">
-                        <span className="text-xs font-bold text-[#52525b] uppercase">Sort By</span>
+                        <span className="text-xs font-bold text-[#a1a1aa] uppercase">Sort By</span>
                         <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
                             className="bg-transparent text-sm font-medium focus:outline-none text-white"
                         >
-                            <option value="score">Outlier Score</option>
-                            <option value="views">Total Views</option>
+                            <option value="score" className="bg-[#0a0a0a] text-white">Outlier Score</option>
+                            <option value="views" className="bg-[#0a0a0a] text-white">Total Views</option>
                         </select>
                     </div>
 
