@@ -67,10 +67,25 @@ async def run(channel_urls):
                         await page.close()
                         continue
 
-                    # Scroll to load more (3 times)
-                    for _ in range(3):
-                        await page.evaluate("window.scrollBy(0, 1000)")
-                        await asyncio.sleep(1)
+                    # Robust scrolling to load full channel
+                    last_height = await page.evaluate("document.documentElement.scrollHeight")
+                    scroll_attempts = 0
+                    max_scrolls = 50 # Allow up to 50 scrolls (approx 100s)
+                    
+                    while scroll_attempts < max_scrolls:
+                        await page.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)")
+                        await asyncio.sleep(2) # Wait for load
+                        
+                        new_height = await page.evaluate("document.documentElement.scrollHeight")
+                        if new_height == last_height:
+                            # Try one more time with a small delay just in case
+                            await asyncio.sleep(2)
+                            new_height = await page.evaluate("document.documentElement.scrollHeight")
+                            if new_height == last_height:
+                                break # Reached bottom
+                        
+                        last_height = new_height
+                        scroll_attempts += 1
 
                     # Wait for 1of10 extension to load
                     await asyncio.sleep(3)

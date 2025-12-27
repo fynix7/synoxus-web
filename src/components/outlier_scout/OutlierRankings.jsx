@@ -152,7 +152,7 @@ const OutlierRankings = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-1">Grouped Title Formats</h2>
+                    <h2 className="text-2xl font-bold text-white mb-1">Title Formats</h2>
                     <p className="text-[#a1a1aa]">Common patterns found across multiple high-performing videos.</p>
                 </div>
                 <div className="flex items-center gap-3">

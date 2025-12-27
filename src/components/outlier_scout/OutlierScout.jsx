@@ -12,6 +12,13 @@ const OutlierScout = ({ isPublic }) => {
     const [savedApiKey, setSavedApiKey] = useState('');
     const [isRunningArchitect, setIsRunningArchitect] = useState(false);
     const [architectStatus, setArchitectStatus] = useState('');
+    const [runMode, setRunMode] = useState('all'); // 'batch' | 'all'
+    const [architectState, setArchitectState] = useState({
+        page: 0,
+        totalProcessed: 0,
+        totalBlueprints: 0,
+        isPaused: false
+    });
 
     useEffect(() => {
         fetchStats();
@@ -93,66 +100,85 @@ const OutlierScout = ({ isPublic }) => {
         setApiKey('');
     };
 
-    const runArchitect = async () => {
+    const processBatch = async (currentPage, currentProcessed, currentBlueprints) => {
+        setIsRunningArchitect(true);
+        setArchitectStatus(`Analyzing Batch ${currentPage + 1} (Outliers ${currentPage * 50 + 1}-${(currentPage + 1) * 50})...`);
+
+        try {
+            const response = await fetch('/api/architect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    apiKey: savedApiKey,
+                    page: currentPage,
+                    reset: currentPage === 0 // Only reset on first page
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                const processed = result.processed || 0;
+                const blueprints = result.blueprints || 0;
+
+                const newProcessed = currentProcessed + processed;
+                const newBlueprints = currentBlueprints + blueprints;
+
+                if (processed === 0) {
+                    setArchitectStatus(`✅ Complete! Analyzed ${newProcessed} outliers → Created ${newBlueprints} patterns.`);
+                    setIsRunningArchitect(false);
+                    setArchitectState(prev => ({ ...prev, isPaused: false }));
+                } else {
+                    // Next page
+                    const nextPage = currentPage + 1;
+
+                    fetchStats(); // Refresh stats
+
+                    if (runMode === 'batch') {
+                        setArchitectState({
+                            page: nextPage,
+                            totalProcessed: newProcessed,
+                            totalBlueprints: newBlueprints,
+                            isPaused: true
+                        });
+                        setArchitectStatus(`⏸ Paused after Batch ${currentPage + 1}. Click Continue to process next batch.`);
+                        setIsRunningArchitect(false);
+                    } else {
+                        // Continue automatically
+                        setArchitectState({
+                            page: nextPage,
+                            totalProcessed: newProcessed,
+                            totalBlueprints: newBlueprints,
+                            isPaused: false
+                        });
+                        await processBatch(nextPage, newProcessed, newBlueprints);
+                    }
+                }
+            } else {
+                throw new Error(result.error || 'Unknown error');
+            }
+        } catch (error) {
+            setArchitectStatus(`❌ Error: ${error.message}`);
+            setIsRunningArchitect(false);
+        }
+    };
+
+    const startArchitect = () => {
         if (!savedApiKey) {
             setShowSettings(true);
             return;
         }
+        setArchitectState({
+            page: 0,
+            totalProcessed: 0,
+            totalBlueprints: 0,
+            isPaused: false
+        });
+        processBatch(0, 0, 0);
+    };
 
-        setIsRunningArchitect(true);
-        setArchitectStatus('Starting Architect Engine...');
-
-        let page = 0;
-        let totalProcessed = 0;
-        let totalBlueprints = 0;
-        let keepRunning = true;
-
-        try {
-            while (keepRunning) {
-                setArchitectStatus(`Analyzing Batch ${page + 1} (Outliers ${page * 50 + 1}-${(page + 1) * 50})...`);
-
-                const response = await fetch('/api/architect', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        apiKey: savedApiKey,
-                        page: page,
-                        reset: page === 0 // Only reset on first page
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    const processed = result.processed || 0;
-                    const blueprints = result.blueprints || 0;
-
-                    totalProcessed += processed;
-                    totalBlueprints += blueprints;
-
-                    if (processed === 0) {
-                        keepRunning = false;
-                        setArchitectStatus(`✅ Complete! Analyzed ${totalProcessed} outliers → Created ${totalBlueprints} patterns.`);
-                    } else {
-                        page++;
-                        // Continue to next page
-                    }
-
-                    // Refresh stats after each batch
-                    fetchStats();
-                } else {
-                    throw new Error(result.error || 'Unknown error');
-                }
-            }
-        } catch (error) {
-            setArchitectStatus(`❌ Error: ${error.message}`);
-        } finally {
-            setIsRunningArchitect(false);
-            // Clear status after 10 seconds
-            setTimeout(() => {
-                if (!isRunningArchitect) setArchitectStatus('');
-            }, 10000);
-        }
+    const continueArchitect = () => {
+        processBatch(architectState.page, architectState.totalProcessed, architectState.totalBlueprints);
     };
 
     const maskApiKey = (key) => {
@@ -191,29 +217,55 @@ const OutlierScout = ({ isPublic }) => {
 
                 {/* Run Architect Button - Prominent (Only on Rankings Tab) */}
                 {activeTab === 'rankings' && (!isPublic || window.location.hostname === 'localhost') && (
-                    <div className="flex justify-center pt-4">
-                        <button
-                            onClick={runArchitect}
-                            disabled={!savedApiKey || isRunningArchitect}
-                            className={`flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-[#ff982b]/20 hover:scale-105 active:scale-95 ${savedApiKey && !isRunningArchitect
-                                ? 'bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black'
-                                : 'bg-[#121212] border border-white/10 text-[#52525b] cursor-not-allowed'
-                                }`}
-                        >
-                            {isRunningArchitect ? (
-                                <>
-                                    <Loader2 className="w-6 h-6 animate-spin" />
-                                    Running Architect Engine...
-                                </>
-                            ) : (
-                                <>
-                                    <Play className="w-6 h-6 fill-current" />
-                                    Run Architect Engine
-                                </>
-                            )}
-                        </button>
+                    <div className="flex flex-col items-center gap-4 pt-4">
+                        {/* Mode Toggle */}
+                        <div className="flex items-center gap-2 bg-[#121212] p-1 rounded-lg border border-white/10">
+                            <button
+                                onClick={() => setRunMode('all')}
+                                className={`px-3 py-1.5 rounded text-xs font-bold transition-all ${runMode === 'all' ? 'bg-white text-black' : 'text-[#52525b] hover:text-white'}`}
+                            >
+                                All at Once
+                            </button>
+                            <button
+                                onClick={() => setRunMode('batch')}
+                                className={`px-3 py-1.5 rounded text-xs font-bold transition-all ${runMode === 'batch' ? 'bg-white text-black' : 'text-[#52525b] hover:text-white'}`}
+                            >
+                                Batch Mode
+                            </button>
+                        </div>
+
+                        {architectState.isPaused ? (
+                            <button
+                                onClick={continueArchitect}
+                                className="flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-[#ff982b]/20 hover:scale-105 active:scale-95 bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black"
+                            >
+                                <Play className="w-6 h-6 fill-current" />
+                                Continue (Batch {architectState.page + 1})
+                            </button>
+                        ) : (
+                            <button
+                                onClick={startArchitect}
+                                disabled={!savedApiKey || isRunningArchitect}
+                                className={`flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-[#ff982b]/20 hover:scale-105 active:scale-95 ${savedApiKey && !isRunningArchitect
+                                    ? 'bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black'
+                                    : 'bg-[#121212] border border-white/10 text-[#52525b] cursor-not-allowed'
+                                    }`}
+                            >
+                                {isRunningArchitect ? (
+                                    <>
+                                        <Loader2 className="w-6 h-6 animate-spin" />
+                                        Running Architect Engine...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Play className="w-6 h-6 fill-current" />
+                                        Run Architect Engine
+                                    </>
+                                )}
+                            </button>
+                        )}
                         {!savedApiKey && (
-                            <p className="text-xs text-[#52525b] mt-2 absolute translate-y-16">
+                            <p className="text-xs text-[#52525b] mt-2">
                                 * Configure API Key in Settings to run
                             </p>
                         )}
