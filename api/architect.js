@@ -272,8 +272,6 @@ export default async function handler(req, res) {
                 median_score: parseFloat(medianScore.toFixed(2)),
                 median_views: Math.round(medianViews),
                 count: members.length,
-                example1: examples[0]?.title || '',
-                thumbnail1: examples[0]?.thumbnail || '',
                 examples: JSON.stringify(examples), // Store all examples as JSON
                 generated_example: generatedExample
             });
@@ -290,6 +288,7 @@ export default async function handler(req, res) {
 
             if (insertError) {
                 console.error('Error inserting blueprints:', insertError);
+                throw new Error(`Failed to save blueprints: ${insertError.message}`);
             }
         }
 
