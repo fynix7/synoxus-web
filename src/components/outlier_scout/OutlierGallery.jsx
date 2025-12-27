@@ -310,7 +310,7 @@ const OutlierGallery = ({ isPublic = false }) => {
                     </select>
                 </div>
 
-                <div className="flex items-center gap-4 text-[#a1a1aa] overflow-x-auto pb-2 md:pb-0 ml-auto">
+                <div className="flex items-center gap-4 text-[#a1a1aa] ml-auto flex-wrap justify-end">
                     <div className="flex items-center gap-2 bg-[#0a0a0a] px-3 py-1.5 rounded-lg border border-white/10">
                         <span className="text-xs font-bold text-[#52525b] uppercase">Sort By</span>
                         <select
@@ -417,9 +417,7 @@ const OutlierGallery = ({ isPublic = false }) => {
                                                 </span>
                                             </div>
                                         ) : (
-                                            <div className="flex items-center gap-2 group-hover:text-black opacity-50">
-                                                <span className="text-xs font-medium text-[#a1a1aa]">Legacy Data</span>
-                                            </div>
+                                            <div />
                                         )}
 
                                         <span className="text-sm font-medium text-[#a1a1aa] group-hover:text-white flex items-center gap-2 transition-colors group-hover:text-black">
