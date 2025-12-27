@@ -102,26 +102,56 @@ const OutlierScout = ({ isPublic }) => {
         setIsRunningArchitect(true);
         setArchitectStatus('Starting Architect Engine...');
 
+        let page = 0;
+        let totalProcessed = 0;
+        let totalBlueprints = 0;
+        let keepRunning = true;
+
         try {
-            const response = await fetch('/api/architect', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ apiKey: savedApiKey })
-            });
+            while (keepRunning) {
+                setArchitectStatus(`Analyzing Batch ${page + 1} (Outliers ${page * 50 + 1}-${(page + 1) * 50})...`);
 
-            const result = await response.json();
+                const response = await fetch('/api/architect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        apiKey: savedApiKey,
+                        page: page,
+                        reset: page === 0 // Only reset on first page
+                    })
+                });
 
-            if (result.success) {
-                setArchitectStatus(`✅ Complete! Analyzed ${result.processed} outliers → Created ${result.blueprints || 0} grouped patterns.`);
-                fetchStats(); // Refresh stats
-            } else {
-                setArchitectStatus(`❌ Error: ${result.error}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const processed = result.processed || 0;
+                    const blueprints = result.blueprints || 0;
+
+                    totalProcessed += processed;
+                    totalBlueprints += blueprints;
+
+                    if (processed === 0) {
+                        keepRunning = false;
+                        setArchitectStatus(`✅ Complete! Analyzed ${totalProcessed} outliers → Created ${totalBlueprints} patterns.`);
+                    } else {
+                        page++;
+                        // Continue to next page
+                    }
+
+                    // Refresh stats after each batch
+                    fetchStats();
+                } else {
+                    throw new Error(result.error || 'Unknown error');
+                }
             }
         } catch (error) {
             setArchitectStatus(`❌ Error: ${error.message}`);
         } finally {
             setIsRunningArchitect(false);
-            setTimeout(() => setArchitectStatus(''), 5000);
+            // Clear status after 10 seconds
+            setTimeout(() => {
+                if (!isRunningArchitect) setArchitectStatus('');
+            }, 10000);
         }
     };
 
