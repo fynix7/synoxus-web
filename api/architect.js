@@ -10,7 +10,7 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { apiKey } = req.body;
+    const { apiKey, page = 0, reset = false } = req.body;
 
     if (!apiKey) {
         return res.status(400).json({ error: 'API key is required', success: false });
@@ -27,58 +27,55 @@ export default async function handler(req, res) {
 
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         // STEP 0: Fetch existing blueprints to preserve generated concepts
-        const { data: existingBlueprints } = await supabase
-            .from('os_blueprints')
-            .select('pattern, generated_example');
+        // Only needed if we are NOT resetting, or if we want to preserve across resets (but user asked for reset logic)
+        // Actually, if we are appending (reset=false), we might want to check existing to avoid dupes, but for now let's just append.
 
         const conceptCache = new Map();
-        if (existingBlueprints) {
-            existingBlueprints.forEach(bp => {
-                if (bp.pattern && bp.generated_example) {
-                    conceptCache.set(bp.pattern, bp.generated_example);
-                }
-            });
+        // We can skip cache loading for now or keep it if we want to preserve concepts from previous runs
+        if (reset) {
+            const { data: existingBlueprints } = await supabase
+                .from('os_blueprints')
+                .select('pattern, generated_example');
+
+            if (existingBlueprints) {
+                existingBlueprints.forEach(bp => {
+                    if (bp.pattern && bp.generated_example) {
+                        conceptCache.set(bp.pattern, bp.generated_example);
+                    }
+                });
+            }
+
+            // Clear existing blueprints
+            const { error: deleteError } = await supabase
+                .from('os_blueprints')
+                .delete()
+                .gt('median_score', -100);
+
+            if (deleteError) {
+                console.error('Error clearing blueprints:', deleteError);
+            }
         }
 
-        // Clear existing blueprints
-        const { error: deleteError } = await supabase
-            .from('os_blueprints')
-            .delete()
-            .gt('median_score', -100);
-
-        if (deleteError) {
-            console.error('Error clearing blueprints:', deleteError);
-        }
-
-        // STEP 1: Fetch ALL outliers
+        // STEP 1: Fetch outliers for THIS PAGE
+        const CHUNK_SIZE = 50;
         let allOutliers = [];
-        let hasMore = true;
-        let page = 0;
-        const CHUNK_SIZE = 50; // Reduced chunk size
 
-        while (hasMore) {
-            const { data: outliers, error } = await supabase
-                .from('os_outliers')
-                .select('*')
-                .order('outlier_score', { ascending: false })
-                .range(page * CHUNK_SIZE, (page + 1) * CHUNK_SIZE - 1);
+        const { data: outliers, error } = await supabase
+            .from('os_outliers')
+            .select('*')
+            .order('outlier_score', { ascending: false })
+            .range(page * CHUNK_SIZE, (page + 1) * CHUNK_SIZE - 1);
 
-            if (error) {
-                console.error('Error fetching outliers chunk:', error);
-                break;
-            }
+        if (error) {
+            console.error('Error fetching outliers chunk:', error);
+            throw error;
+        }
 
-            if (!outliers || outliers.length === 0) {
-                hasMore = false;
-            } else {
-                allOutliers = [...allOutliers, ...outliers];
-                page++;
-                // Limit to prevent timeout - process max 50 outliers
-                if (page >= 1) hasMore = false;
-            }
+        if (outliers && outliers.length > 0) {
+            allOutliers = outliers;
         }
 
         if (allOutliers.length === 0) {

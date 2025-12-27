@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../supabaseClient';
-import { Search, Filter, RefreshCw, Trash2, ExternalLink, Database, Eye } from 'lucide-react';
+import { Search, Filter, RefreshCw, Trash2, ExternalLink, Database, Eye, Calendar, User } from 'lucide-react';
 
 const OutlierGallery = ({ isPublic = false }) => {
     const [outliers, setOutliers] = useState([]);
@@ -9,6 +9,7 @@ const OutlierGallery = ({ isPublic = false }) => {
     const [channelUrl, setChannelUrl] = useState('');
     const [isScouting, setIsScouting] = useState(false);
     const [sortBy, setSortBy] = useState('score'); // 'score' | 'views'
+    const [dateFilter, setDateFilter] = useState('any'); // 'any', '6months', 'year', '3years'
     const [progress, setProgress] = useState(0);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(0);
@@ -29,9 +30,10 @@ const OutlierGallery = ({ isPublic = false }) => {
         }
 
         try {
+            // Join with os_channels to get name and avatar
             let query = supabase
                 .from('os_outliers')
-                .select('*')
+                .select('*, os_channels(name, avatar_url)')
                 .gte('outlier_score', minScore);
 
             // Apply Search
@@ -42,6 +44,16 @@ const OutlierGallery = ({ isPublic = false }) => {
             // Apply View Range
             if (viewRange.min) query = query.gte('views', parseInt(viewRange.min));
             if (viewRange.max) query = query.lte('views', parseInt(viewRange.max));
+
+            // Apply Date Filter
+            if (dateFilter !== 'any') {
+                const date = new Date();
+                if (dateFilter === '6months') date.setMonth(date.getMonth() - 6);
+                else if (dateFilter === 'year') date.setFullYear(date.getFullYear() - 1);
+                else if (dateFilter === '3years') date.setFullYear(date.getFullYear() - 3);
+
+                query = query.gte('published_at', date.toISOString());
+            }
 
             // Apply Sort
             if (sortBy === 'score') {
@@ -115,7 +127,7 @@ const OutlierGallery = ({ isPublic = false }) => {
             fetchOutliers(false);
         }, 500);
         return () => clearTimeout(timer);
-    }, [search, minScore, sortBy, viewRange]);
+    }, [search, minScore, sortBy, viewRange, dateFilter]);
 
     const handleScout = async () => {
         if (!channelUrl) return;
@@ -284,6 +296,20 @@ const OutlierGallery = ({ isPublic = false }) => {
                     />
                 </div>
 
+                <div className="flex items-center gap-2 bg-[#0a0a0a] px-3 py-2 rounded-lg border border-white/10">
+                    <Calendar className="w-4 h-4 text-[#52525b]" />
+                    <select
+                        value={dateFilter}
+                        onChange={(e) => setDateFilter(e.target.value)}
+                        className="bg-transparent text-sm font-medium focus:outline-none text-white"
+                    >
+                        <option value="any">Any Time</option>
+                        <option value="6months">Last 6 Months</option>
+                        <option value="year">Last Year</option>
+                        <option value="3years">Last 3 Years</option>
+                    </select>
+                </div>
+
                 <div className="flex items-center gap-4 text-[#a1a1aa] overflow-x-auto pb-2 md:pb-0 ml-auto">
                     <div className="flex items-center gap-2 bg-[#0a0a0a] px-3 py-1.5 rounded-lg border border-white/10">
                         <span className="text-xs font-bold text-[#52525b] uppercase">Sort By</span>
@@ -375,10 +401,24 @@ const OutlierGallery = ({ isPublic = false }) => {
                                     <h3 className="text-xl text-white group-hover:text-[#0a0a0a] group-hover:scale-[1.02] origin-left font-semibold line-clamp-2 mb-3 transition-all duration-300 leading-snug">
                                         {video.title}
                                     </h3>
-                                    <div className="mt-auto pt-3 border-t border-white/5 flex justify-center items-center relative">
-                                        <span className="text-sm font-medium text-[#a1a1aa] group-hover:text-white flex items-center gap-2 transition-colors">
+                                    <div className="mt-auto pt-3 border-t border-white/5 flex justify-between items-center relative">
+                                        {/* Channel Info */}
+                                        <div className="flex items-center gap-2 group-hover:text-black">
+                                            {video.os_channels?.avatar_url ? (
+                                                <img src={video.os_channels.avatar_url} alt={video.os_channels.name} className="w-6 h-6 rounded-full object-cover border border-white/10" />
+                                            ) : (
+                                                <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
+                                                    <User className="w-3 h-3 text-white/50" />
+                                                </div>
+                                            )}
+                                            <span className="text-xs font-medium text-[#a1a1aa] group-hover:text-black/70 truncate max-w-[100px]" title={video.os_channels?.name}>
+                                                {video.os_channels?.name || 'Unknown Channel'}
+                                            </span>
+                                        </div>
+
+                                        <span className="text-sm font-medium text-[#a1a1aa] group-hover:text-white flex items-center gap-2 transition-colors group-hover:text-black">
                                             <Eye className="w-4 h-4" />
-                                            {formatViews(video.views)} views
+                                            {formatViews(video.views)}
                                         </span>
                                     </div>
                                 </div>

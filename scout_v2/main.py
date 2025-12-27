@@ -75,6 +75,51 @@ async def run(channel_urls):
                     # Wait for 1of10 extension to load
                     await asyncio.sleep(3)
 
+                    # Extract Channel Info
+                    channel_info = await page.evaluate("""
+                        () => {
+                            try {
+                                const header = document.querySelector("ytd-channel-header-renderer");
+                                const nameEl = header ? header.querySelector("#text") : null;
+                                const imgEl = header ? header.querySelector("#img") : null;
+                                return {
+                                    name: nameEl ? nameEl.innerText : "",
+                                    avatar_url: imgEl ? imgEl.src : ""
+                                };
+                            } catch (e) {
+                                return { name: "", avatar_url: "" };
+                            }
+                        }
+                    """)
+                    
+                    # Upsert Channel
+                    channel_id = None
+                    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+                    
+                    if channel_info['name']:
+                        try:
+                            # Try upsert with avatar_url
+                            res = supabase.table("os_channels").upsert({
+                                "url": channel_url,
+                                "name": channel_info['name'],
+                                "avatar_url": channel_info['avatar_url'],
+                                "last_scouted": "now()"
+                            }, on_conflict="url").execute()
+                            if res.data:
+                                channel_id = res.data[0]['id']
+                        except Exception as e:
+                            print(f"⚠️ Channel Upsert Error (trying without avatar): {e}")
+                            try:
+                                res = supabase.table("os_channels").upsert({
+                                    "url": channel_url,
+                                    "name": channel_info['name'],
+                                    "last_scouted": "now()"
+                                }, on_conflict="url").execute()
+                                if res.data:
+                                    channel_id = res.data[0]['id']
+                            except Exception as e2:
+                                print(f"❌ Channel Upsert Failed: {e2}")
+
                     # Extract Data
                     outliers = await page.evaluate("""
                         () => {
@@ -99,6 +144,28 @@ async def run(channel_urls):
                                             const multiplier = viewCountText.toUpperCase().includes('K') ? 1000 : 
                                                                viewCountText.toUpperCase().includes('M') ? 1000000 : 1;
                                             views = Math.round(num * multiplier);
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                // Extract Date
+                                let publishedAt = null;
+                                if (metadataLine) {
+                                    const spans = metadataLine.querySelectorAll('span');
+                                    for (const span of spans) {
+                                        if (span.innerText.includes('ago')) {
+                                            const timeText = span.innerText;
+                                            const now = new Date();
+                                            const num = parseInt(timeText.match(/\\d+/)?.[0] || "0");
+                                            
+                                            if (timeText.includes('hour')) now.setHours(now.getHours() - num);
+                                            else if (timeText.includes('day')) now.setDate(now.getDate() - num);
+                                            else if (timeText.includes('week')) now.setDate(now.getDate() - num * 7);
+                                            else if (timeText.includes('month')) now.setMonth(now.getMonth() - num);
+                                            else if (timeText.includes('year')) now.setFullYear(now.getFullYear() - num);
+                                            
+                                            publishedAt = now.toISOString();
                                             break;
                                         }
                                     }
@@ -141,7 +208,8 @@ async def run(channel_urls):
                                             thumbnail: thumbnail,
                                             views: views,
                                             outlier_score: multiplier,
-                                            channel_url: window.location.href
+                                            channel_url: window.location.href,
+                                            published_at: publishedAt
                                         });
                                     }
                                 }
@@ -155,10 +223,10 @@ async def run(channel_urls):
                     
                     # Save to Supabase
                     if outliers:
-                        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
                         data_to_insert = []
                         for o in outliers:
                             if o['video_id']:
+                                o['channel_id'] = channel_id # Add channel_id
                                 data_to_insert.append(o)
                         
                         if data_to_insert:
