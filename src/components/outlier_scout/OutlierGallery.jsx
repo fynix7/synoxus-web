@@ -30,10 +30,10 @@ const OutlierGallery = ({ isPublic = false }) => {
         }
 
         try {
-            // Join with os_channels to get name and avatar
+            // Join with os_channels to get name
             let query = supabase
                 .from('os_outliers')
-                .select('*, os_channels(name, avatar_url)')
+                .select('*, os_channels(name)')
                 .gte('outlier_score', minScore);
 
             // Apply Search
