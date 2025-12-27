@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import { YoutubeTranscript } from 'youtube-transcript'
 import https from 'https'
 import { spawn, exec } from 'child_process'
+import 'dotenv/config'
 
 // https://vite.dev/config/
 export default defineConfig({
