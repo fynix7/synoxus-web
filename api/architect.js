@@ -1,6 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+export const config = {
+    maxDuration: 60,
+};
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -53,7 +57,7 @@ export default async function handler(req, res) {
         let allOutliers = [];
         let hasMore = true;
         let page = 0;
-        const CHUNK_SIZE = 100;
+        const CHUNK_SIZE = 50; // Reduced chunk size
 
         while (hasMore) {
             const { data: outliers, error } = await supabase
@@ -72,8 +76,8 @@ export default async function handler(req, res) {
             } else {
                 allOutliers = [...allOutliers, ...outliers];
                 page++;
-                // Limit to prevent timeout - process max 300 outliers
-                if (page >= 3) hasMore = false;
+                // Limit to prevent timeout - process max 50 outliers
+                if (page >= 1) hasMore = false;
             }
         }
 
