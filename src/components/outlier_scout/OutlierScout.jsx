@@ -190,7 +190,7 @@ const OutlierScout = ({ isPublic }) => {
                 )}
 
                 {/* Run Architect Button - Prominent (Only on Rankings Tab) */}
-                {activeTab === 'rankings' && (
+                {activeTab === 'rankings' && (!isPublic || window.location.hostname === 'localhost') && (
                     <div className="flex justify-center pt-4">
                         <button
                             onClick={runArchitect}
