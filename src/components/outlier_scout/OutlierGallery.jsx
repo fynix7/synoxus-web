@@ -403,18 +403,24 @@ const OutlierGallery = ({ isPublic = false }) => {
                                     </h3>
                                     <div className="mt-auto pt-3 border-t border-white/5 flex justify-between items-center relative">
                                         {/* Channel Info */}
-                                        <div className="flex items-center gap-2 group-hover:text-black">
-                                            {video.os_channels?.avatar_url ? (
-                                                <img src={video.os_channels.avatar_url} alt={video.os_channels.name} className="w-6 h-6 rounded-full object-cover border border-white/10" />
-                                            ) : (
-                                                <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
-                                                    <User className="w-3 h-3 text-white/50" />
-                                                </div>
-                                            )}
-                                            <span className="text-xs font-medium text-[#a1a1aa] group-hover:text-black/70 truncate max-w-[100px]" title={video.os_channels?.name}>
-                                                {video.os_channels?.name || 'Unknown Channel'}
-                                            </span>
-                                        </div>
+                                        {video.os_channels ? (
+                                            <div className="flex items-center gap-2 group-hover:text-black">
+                                                {video.os_channels.avatar_url ? (
+                                                    <img src={video.os_channels.avatar_url} alt={video.os_channels.name} className="w-6 h-6 rounded-full object-cover border border-white/10" />
+                                                ) : (
+                                                    <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
+                                                        <User className="w-3 h-3 text-white/50" />
+                                                    </div>
+                                                )}
+                                                <span className="text-xs font-medium text-[#a1a1aa] group-hover:text-black/70 truncate max-w-[100px]" title={video.os_channels.name}>
+                                                    {video.os_channels.name}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2 group-hover:text-black opacity-50">
+                                                <span className="text-xs font-medium text-[#a1a1aa]">Legacy Data</span>
+                                            </div>
+                                        )}
 
                                         <span className="text-sm font-medium text-[#a1a1aa] group-hover:text-white flex items-center gap-2 transition-colors group-hover:text-black">
                                             <Eye className="w-4 h-4" />
