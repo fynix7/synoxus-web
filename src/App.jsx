@@ -60,7 +60,11 @@ function AppContent() {
     const settings = getSiteSettings();
 
     // If authenticated, check for public routes too (so logged in users can see them)
-    if (path === '/s/k9p2m' || path === '/s/z4r8q' || path === '/s/m2n5v') {
+    const publicRoutes = [
+      '/s/k9p2m', '/s/z4r8q', '/s/m2n5v',
+      '/s2/outlier-scout', '/s2/thumbnail-generator', '/s2/skool-tracking'
+    ];
+    if (publicRoutes.includes(path)) {
       // For logged in users, we can either show the standalone component or redirect to portal view
       // Let's show standalone for consistency with the link
       return;
@@ -150,6 +154,17 @@ function AppContent() {
   }
   if (path === '/s/m2n5v') {
     return <PackagingTool isPublic={true} />;
+  }
+
+  // Readable public slugs
+  if (path === '/s2/outlier-scout') {
+    return <OutlierScout isPublic={true} />;
+  }
+  if (path === '/s2/thumbnail-generator') {
+    return <PackagingTool isPublic={true} />;
+  }
+  if (path === '/s2/skool-tracking') {
+    return <SkoolTrackingSetup />;
   }
 
   if (path === '/terms') {

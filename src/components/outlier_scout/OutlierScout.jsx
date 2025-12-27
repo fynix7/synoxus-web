@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 import OutlierGallery from './OutlierGallery';
 import OutlierRankings from './OutlierRankings';
-import { LayoutGrid, Type, Settings, Key, X, Check, Loader2, Play } from 'lucide-react';
-import binocularsIcon from '../../assets/binoculars_icon.png';
+import { LayoutGrid, Type, Settings, Key, X, Check, Loader2, Play, Binoculars } from 'lucide-react';
 
 const OutlierScout = ({ isPublic }) => {
     const [activeTab, setActiveTab] = useState('gallery'); // 'gallery' | 'rankings'
@@ -135,16 +134,10 @@ const OutlierScout = ({ isPublic }) => {
             {/* Header */}
             <div className="text-center space-y-6 mb-8">
                 <div className="flex items-center justify-center gap-4">
-                    <div className="w-20 h-20">
-                        <img src={binocularsIcon} alt="Outlier Scout" className="w-full h-full object-contain" />
+                    <div className="w-20 h-20 flex items-center justify-center">
+                        <Binoculars className="w-full h-full text-[#ff982b]" strokeWidth={1.5} />
                     </div>
-                    <button
-                        onClick={() => setShowSettings(true)}
-                        className="p-2 rounded-lg bg-[#121212] border border-white/10 text-[#a1a1aa] hover:text-white hover:border-[#ff982b]/50 transition-all"
-                        title="Settings"
-                    >
-                        <Settings className="w-5 h-5" />
-                    </button>
+
                 </div>
 
                 {/* Stats Grid */}
@@ -163,6 +156,37 @@ const OutlierScout = ({ isPublic }) => {
                 {architectStatus && (
                     <div className="max-w-2xl mx-auto bg-[#121212] border border-white/10 p-3 rounded-lg text-sm text-[#a1a1aa]">
                         {architectStatus}
+                    </div>
+                )}
+
+                {/* Run Architect Button - Prominent (Only on Rankings Tab) */}
+                {activeTab === 'rankings' && (
+                    <div className="flex justify-center pt-4">
+                        <button
+                            onClick={runArchitect}
+                            disabled={!savedApiKey || isRunningArchitect}
+                            className={`flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-[#ff982b]/20 hover:scale-105 active:scale-95 ${savedApiKey && !isRunningArchitect
+                                ? 'bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black'
+                                : 'bg-[#121212] border border-white/10 text-[#52525b] cursor-not-allowed'
+                                }`}
+                        >
+                            {isRunningArchitect ? (
+                                <>
+                                    <Loader2 className="w-6 h-6 animate-spin" />
+                                    Running Architect Engine...
+                                </>
+                            ) : (
+                                <>
+                                    <Play className="w-6 h-6 fill-current" />
+                                    Run Architect Engine
+                                </>
+                            )}
+                        </button>
+                        {!savedApiKey && (
+                            <p className="text-xs text-[#52525b] mt-2 absolute translate-y-16">
+                                * Configure API Key in Settings to run
+                            </p>
+                        )}
                     </div>
                 )}
             </div>
@@ -195,7 +219,7 @@ const OutlierScout = ({ isPublic }) => {
 
             {/* Content */}
             <div className="max-w-7xl mx-auto">
-                {activeTab === 'gallery' ? <OutlierGallery /> : <OutlierRankings />}
+                {activeTab === 'gallery' ? <OutlierGallery isPublic={isPublic} /> : <OutlierRankings />}
             </div>
 
             {/* Settings Modal */}
@@ -263,36 +287,18 @@ const OutlierScout = ({ isPublic }) => {
                                 Save API Key
                             </button>
                         </div>
-
-                        {/* Run Architect */}
-                        <div className="pt-4 border-t border-white/10">
-                            <button
-                                onClick={runArchitect}
-                                disabled={!savedApiKey || isRunningArchitect}
-                                className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-bold text-sm transition-all ${savedApiKey && !isRunningArchitect
-                                    ? 'bg-gradient-to-r from-[#ff982b] to-[#ffc972] text-black hover:opacity-90'
-                                    : 'bg-[#27272a] text-[#52525b] cursor-not-allowed'
-                                    }`}
-                            >
-                                {isRunningArchitect ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        Running Architect...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Play className="w-4 h-4" />
-                                        Run Architect Engine
-                                    </>
-                                )}
-                            </button>
-                            <p className="text-xs text-[#52525b] mt-2 text-center">
-                                Analyzes outliers and generates title formats using AI.
-                            </p>
-                        </div>
                     </div>
                 </div>
             )}
+
+            {/* Fixed Settings Button */}
+            <button
+                onClick={() => setShowSettings(true)}
+                className="fixed bottom-6 right-6 p-4 rounded-full bg-[#121212] border border-white/10 text-[#a1a1aa] hover:text-white hover:border-[#ff982b] hover:bg-[#1a1a1a] transition-all shadow-2xl z-50 group"
+                title="Settings"
+            >
+                <Settings className="w-6 h-6 group-hover:rotate-90 transition-transform duration-500" />
+            </button>
         </div>
     );
 };

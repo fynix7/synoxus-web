@@ -27,3 +27,7 @@ button:hover {
 .animate-shine {
     animation: shine 0.6s ease-out forwards;
 }
+@keyframes pulse-scale {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}

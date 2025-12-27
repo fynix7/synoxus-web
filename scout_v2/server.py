@@ -14,17 +14,21 @@ CORS(app)  # Enable CORS for all routes
 @app.route('/scout', methods=['POST'])
 def scout():
     data = request.json
-    channel_url = data.get('channelUrl')
+    channel_urls = data.get('channelUrls')
     
-    if not channel_url:
-        return jsonify({"error": "Channel URL is required"}), 400
+    # Backward compatibility
+    if not channel_urls and data.get('channelUrl'):
+        channel_urls = [data.get('channelUrl')]
+    
+    if not channel_urls:
+        return jsonify({"error": "channelUrls is required"}), 400
 
-    print(f"Received scout request for: {channel_url}")
+    print(f"Received batch scout request for {len(channel_urls)} channels")
     
     try:
         # Run the async scout function
-        asyncio.run(run_scout(channel_url))
-        return jsonify({"success": True, "message": "Scouting completed successfully"})
+        asyncio.run(run_scout(channel_urls))
+        return jsonify({"success": True, "message": "Batch scouting completed successfully"})
     except Exception as e:
         print(f"Error during scouting: {e}")
         return jsonify({"error": str(e)}), 500
