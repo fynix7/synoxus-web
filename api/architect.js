@@ -99,42 +99,32 @@ export default async function handler(req, res) {
 
                 CRITICAL INSTRUCTION: Replace specific words with semantic variables. Do NOT return the original title.
                 
-                Variable Taxonomy (use ONLY these or similar semantic labels):
-                - [Number] - A quantity
-                - [Practices/Doctrine] - A repeatable action or principle
-                - [Positive Quantifiable Change] - A measurable improvement
-                - [Negative Attribute] - Something undesirable to fix
-                - [Desired Outcome] - The end goal or result
-                - [Undesired State] - A negative state to escape
-                - [Starting Point] - A neutral beginning state
-                - [Identity] - A role or persona
-                - [Authority Figure] - Someone with credibility
-                - [Common Method] - A typical approach
-                - [Hidden Reality] - A surprising truth
-                - [Absurd Consequence] - An extreme result
-                - [Descriptive Advantage/Adverb] - A quality modifier
-                - [Negative Command] - An action to stop
-                - [Short Timeframe] - A compressed time period
-                - [Constraint] - A limitation or condition
-                - [Skill/Task] - An action or ability
-                - [Resource] - A deliverable or asset
-                - [Better Alternative] - An upgraded approach
-                - [Topic/Subject] - The main topic being discussed
-                - [Action/Verb] - An action word
-                - [Year/Time Period] - A specific year (e.g., 2024, 2025) or era
+                Variable Taxonomy (use ONLY these or similar semantic labels, in ALL CAPS):
+                - [NUMBER] - A quantity (e.g. "10", "7", "$1M")
+                - [ADJECTIVE] - A descriptive word (e.g. "Best", "Secret", "Insane")
+                - [TOPIC] - The main subject (e.g. "Gaming Laptops", "Python")
+                - [DREAM OUTCOME] - The desired result (e.g. "Get Rich", "Lose Weight")
+                - [TIMEFRAME] - Time period (e.g. "30 Days", "2025")
+                - [OBSTACLE] - Negative thing to avoid (e.g. "Mistakes", "Debt")
+                - [AUTHORITY] - Expert or famous person (e.g. "MrBeast", "Pro")
+                - [IDENTITY] - Role or persona (e.g. "Beginner", "Expert")
+                - [ACTION] - Verb or activity (e.g. "Built", "Sold")
+                - [PLATFORM] - (e.g. "YouTube", "Amazon")
+                - [PRICE] - (e.g. "$10", "Cheap")
+                - [OBJECT] - Physical item (e.g. "Camera", "House")
 
                 EXAMPLES:
                 Input: "1 Habit That Fixes 90% of Problems"
-                Output: "[Number] [Practices/Doctrine] That [Positive Quantifiable Change] [Negative Attribute]"
+                Output: "[NUMBER] Habit That Fixes [OBSTACLE]"
                 
                 Input: "Best Gaming Laptops of 2025"
-                Output: "Best [Topic/Subject] of [Year/Time Period]"
+                Output: "Best [TOPIC] of [TIMEFRAME]"
                 
                 Input: "How I Made $1,000,000 in 30 Days"
-                Output: "How I Made [Desired Outcome] in [Short Timeframe]"
+                Output: "How I Made [DREAM OUTCOME] in [TIMEFRAME]"
                 
                 Input: "I Asked an AI How to Get Rich"
-                Output: "I Asked [Authority Figure] How to [Desired Outcome]"
+                Output: "I Asked [AUTHORITY] How to [DREAM OUTCOME]"
 
                 Input Titles:
                 ${batch.map((o, idx) => `${idx + 1}. ${o.title}`).join('\n')}
@@ -188,13 +178,13 @@ export default async function handler(req, res) {
             YOUR TASK: Group these formats by similarity. Formats are "similar" if they share the same structural pattern, even if specific variables differ slightly.
 
             EXAMPLES OF SIMILAR FORMATS:
-            - "[Number] [Practices/Doctrine] That [Positive Change] [Negative Attribute]" ≈ "[Number] [Habit] That [Fixes] [Problems]"
-            - "How I [Achieved] [Desired Outcome] in [Timeframe]" ≈ "How I Made [Money] in [Short Time]"
-            - "Why [Authority] [Does Something] (And You Should Too)" ≈ "Why [Experts] [Use This Method] (And You Should Too)"
+            - "[NUMBER] Habit That Fixes [OBSTACLE]" ≈ "[NUMBER] Things That Stop [OBSTACLE]"
+            - "How I [ACTION] [DREAM OUTCOME] in [TIMEFRAME]" ≈ "How I Made [DREAM OUTCOME] in [TIMEFRAME]"
+            - "Why [AUTHORITY] [ACTION] (And You Should Too)" ≈ "Why [AUTHORITY] Uses This Method"
 
             EXAMPLES OF DIFFERENT FORMATS (should NOT be grouped):
-            - "[Number] [Practices/Doctrine] That..." vs "How I [Achieved]..." (different structure)
-            - "I Asked [Authority]..." vs "[Number] Things..." (different hook mechanism)
+            - "[NUMBER] Habit That..." vs "How I [ACTION]..." (different structure)
+            - "I Asked [AUTHORITY]..." vs "[NUMBER] Things..." (different hook mechanism)
 
             FORMATS TO ANALYZE:
             ${formatList}
