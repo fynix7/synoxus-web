@@ -242,6 +242,8 @@ async def run(channel_urls):
                         for o in outliers:
                             if o['video_id']:
                                 o['channel_id'] = channel_id # Add channel_id
+                                if 'channel_url' in o:
+                                    del o['channel_url'] # Remove extra field not in DB
                                 data_to_insert.append(o)
                         
                         if data_to_insert:
